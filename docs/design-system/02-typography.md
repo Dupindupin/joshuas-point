@@ -1,28 +1,98 @@
-# Typography
+# Joshua's Point — Typography
 
-## Philosophy
+Version: 1.0 (Living Document)
 
-Typography should feel calm.
+---
 
-Never trendy.
+# Philosophy
+
+Typography should feel like Joshua's Point itself.
+
+Calm.
+
+Elegant.
+
+Architectural.
+
+Timeless.
+
+Never fashionable.
 
 Never loud.
 
+Visitors should notice the story—not the font.
+
 ---
 
-## Preferred
+# Design Goal
 
-Display
+Every word should feel like it belongs inside the house.
+
+Warm.
+
+Open.
+
+Relaxed.
+
+Thoughtful.
+
+---
+
+# Primary Typeface
+
+## Display
 
 Canela
 
-Body
+Purpose
 
-Inter
+Large headlines.
+
+Hero sections.
+
+Quotes.
+
+Story introductions.
+
+Feeling
+
+Elegant.
+
+Confident.
+
+Quiet.
+
+Timeless.
 
 ---
 
-## Alternative
+## Body
+
+Inter
+
+Purpose
+
+Paragraphs.
+
+Navigation.
+
+Forms.
+
+Interface.
+
+Feeling
+
+Readable.
+
+Friendly.
+
+Invisible.
+
+Inter should disappear and allow the story to shine.
+
+---
+
+# Alternative Pairing
 
 Display
 
@@ -32,16 +102,100 @@ Body
 
 Manrope
 
+Use only if licensing or performance requires it.
+
 ---
 
-## Rules
+# Typography Rules
 
-Generous spacing.
+Never use more than two font families.
 
-Large headlines.
+Never use decorative fonts.
 
-Readable paragraphs.
+Avoid ALL CAPS except for small navigation labels.
 
-Comfortable line height.
+Use generous line spacing.
+
+Use generous margins.
 
 Typography should breathe.
+
+---
+
+# Headline Style
+
+Large.
+
+Simple.
+
+Never shout.
+
+Example
+
+Joshua's Point
+
+A place where architecture meets nature.
+
+Not
+
+★★★★★ Luxury Villa ★★★★★
+
+---
+
+# Body Style
+
+Short paragraphs.
+
+Simple language.
+
+Comfortable reading.
+
+Never write like marketing.
+
+Write like a host welcoming friends.
+
+---
+
+# Numbers
+
+Use tabular figures only where alignment matters.
+
+Room sizes.
+
+Distances.
+
+Prices.
+
+Dates.
+
+---
+
+# Quote Style
+
+Quotes should feel personal.
+
+Example
+
+"Some places are visited.
+
+Others become part of your memories."
+
+---
+
+# Accessibility
+
+Maintain excellent contrast.
+
+Readable font sizes.
+
+Comfortable spacing.
+
+No tiny text.
+
+---
+
+# Future
+
+Typography should evolve with the brand.
+
+Not with design trends.
