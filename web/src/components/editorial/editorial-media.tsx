@@ -1,16 +1,25 @@
 import type {ImageProps} from 'next/image'
 import Image from 'next/image'
 
-type EditorialImage = {
+export type EditorialImage = {
   alt: string
+  blurDataURL?: string
   src: ImageProps['src']
 }
 
+export type EditorialMediaRatio = 'landscape' | 'panoramic' | 'portrait'
+export type EditorialMediaTone = 'morning' | 'stone'
+
 type EditorialMediaProps = {
+  className?: string
   image?: EditorialImage
-  ratio?: 'landscape' | 'panoramic' | 'portrait'
-  sizes: string
-  tone?: 'morning' | 'stone'
+  imageClassName?: string
+  objectPosition?: string
+  preload?: boolean
+  quality?: number
+  ratio?: EditorialMediaRatio
+  sizes?: string
+  tone?: EditorialMediaTone
 }
 
 const ratioClasses: Record<NonNullable<EditorialMediaProps['ratio']>, string> = {
@@ -27,17 +36,35 @@ const toneClasses: Record<NonNullable<EditorialMediaProps['tone']>, string> = {
 }
 
 export function EditorialMedia({
+  className = '',
   image,
+  imageClassName = '',
+  objectPosition,
+  preload = false,
+  quality,
   ratio = 'landscape',
-  sizes,
+  sizes = '100vw',
   tone = 'morning',
 }: EditorialMediaProps) {
   return (
     <div
       aria-hidden={image ? undefined : true}
-      className={`relative w-full overflow-hidden ${ratioClasses[ratio]} ${toneClasses[tone]}`}
+      className={`relative w-full overflow-hidden ${ratioClasses[ratio]} ${toneClasses[tone]} ${className}`}
     >
-      {image ? <Image alt={image.alt} className="object-cover" fill sizes={sizes} src={image.src} /> : null}
+      {image ? (
+        <Image
+          alt={image.alt}
+          blurDataURL={image.blurDataURL}
+          className={`object-cover ${imageClassName}`}
+          fill
+          placeholder={image.blurDataURL ? 'blur' : 'empty'}
+          preload={preload}
+          quality={quality}
+          sizes={sizes}
+          src={image.src}
+          style={{objectPosition}}
+        />
+      ) : null}
     </div>
   )
 }
