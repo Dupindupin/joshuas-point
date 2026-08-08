@@ -1,15 +1,85 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 
 :root {
   --background: #ffffff;
   --foreground: #171717;
+
+  /* Joshua's Point — foundational brand tokens */
+  --jp-color-linen: #f6f2eb;
+  --jp-color-charcoal: #242424;
+  --jp-color-timber: #a56f3a;
+  --jp-color-stone: #b7b0a6;
+  --jp-color-forest: #405548;
+  --jp-color-ocean: #6a8ea1;
+  --jp-color-evening: #121212;
+  --jp-color-evening-surface: #1b1b1b;
+  --jp-color-evening-text: #f2efea;
+  --jp-color-evening-accent: #c89a64;
+
+  --jp-space-xs: 0.5rem;
+  --jp-space-sm: 1rem;
+  --jp-space-md: 1.5rem;
+  --jp-space-lg: 3rem;
+  --jp-space-xl: 6rem;
+  --jp-space-2xl: 10rem;
+
+  --jp-font-display: var(--font-jp-display, Georgia, 'Times New Roman', serif);
+  --jp-font-body: var(--font-jp-body, Arial, Helvetica, sans-serif);
+  --jp-ease-natural: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+[data-atmosphere='morning'] {
+  color-scheme: light;
+  --jp-atmosphere-canvas: var(--jp-color-linen);
+  --jp-atmosphere-surface: rgb(255 255 255 / 55%);
+  --jp-atmosphere-surface-soft: rgb(255 255 255 / 35%);
+  --jp-atmosphere-text: var(--jp-color-charcoal);
+  --jp-atmosphere-muted: rgb(36 36 36 / 68%);
+  --jp-atmosphere-subtle: rgb(36 36 36 / 52%);
+  --jp-atmosphere-border: rgb(183 176 166 / 62%);
+  --jp-atmosphere-accent: var(--jp-color-forest);
+  --jp-atmosphere-brand: var(--jp-color-timber);
+}
+
+[data-atmosphere='evening'] {
+  color-scheme: dark;
+  --jp-atmosphere-canvas: var(--jp-color-evening);
+  --jp-atmosphere-surface: var(--jp-color-evening-surface);
+  --jp-atmosphere-surface-soft: rgb(27 27 27 / 72%);
+  --jp-atmosphere-text: var(--jp-color-evening-text);
+  --jp-atmosphere-muted: rgb(242 239 234 / 70%);
+  --jp-atmosphere-subtle: rgb(242 239 234 / 52%);
+  --jp-atmosphere-border: rgb(183 176 166 / 34%);
+  --jp-atmosphere-accent: var(--jp-color-evening-accent);
+  --jp-atmosphere-brand: var(--jp-color-evening-accent);
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-linen: var(--jp-color-linen);
+  --color-charcoal: var(--jp-color-charcoal);
+  --color-timber: var(--jp-color-timber);
+  --color-stone: var(--jp-color-stone);
+  --color-forest: var(--jp-color-forest);
+  --color-ocean: var(--jp-color-ocean);
+  --color-evening: var(--jp-color-evening);
+  --color-evening-surface: var(--jp-color-evening-surface);
+  --color-evening-text: var(--jp-color-evening-text);
+  --color-evening-accent: var(--jp-color-evening-accent);
+  --color-atmosphere-canvas: var(--jp-atmosphere-canvas);
+  --color-atmosphere-surface: var(--jp-atmosphere-surface);
+  --color-atmosphere-surface-soft: var(--jp-atmosphere-surface-soft);
+  --color-atmosphere-text: var(--jp-atmosphere-text);
+  --color-atmosphere-muted: var(--jp-atmosphere-muted);
+  --color-atmosphere-subtle: var(--jp-atmosphere-subtle);
+  --color-atmosphere-border: var(--jp-atmosphere-border);
+  --color-atmosphere-accent: var(--jp-atmosphere-accent);
+  --color-atmosphere-brand: var(--jp-atmosphere-brand);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  --font-display: var(--jp-font-display);
+  --font-body: var(--jp-font-body);
 }
 
 @media (prefers-color-scheme: dark) {

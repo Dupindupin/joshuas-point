@@ -1,6 +1,6 @@
 # Joshua's Point — Typography
 
-Version: 1.0 (Living Document)
+Version: 1.1 (Living Document)
 
 ---
 
@@ -42,7 +42,7 @@ Thoughtful.
 
 ## Display
 
-Canela
+Newsreader
 
 Purpose
 
@@ -56,9 +56,9 @@ Story introductions.
 
 Feeling
 
-Elegant.
+Editorial.
 
-Confident.
+Warm.
 
 Quiet.
 
@@ -68,7 +68,7 @@ Timeless.
 
 ## Body
 
-Inter
+Manrope
 
 Purpose
 
@@ -88,21 +88,23 @@ Friendly.
 
 Invisible.
 
-Inter should disappear and allow the story to shine.
+Manrope should disappear and allow the story to shine.
 
 ---
 
-# Alternative Pairing
+# Typography Decision
 
-Display
+Approved display
 
-Cormorant Garamond
+Newsreader
 
-Body
+Approved body
 
 Manrope
 
-Use only if licensing or performance requires it.
+Instrument Serif, Fraunces, and Cormorant Garamond remain archived in the internal Typography Lab.
+
+Canela is not part of the production pairing. It may only be added to the Typography Lab if an appropriate webfont license is secured.
 
 ---
 

@@ -4,90 +4,101 @@
 
 Joshua's Point is a private architectural retreat in Negros Oriental, Philippines.
 
-More than a website, this repository contains the complete digital experience of Joshua's Point, including its design system, content architecture, brand guidelines, and Next.js application.
+This repository contains the complete digital ecosystem of Joshua's Point, including the website, design system, content architecture, and brand documentation.
 
-Our goal is simple:
+Our goal is not simply to build a website.
 
-Create one of the most authentic and timeless hospitality websites on the web.
+Our goal is to create one of the most authentic digital experiences in hospitality.
+
+---
+
+# Table of Contents
+
+- Vision
+- Philosophy
+- Technology Stack
+- Repository Structure
+- Documentation
+- Development Workflow
+- Design Principles
+- AI Collaboration
+- Roadmap
+- License
 
 ---
 
 # Vision
 
-Joshua's Point is not built around luxury.
+Joshua's Point is a place where architecture quietly frames nature.
 
-It is built around feeling.
+The digital experience should feel exactly the same.
 
-Morning coffee on the deck.
+Every design decision should create calm.
 
-The sound of birds before sunrise.
+Every animation should feel natural.
 
-Rain moving across the mountains.
+Every sentence should feel welcoming.
 
-Quiet evenings beside the pool.
-
-Every design decision should support these experiences.
+Every photograph should invite people into a real moment.
 
 ---
 
-# Project Principles
+# Philosophy
 
-- Nature is the hero.
-- Architecture frames the landscape.
-- Simplicity creates elegance.
-- Photography tells the story.
-- Motion should feel natural.
-- Technology should disappear behind the experience.
-- Every page should leave visitors calmer than before.
+We believe that great hospitality websites do not sell.
+
+They invite.
+
+Joshua's Point should never feel like marketing.
+
+It should feel like arriving.
 
 ---
 
-# Technology
+# Technology Stack
 
-Frontend
+## Frontend
 
 - Next.js
 - React
 - TypeScript
 
-Content
+## CMS
 
 - Sanity CMS
 
-Deployment
+## Deployment
 
 - Vercel
 
-Version Control
+## Version Control
 
 - GitHub
 
-Development
+## Development
 
 - VS Code
-- Codex
 - ChatGPT
+- Codex
 
 ---
 
 # Repository Structure
 
 ```
-
 docs/
-design-system/
-joshuas-point-book/
-project-rules.md
+├── design-system/
+├── joshuas-point-book/
+└── project-rules.md
 
 web/
-Next.js Application
+Next.js application
 
 schemaTypes/
-Sanity Schemas
+Sanity schemas
 
 static/
-Static Assets
-
+Static assets
 ```
 
 ---
@@ -96,69 +107,147 @@ Static Assets
 
 ## Joshua's Point Book
 
-The story behind Joshua's Point.
-
-The place.
-
-The family.
-
-The philosophy.
-
-The memories.
+Contains the philosophy, story, personality and long-term vision of Joshua's Point.
 
 ---
 
 ## Design System
 
-Defines every visual and interaction rule including:
+Defines every visual rule of the project.
 
-- Colors
+Including:
+
+- Color System
 - Typography
 - Spacing
 - Photography
 - Motion
 - Components
+- Day & Evening
 - Writing Style
-- Day & Evening Themes
+- Roadmap
 
 ---
 
 ## Project Rules
 
-Every contributor—including AI assistants—must follow the rules defined in:
+Every contributor should read:
 
 ```
-
 docs/project-rules.md
-
 ```
+
+before writing code.
 
 ---
 
 # Development Workflow
 
 1. Define the experience.
-2. Update the Design System.
-3. Build reusable components.
-4. Test.
-5. Review.
-6. Deploy.
+2. Update documentation.
+3. Update the Design System.
+4. Build reusable components.
+5. Test.
+6. Review.
+7. Deploy.
 
 No feature should bypass the Design System.
 
 ---
 
+# Design Principles
+
+Nature comes first.
+
+Architecture frames nature.
+
+Photography is more important than decoration.
+
+Motion should never distract.
+
+Technology should disappear behind the experience.
+
+Guests should feel welcomed.
+
+Never sold to.
+
+---
+
+# AI Collaboration
+
+## ChatGPT
+
+Creative direction
+
+UX
+
+Brand
+
+Storytelling
+
+Architecture
+
+Planning
+
+---
+
+## Codex
+
+Implementation
+
+Refactoring
+
+Testing
+
+Component development
+
+---
+
+## Claude (Optional)
+
+Architecture review
+
+Code review
+
+Alternative implementation ideas
+
+---
+
+# Roadmap
+
+Current Phase
+
+✅ Project Foundation
+
+✅ Brand Documentation
+
+✅ Design System
+
+⬜ Design Playground
+
+⬜ Website Components
+
+⬜ Homepage
+
+⬜ Content Modeling
+
+⬜ Production Website
+
+---
+
 # Long-Term Vision
 
-Joshua's Point is designed as a living project.
+Joshua's Point is not a finished product.
+
+It is a living project.
 
 Future expansions may include:
 
 - Journal
-- Destination Guides
 - Guest Stories
-- Printed Book
+- Destination Guides
 - Mobile App
+- Printed Book
 - Guest Guide
 - Architecture Stories
 
@@ -166,13 +255,19 @@ Every future project should follow the same Design System.
 
 ---
 
-# Mission
+# One Question Guides Every Decision
 
-We are not trying to build another villa website.
+Before approving anything ask:
 
-We are building the digital home of Joshua's Point.
+> **Would this still feel right ten years from now?**
 
-If visitors close the website already imagining themselves standing on the deck, we have succeeded.
+If the answer is yes,
+
+ship it.
+
+If the answer is no,
+
+refine it.
 
 ---
 
@@ -180,6 +275,6 @@ If visitors close the website already imagining themselves standing on the deck,
 
 Private repository.
 
-All content, photography, branding, and source code are proprietary to Joshua's Point unless explicitly stated otherwise.
+All branding, design, photography, content and source code are proprietary to Joshua's Point unless explicitly stated otherwise.
 
 © Joshua's Point
