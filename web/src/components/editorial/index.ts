@@ -6,11 +6,8 @@ export type {EditorialGridGap} from './editorial-grid'
 export {EditorialMedia} from './editorial-media'
 export type {EditorialImage, EditorialMediaRatio, EditorialMediaTone} from './editorial-media'
 export {EditorialPageHero} from './editorial-page-hero'
+export {EditorialPortableText} from './editorial-portable-text'
 export {EditorialText} from './editorial-text'
-export type {
-  EditorialHeadingSize,
-  EditorialTextTone,
-  EditorialTextVariant,
-} from './editorial-text'
+export type {EditorialHeadingSize, EditorialTextTone, EditorialTextVariant} from './editorial-text'
 export {SectionSpacing} from './section-spacing'
 export type {SectionSpacingAxis, SectionSpacingSize} from './section-spacing'
