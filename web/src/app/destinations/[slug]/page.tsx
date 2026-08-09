@@ -5,7 +5,6 @@ import {
   DestinationPhotography,
   type DestinationPhotograph,
 } from '@/components/destinations/destination-photography'
-import {DestinationMapPlaceholder} from '@/components/destinations/destination-map-placeholder'
 import {DestinationTravelInformation} from '@/components/destinations/destination-travel-information'
 import {
   EditorialContainer,
@@ -15,6 +14,7 @@ import {
   EditorialText,
   SectionSpacing,
 } from '@/components/editorial'
+import {DestinationMap} from '@/components/maps'
 import {NearbyDiveSites, RelatedJournalArticles, RelatedPlaces} from '@/components/relationships'
 import {SiteHeader} from '@/components/site/site-header'
 import {getEditorialImage} from '@/sanity/image'
@@ -179,7 +179,19 @@ export default async function DestinationPage({params}: DestinationPageProps) {
           tips={destination.tips}
         />
 
-        <DestinationMapPlaceholder location={destination.mapLocation} />
+        <DestinationMap
+          coordinates={
+            destination.mapLocation?.coordinates
+              ? {
+                  latitude: destination.mapLocation.coordinates.lat,
+                  longitude: destination.mapLocation.coordinates.lng,
+                }
+              : undefined
+          }
+          destinationTitle={destination.title}
+          directionsUrl={destination.mapLocation?.directionsUrl}
+          locationLabel={destination.mapLocation?.label}
+        />
 
         {destination.photographyNotes.length > 0 ? (
           <SectionSpacing aria-labelledby="photography-notes-title" size="generous">
