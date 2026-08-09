@@ -10,6 +10,8 @@ import {
 } from '@/components/editorial'
 import {SiteHeader} from '@/components/site/site-header'
 
+import {submitEnquiry} from './actions'
+
 export const metadata: Metadata = {
   title: "Contact | Joshua's Point",
   description:
@@ -147,7 +149,7 @@ export default function ContactPage() {
               </div>
 
               <div className="lg:col-span-7 lg:col-start-6">
-                <EnquiryForm />
+                <EnquiryForm action={submitEnquiry} />
               </div>
             </EditorialGrid>
           </EditorialContainer>

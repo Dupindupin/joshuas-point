@@ -4,6 +4,11 @@ import type {NextConfig} from 'next'
 import {sanityConfig} from './src/sanity/config'
 
 const nextConfig: NextConfig = {
+  experimental: {
+    serverActions: {
+      bodySizeLimit: '32kb',
+    },
+  },
   images: {
     remotePatterns: [
       {

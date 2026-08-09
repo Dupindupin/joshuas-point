@@ -1,12 +1,16 @@
 'use client'
 
-import {useState} from 'react'
-import type {FormEvent} from 'react'
+import {useActionState, useEffect, useRef} from 'react'
+import type {FormEvent, ReactNode} from 'react'
 
-export type EnquiryFormAction = (formData: FormData) => Promise<void> | void
+import {
+  initialEnquiryFormState,
+  type EnquiryField,
+  type EnquiryFormAction,
+} from '@/lib/enquiry/types'
 
 type EnquiryFormProps = {
-  action?: EnquiryFormAction
+  action: EnquiryFormAction
 }
 
 const inputClasses =
@@ -26,13 +30,29 @@ function RequiredLabel({children}: {children: string}) {
   )
 }
 
+function FieldError({children, id}: {children?: ReactNode; id: string}) {
+  if (!children) return null
+
+  return (
+    <p className="mt-2 font-body text-sm leading-6 text-timber" id={id}>
+      {children}
+    </p>
+  )
+}
+
 export function EnquiryForm({action}: EnquiryFormProps) {
-  const [developmentMessage, setDevelopmentMessage] = useState<string>()
+  const [state, formAction, pending] = useActionState(action, initialEnquiryFormState)
+  const formRef = useRef<HTMLFormElement>(null)
+
+  useEffect(() => {
+    if (state.status === 'success') formRef.current?.reset()
+  }, [state.status])
+
+  function fieldError(field: EnquiryField) {
+    return state.fieldErrors?.[field]
+  }
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    if (action) return
-
-    event.preventDefault()
     const form = event.currentTarget
     const formData = new FormData(form)
     const arrivalDate = String(formData.get('arrivalDate') ?? '')
@@ -43,28 +63,33 @@ export function EnquiryForm({action}: EnquiryFormProps) {
       departureInput?.setCustomValidity('Departure must be after arrival.')
       departureInput?.reportValidity()
       departureInput?.focus()
-      setDevelopmentMessage(undefined)
+      event.preventDefault()
       return
     }
 
     departureInput?.setCustomValidity('')
-    setDevelopmentMessage(
-      'Your enquiry has not been sent. Delivery will be enabled after transactional email is configured.',
-    )
   }
 
   return (
     <form
-      action={action}
-      aria-describedby="enquiry-form-development-note enquiry-form-privacy-note"
+      action={formAction}
+      aria-describedby="enquiry-form-delivery-note enquiry-form-privacy-note"
+      aria-label="Stay enquiry"
       className="w-full"
       onSubmit={handleSubmit}
+      ref={formRef}
     >
       <div
         className="border-l border-charcoal/25 pl-5 font-body text-sm leading-7 text-charcoal/65 sm:pl-6"
-        id="enquiry-form-development-note"
+        id="enquiry-form-delivery-note"
       >
-        Development form: details entered here are not sent or stored yet.
+        Your details are sent securely for the sole purpose of responding to this enquiry. They are
+        not stored in the website CMS.
+      </div>
+
+      <div aria-hidden="true" className="absolute -left-[10000px] h-px w-px overflow-hidden">
+        <label htmlFor="enquiry-website">Website</label>
+        <input autoComplete="off" id="enquiry-website" name="website" tabIndex={-1} type="text" />
       </div>
 
       <fieldset className="mt-14">
@@ -77,6 +102,8 @@ export function EnquiryForm({action}: EnquiryFormProps) {
             </label>
             <input
               autoComplete="name"
+              aria-describedby={fieldError('name') ? 'enquiry-name-error' : undefined}
+              aria-invalid={fieldError('name') ? true : undefined}
               className={inputClasses}
               id="enquiry-name"
               maxLength={100}
@@ -84,6 +111,7 @@ export function EnquiryForm({action}: EnquiryFormProps) {
               required
               type="text"
             />
+            <FieldError id="enquiry-name-error">{fieldError('name')}</FieldError>
           </div>
 
           <div>
@@ -92,6 +120,8 @@ export function EnquiryForm({action}: EnquiryFormProps) {
             </label>
             <input
               autoComplete="email"
+              aria-describedby={fieldError('email') ? 'enquiry-email-error' : undefined}
+              aria-invalid={fieldError('email') ? true : undefined}
               className={inputClasses}
               id="enquiry-email"
               maxLength={254}
@@ -99,6 +129,7 @@ export function EnquiryForm({action}: EnquiryFormProps) {
               required
               type="email"
             />
+            <FieldError id="enquiry-email-error">{fieldError('email')}</FieldError>
           </div>
 
           <div className="sm:col-span-2">
@@ -107,6 +138,8 @@ export function EnquiryForm({action}: EnquiryFormProps) {
             </label>
             <input
               autoComplete="tel"
+              aria-describedby={fieldError('phone') ? 'enquiry-phone-error' : undefined}
+              aria-invalid={fieldError('phone') ? true : undefined}
               className={inputClasses}
               id="enquiry-phone"
               inputMode="tel"
@@ -114,6 +147,7 @@ export function EnquiryForm({action}: EnquiryFormProps) {
               name="phone"
               type="tel"
             />
+            <FieldError id="enquiry-phone-error">{fieldError('phone')}</FieldError>
           </div>
 
           <div>
@@ -121,12 +155,17 @@ export function EnquiryForm({action}: EnquiryFormProps) {
               <RequiredLabel>Arrival date</RequiredLabel>
             </label>
             <input
+              aria-describedby={
+                fieldError('arrivalDate') ? 'enquiry-arrival-date-error' : undefined
+              }
+              aria-invalid={fieldError('arrivalDate') ? true : undefined}
               className={inputClasses}
               id="enquiry-arrival-date"
               name="arrivalDate"
               required
               type="date"
             />
+            <FieldError id="enquiry-arrival-date-error">{fieldError('arrivalDate')}</FieldError>
           </div>
 
           <div>
@@ -134,6 +173,10 @@ export function EnquiryForm({action}: EnquiryFormProps) {
               <RequiredLabel>Departure date</RequiredLabel>
             </label>
             <input
+              aria-describedby={
+                fieldError('departureDate') ? 'enquiry-departure-date-error' : undefined
+              }
+              aria-invalid={fieldError('departureDate') ? true : undefined}
               className={inputClasses}
               id="enquiry-departure-date"
               name="departureDate"
@@ -141,6 +184,7 @@ export function EnquiryForm({action}: EnquiryFormProps) {
               required
               type="date"
             />
+            <FieldError id="enquiry-departure-date-error">{fieldError('departureDate')}</FieldError>
           </div>
 
           <div>
@@ -148,15 +192,19 @@ export function EnquiryForm({action}: EnquiryFormProps) {
               <RequiredLabel>Number of guests</RequiredLabel>
             </label>
             <input
+              aria-describedby={fieldError('guests') ? 'enquiry-guests-error' : undefined}
+              aria-invalid={fieldError('guests') ? true : undefined}
               className={inputClasses}
               id="enquiry-guests"
               inputMode="numeric"
+              max={50}
               min={1}
               name="guests"
               required
               step={1}
               type="number"
             />
+            <FieldError id="enquiry-guests-error">{fieldError('guests')}</FieldError>
           </div>
 
           <div className="sm:col-span-2">
@@ -164,6 +212,8 @@ export function EnquiryForm({action}: EnquiryFormProps) {
               <RequiredLabel>Message</RequiredLabel>
             </label>
             <textarea
+              aria-describedby={fieldError('message') ? 'enquiry-message-error' : undefined}
+              aria-invalid={fieldError('message') ? true : undefined}
               className={`${inputClasses} min-h-40 resize-y leading-8`}
               id="enquiry-message"
               maxLength={2000}
@@ -171,6 +221,7 @@ export function EnquiryForm({action}: EnquiryFormProps) {
               required
               rows={6}
             />
+            <FieldError id="enquiry-message-error">{fieldError('message')}</FieldError>
           </div>
         </div>
       </fieldset>
@@ -185,17 +236,18 @@ export function EnquiryForm({action}: EnquiryFormProps) {
 
       <div className="mt-10 flex flex-col items-start gap-6 sm:flex-row sm:items-center">
         <button
-          className="inline-flex min-h-12 items-center justify-center rounded-full border border-charcoal bg-charcoal px-7 py-3 font-body text-sm font-semibold tracking-[0.01em] text-linen hover:border-forest hover:bg-forest focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-forest"
+          className="inline-flex min-h-12 items-center justify-center rounded-full border border-charcoal bg-charcoal px-7 py-3 font-body text-sm font-semibold tracking-[0.01em] text-linen hover:border-forest hover:bg-forest focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-forest disabled:cursor-wait disabled:opacity-55"
+          disabled={pending}
           type="submit"
         >
-          Prepare enquiry
+          {pending ? 'Sending enquiry…' : 'Send enquiry'}
         </button>
         <p
-          aria-live="polite"
-          className="max-w-md font-body text-sm leading-7 text-charcoal/68"
-          role="status"
+          aria-live={state.status === 'error' ? 'assertive' : 'polite'}
+          className={`max-w-md font-body text-sm leading-7 ${state.status === 'error' ? 'text-timber' : 'text-charcoal/68'}`}
+          role={state.status === 'error' ? 'alert' : 'status'}
         >
-          {developmentMessage}
+          {state.message}
         </p>
       </div>
     </form>
