@@ -48,6 +48,7 @@ const studioSections: StudioSection[] = [
     id: 'travel-guide',
     title: 'Travel Guide',
     documents: [
+      {type: 'destinationsPage', title: 'Destinations Page', singleton: true},
       {type: 'destination', title: 'Destinations', ordering: [{field: 'title', direction: 'asc'}]},
       {type: 'diveSite', title: 'Dive Sites', ordering: [{field: 'name', direction: 'asc'}]},
       {type: 'experience', title: 'Experiences', ordering: [{field: 'title', direction: 'asc'}]},

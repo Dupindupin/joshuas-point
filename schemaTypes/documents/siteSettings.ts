@@ -15,6 +15,7 @@ export const siteSettings = defineType({
     {name: 'identity', title: 'Identity', default: true},
     {name: 'seo', title: 'SEO'},
     {name: 'contact', title: 'Contact'},
+    {name: 'location', title: 'Location'},
     {name: 'navigation', title: 'Navigation'},
     {name: 'footer', title: 'Footer'},
     {name: 'booking', title: 'Booking'},
@@ -91,6 +92,14 @@ export const siteSettings = defineType({
       type: 'contactDetails',
       group: 'contact',
       description: 'Public contact details shared across the website.',
+      validation: (rule) => rule.required(),
+    }),
+    defineField({
+      name: 'propertyLocation',
+      title: "Joshua's Point Location",
+      type: 'mapLocation',
+      group: 'location',
+      description: 'Verified property location used as the origin for destination travel guidance.',
       validation: (rule) => rule.required(),
     }),
     defineField({

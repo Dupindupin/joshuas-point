@@ -37,12 +37,14 @@ export const defineSeoField = () =>
     description: 'Optional overrides. Empty values inherit the defaults from Site Settings.',
   })
 
-export const defineLastReviewedAtField = () =>
+export const defineLastReviewedAtField = ({required = false}: {required?: boolean} = {}) =>
   defineField({
     name: 'lastReviewedAt',
     title: 'Last Reviewed At',
     type: 'datetime',
     group: 'governance',
-    description:
-      'Optional date of the most recent material factual review. This is not displayed publicly.',
+    description: required
+      ? 'Date of the most recent material factual review. Required because this content contains changeable guidance.'
+      : 'Optional date of the most recent material factual review. This is not displayed publicly.',
+    validation: required ? (rule) => rule.required() : undefined,
   })
