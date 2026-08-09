@@ -1,5 +1,7 @@
 import {destination} from './documents/destination'
 import {destinationsPage} from './documents/destinationsPage'
+import {diveSite} from './documents/diveSite'
+import {diveSitesPage} from './documents/diveSitesPage'
 import {homePage} from './documents/homePage'
 import {room} from './documents/room'
 import {siteSettings} from './documents/siteSettings'
@@ -29,6 +31,7 @@ import {socialLink} from './objects/socialLink'
 import {video} from './objects/video'
 import {travelInformation} from './objects/travelInformation'
 import {travelTime} from './objects/travelTime'
+import {visibilityRange} from './objects/visibilityRange'
 
 export const schemaTypes = [
   siteSettings,
@@ -36,6 +39,8 @@ export const schemaTypes = [
   room,
   destinationsPage,
   destination,
+  diveSitesPage,
+  diveSite,
   editorialImage,
   seo,
   link,
@@ -58,6 +63,7 @@ export const schemaTypes = [
   openingInformation,
   travelInformation,
   scooterGuide,
+  visibilityRange,
   gallery,
   quote,
   video,

@@ -50,6 +50,7 @@ const studioSections: StudioSection[] = [
     documents: [
       {type: 'destinationsPage', title: 'Destinations Page', singleton: true},
       {type: 'destination', title: 'Destinations', ordering: [{field: 'title', direction: 'asc'}]},
+      {type: 'diveSitesPage', title: 'Dive Sites Page', singleton: true},
       {type: 'diveSite', title: 'Dive Sites', ordering: [{field: 'name', direction: 'asc'}]},
       {type: 'experience', title: 'Experiences', ordering: [{field: 'title', direction: 'asc'}]},
       {
