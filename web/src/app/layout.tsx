@@ -1,6 +1,7 @@
 import type {Metadata} from 'next'
 import {Geist_Mono} from 'next/font/google'
 
+import {SiteFooter} from '@/components/site/site-footer'
 import {brandFontVariables} from '@/styles/fonts'
 
 import './globals.css'
@@ -19,7 +20,10 @@ export const metadata: Metadata = {
 export default function RootLayout({children}: LayoutProps<'/'>) {
   return (
     <html lang="en" className={`${brandFontVariables} ${geistMono.variable} h-full antialiased`}>
-      <body className="flex min-h-full flex-col font-body">{children}</body>
+      <body className="flex min-h-full flex-col font-body">
+        {children}
+        <SiteFooter />
+      </body>
     </html>
   )
 }

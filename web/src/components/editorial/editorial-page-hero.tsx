@@ -1,6 +1,6 @@
 type EditorialPageHeroProps = {
   eyebrow: string
-  introduction: string
+  introduction?: string
   title: string
 }
 
@@ -14,9 +14,11 @@ export function EditorialPageHero({eyebrow, introduction, title}: EditorialPageH
         <h1 className="mt-8 font-display text-[4.25rem] leading-[0.84] font-medium tracking-[-0.045em] sm:text-[5.5rem] lg:col-span-10 lg:col-start-3 lg:mt-0 lg:text-[7.75rem] xl:text-[9rem]">
           {title}
         </h1>
-        <p className="mt-14 max-w-lg font-body text-base leading-8 text-charcoal/72 sm:text-lg sm:leading-9 lg:col-span-5 lg:col-start-8 lg:row-start-2 lg:mt-20">
-          {introduction}
-        </p>
+        {introduction ? (
+          <p className="mt-14 max-w-lg font-body text-base leading-8 text-charcoal/72 sm:text-lg sm:leading-9 lg:col-span-5 lg:col-start-8 lg:row-start-2 lg:mt-20">
+            {introduction}
+          </p>
+        ) : null}
       </div>
     </header>
   )
