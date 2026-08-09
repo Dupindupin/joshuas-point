@@ -6,6 +6,8 @@ import {
   defineSeoField,
   defineWorkflowStatusField,
 } from '../fields/commonEditorialFields'
+import {prepareEditorialPreview} from '../editorial/preview'
+import {defineEditorialWarnings} from '../editorial/warnings'
 
 export const room = defineType({
   name: 'room',
@@ -13,6 +15,11 @@ export const room = defineType({
   type: 'document',
   description:
     'One accommodation and its editorial story. Pricing and availability do not belong here.',
+  validation: defineEditorialWarnings({
+    creditImagePaths: ['previewImage', 'hero.image'],
+    heroImagePath: 'hero.image',
+    staleAfterDays: 365,
+  }),
   groups: [
     {name: 'identity', title: 'Identity', default: true},
     {name: 'story', title: 'Story'},
@@ -68,6 +75,7 @@ export const room = defineType({
       type: 'pageHero',
       group: 'story',
       description: 'Opening content for the individual room page.',
+      options: {collapsible: true, collapsed: false},
       validation: (rule) => rule.required(),
     }),
     defineField({
@@ -92,7 +100,9 @@ export const room = defineType({
       title: 'Gallery',
       type: 'gallery',
       group: 'story',
-      description: 'Optional ordered room gallery.',
+      description:
+        'Optional ordered room gallery. Include different views that help a guest understand the space.',
+      options: {collapsible: true, collapsed: true},
     }),
     defineField({
       name: 'closingReflection',
@@ -108,6 +118,7 @@ export const room = defineType({
       type: 'capacity',
       group: 'details',
       description: 'Factual occupancy information.',
+      options: {collapsible: true, collapsed: false},
       validation: (rule) => rule.required(),
     }),
     defineField({
@@ -125,7 +136,36 @@ export const room = defineType({
   ],
   preview: {
     select: {
+      capacityLabel: 'capacity.displayLabel',
+      heroMedia: 'hero.image',
+      lastReviewedAt: 'lastReviewedAt',
+      maxGuests: 'capacity.maxGuests',
+      previewMedia: 'previewImage',
       title: 'title',
+      workflowStatus: 'workflowStatus',
+    },
+    prepare({
+      capacityLabel,
+      heroMedia,
+      lastReviewedAt,
+      maxGuests,
+      previewMedia,
+      title,
+      workflowStatus,
+    }) {
+      const subtitle = capacityLabel
+        ? String(capacityLabel)
+        : maxGuests
+          ? `Up to ${maxGuests} guest${Number(maxGuests) === 1 ? '' : 's'}`
+          : 'Capacity not set'
+
+      return prepareEditorialPreview({
+        lastReviewedAt,
+        media: heroMedia ?? previewMedia,
+        subtitle,
+        title,
+        workflowStatus,
+      })
     },
   },
 })

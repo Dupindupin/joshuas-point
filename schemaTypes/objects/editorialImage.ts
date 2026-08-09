@@ -10,7 +10,8 @@ export const editorialImage = defineType({
   name: 'editorialImage',
   title: 'Editorial Image',
   type: 'image',
-  description: 'Photography with the accessibility and credit information needed for publication.',
+  description:
+    'Photography with the accessibility, caption, and rights information needed for publication. Complete the credit whenever an image is added.',
   options: {
     hotspot: true,
   },
@@ -41,7 +42,8 @@ export const editorialImage = defineType({
       name: 'credit',
       title: 'Credit',
       type: 'string',
-      description: 'Optional photographer or source credit.',
+      description:
+        'Photographer or approved source credit. Leave empty only when the image rights record explicitly requires no public credit.',
     }),
     defineField({
       name: 'creditUrl',

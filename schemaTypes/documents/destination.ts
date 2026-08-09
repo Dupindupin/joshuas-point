@@ -6,6 +6,8 @@ import {
   defineSeoField,
   defineWorkflowStatusField,
 } from '../fields/commonEditorialFields'
+import {prepareEditorialPreview} from '../editorial/preview'
+import {defineEditorialWarnings} from '../editorial/warnings'
 
 type ReferenceValue = {
   _ref?: string
@@ -30,6 +32,11 @@ export const destination = defineType({
   type: 'document',
   description:
     'A carefully written, locally verified guide to one place guests can explore from Joshua’s Point.',
+  validation: defineEditorialWarnings({
+    creditImagePaths: ['heroImage'],
+    heroImagePath: 'heroImage',
+    staleAfterDays: 90,
+  }),
   groups: [
     {name: 'identity', title: 'Identity', default: true},
     {name: 'story', title: 'Editorial Story'},
@@ -100,6 +107,7 @@ export const destination = defineType({
       group: 'story',
       description:
         'Optional ordered photography that expands the visual understanding of the place.',
+      options: {collapsible: true, collapsed: true},
     }),
     defineField({
       name: 'editorialIntroduction',
@@ -152,6 +160,7 @@ export const destination = defineType({
       type: 'travelInformation',
       group: 'travel',
       description: 'Reviewed practical details for planning an independent visit.',
+      options: {collapsible: true, collapsed: false},
       validation: (rule) => rule.required(),
     }),
     defineField({
@@ -170,6 +179,7 @@ export const destination = defineType({
       group: 'travel',
       description:
         'Required when Scooter Friendly is enabled. Remove it when scooter travel is unsuitable.',
+      options: {collapsible: true, collapsed: true},
       validation: (rule) =>
         rule.custom((value, context) => {
           const scooterFriendly = context.document?.scooterFriendly
@@ -206,6 +216,7 @@ export const destination = defineType({
       type: 'mapLocation',
       group: 'location',
       description: 'Verified provider-neutral location used for maps and accessible orientation.',
+      options: {collapsible: true, collapsed: false},
       validation: (rule) => rule.required(),
     }),
     defineField({
@@ -247,17 +258,25 @@ export const destination = defineType({
   ],
   preview: {
     select: {
-      title: 'title',
-      subtitle: 'destinationType',
+      lastReviewedAt: 'lastReviewedAt',
       media: 'heroImage',
+      subtitle: 'destinationType',
+      title: 'title',
+      workflowStatus: 'workflowStatus',
     },
-    prepare({title, subtitle, media}) {
+    prepare({lastReviewedAt, media, subtitle, title, workflowStatus}) {
       const formattedType = subtitle
         ? String(subtitle)
             .replace(/([A-Z])/g, ' $1')
             .replace(/^./, (value) => value.toUpperCase())
         : 'Destination'
-      return {title, subtitle: formattedType, media}
+      return prepareEditorialPreview({
+        lastReviewedAt,
+        media,
+        subtitle: formattedType,
+        title,
+        workflowStatus,
+      })
     },
   },
 })

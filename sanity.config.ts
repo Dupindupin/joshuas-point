@@ -2,6 +2,11 @@ import {defineConfig} from 'sanity'
 import {structureTool} from 'sanity/structure'
 import {visionTool} from '@sanity/vision'
 import {schemaTypes} from './schemaTypes'
+import {
+  reviewDateBadge,
+  supportsEditorialBadges,
+  workflowStatusBadge,
+} from './schemaTypes/editorial/badges'
 import {singletonTypes, structure} from './schemaTypes/structure'
 
 export default defineConfig({
@@ -26,5 +31,9 @@ export default defineConfig({
             ({action}) => action && ['publish', 'discardChanges', 'restore'].includes(action),
           )
         : actions,
+    badges: (badges, context) =>
+      supportsEditorialBadges(context.schemaType)
+        ? [...badges, workflowStatusBadge, reviewDateBadge]
+        : badges,
   },
 })

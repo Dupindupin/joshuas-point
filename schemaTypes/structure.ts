@@ -23,6 +23,55 @@ type StudioSection = {
   documents: StudioDocument[]
 }
 
+type EditorialDocument = {
+  heroImagePath: string
+  type: string
+}
+
+type DashboardView = {
+  filter: string
+  id: string
+  title: string
+}
+
+const studioApiVersion = '2026-08-09'
+
+const editorialDocuments: EditorialDocument[] = [
+  {type: 'room', heroImagePath: 'hero.image'},
+  {type: 'destination', heroImagePath: 'heroImage'},
+  {type: 'diveSite', heroImagePath: 'heroImage'},
+  {type: 'experience', heroImagePath: 'heroImage'},
+  {type: 'journalArticle', heroImagePath: 'heroImage'},
+]
+
+const dashboardViews: DashboardView[] = [
+  {
+    id: 'needs-review',
+    title: 'Needs Review',
+    filter: '_type in $types && workflowStatus == "inReview"',
+  },
+  {
+    id: 'ready-to-publish',
+    title: 'Ready to Publish',
+    filter: '_type in $types && workflowStatus == "approved" && _id in path("drafts.**")',
+  },
+  {
+    id: 'recently-updated',
+    title: 'Recently Updated',
+    filter: '_type in $types && dateTime(_updatedAt) > dateTime(now()) - 60 * 60 * 24 * 30',
+  },
+  {
+    id: 'missing-seo',
+    title: 'Missing SEO',
+    filter: '_type in $types && (!defined(seo.metaDescription) || seo.metaDescription == "")',
+  },
+  {
+    id: 'missing-review-date',
+    title: 'Missing Review Date',
+    filter: '_type in $types && !defined(lastReviewedAt)',
+  },
+]
+
 const studioSections: StudioSection[] = [
   {
     id: 'website',
@@ -131,6 +180,63 @@ function createDocumentItem(
   return structureBuilder.listItem().id(document.type).title(document.title).child(documentList)
 }
 
+function createEditorialDesk(
+  structureBuilder: StructureBuilder,
+  context: StructureResolverContext,
+) {
+  const registeredDocuments = editorialDocuments.filter(({type}) =>
+    isRegisteredDocument(context, type),
+  )
+  if (registeredDocuments.length === 0) return null
+
+  const types = registeredDocuments.map(({type}) => type)
+  const missingPhotographyFilter = registeredDocuments
+    .map(({heroImagePath, type}) => `(_type == "${type}" && !defined(${heroImagePath}.asset))`)
+    .join(' || ')
+
+  const views: DashboardView[] = [
+    dashboardViews[0],
+    dashboardViews[1],
+    dashboardViews[2],
+    {
+      id: 'missing-photography',
+      title: 'Missing Photography',
+      filter: `_type in $types && (${missingPhotographyFilter})`,
+    },
+    dashboardViews[3],
+    dashboardViews[4],
+  ]
+
+  return structureBuilder
+    .listItem()
+    .id('editorial-desk')
+    .title('Editorial Desk')
+    .child(
+      structureBuilder
+        .list()
+        .id('editorial-desk-views')
+        .title('Editorial Desk')
+        .items(
+          views.map((view) =>
+            structureBuilder
+              .listItem()
+              .id(view.id)
+              .title(view.title)
+              .child(
+                structureBuilder
+                  .documentList()
+                  .id(`${view.id}-documents`)
+                  .title(view.title)
+                  .apiVersion(studioApiVersion)
+                  .filter(view.filter)
+                  .params({types})
+                  .defaultOrdering([{field: '_updatedAt', direction: 'desc'}]),
+              ),
+          ),
+        ),
+    )
+}
+
 export const structure: StructureResolver = (structureBuilder, context) => {
   const sections = studioSections
     .map((section) => ({
@@ -138,12 +244,14 @@ export const structure: StructureResolver = (structureBuilder, context) => {
       documents: section.documents.filter(({type}) => isRegisteredDocument(context, type)),
     }))
     .filter(({documents}) => documents.length > 0)
+  const editorialDesk = createEditorialDesk(structureBuilder, context)
 
   return structureBuilder
     .list()
     .title("Joshua's Point")
-    .items(
-      sections.map((section) =>
+    .items([
+      ...(editorialDesk ? [editorialDesk] : []),
+      ...sections.map((section) =>
         structureBuilder
           .listItem()
           .id(section.id)
@@ -158,5 +266,5 @@ export const structure: StructureResolver = (structureBuilder, context) => {
               ),
           ),
       ),
-    )
+    ])
 }

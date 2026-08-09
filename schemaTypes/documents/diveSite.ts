@@ -6,6 +6,8 @@ import {
   defineSeoField,
   defineWorkflowStatusField,
 } from '../fields/commonEditorialFields'
+import {prepareEditorialPreview} from '../editorial/preview'
+import {defineEditorialWarnings} from '../editorial/warnings'
 
 type ReferenceValue = {
   _ref?: string
@@ -17,6 +19,11 @@ export const diveSite = defineType({
   type: 'document',
   description:
     'An editorial and practical field guide to one verified dive site in Southern Negros.',
+  validation: defineEditorialWarnings({
+    creditImagePaths: ['heroImage'],
+    heroImagePath: 'heroImage',
+    staleAfterDays: 90,
+  }),
   groups: [
     {name: 'identity', title: 'Identity', default: true},
     {name: 'story', title: 'Editorial Guide'},
@@ -75,6 +82,7 @@ export const diveSite = defineType({
       type: 'gallery',
       group: 'story',
       description: 'Optional ordered photography that adds editorial understanding of the site.',
+      options: {collapsible: true, collapsed: true},
     }),
     defineField({
       name: 'description',
@@ -208,6 +216,7 @@ export const diveSite = defineType({
       group: 'location',
       description:
         'Verified provider-neutral coordinates. Use a safe meeting point when exact coordinates are sensitive.',
+      options: {collapsible: true, collapsed: false},
       validation: (rule) => rule.required(),
     }),
     defineField({
@@ -253,15 +262,23 @@ export const diveSite = defineType({
   ],
   preview: {
     select: {
+      lastReviewedAt: 'lastReviewedAt',
       media: 'heroImage',
       subtitle: 'diveLevel',
       title: 'name',
+      workflowStatus: 'workflowStatus',
     },
-    prepare({media, subtitle, title}) {
+    prepare({lastReviewedAt, media, subtitle, title, workflowStatus}) {
       const formattedLevel = subtitle
         ? `${String(subtitle).replace(/^./, (value) => value.toUpperCase())} dive site`
         : 'Dive site'
-      return {media, subtitle: formattedLevel, title}
+      return prepareEditorialPreview({
+        lastReviewedAt,
+        media,
+        subtitle: formattedLevel,
+        title,
+        workflowStatus,
+      })
     },
   },
 })

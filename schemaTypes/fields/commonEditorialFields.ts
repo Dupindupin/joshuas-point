@@ -6,7 +6,8 @@ export const defineInternalTitleField = () =>
     title: 'Internal Title',
     type: 'string',
     group: 'governance',
-    description: 'Studio-only title used to identify this document. It may match the public title.',
+    description:
+      'Studio-only working title used to distinguish this document in editorial views. It may match the public title.',
     validation: (rule) => rule.required(),
   })
 
@@ -16,7 +17,8 @@ export const defineWorkflowStatusField = () =>
     title: 'Workflow Status',
     type: 'string',
     group: 'governance',
-    description: 'Tracks editorial readiness. Publishing remains a separate Sanity action.',
+    description:
+      'Draft means work is in progress; In Review requests an editor’s attention; Approved means review is complete. Publishing remains a separate Sanity action.',
     options: {
       layout: 'radio',
       list: [
@@ -34,7 +36,9 @@ export const defineSeoField = () =>
     title: 'SEO',
     type: 'seo',
     group: 'seo',
-    description: 'Optional overrides. Empty values inherit the defaults from Site Settings.',
+    description:
+      'Page-specific search and sharing details. Empty values inherit the defaults from Site Settings, but editorial pages should normally include their own description.',
+    options: {collapsible: true, collapsed: false},
   })
 
 export const defineLastReviewedAtField = ({required = false}: {required?: boolean} = {}) =>
@@ -44,7 +48,7 @@ export const defineLastReviewedAtField = ({required = false}: {required?: boolea
     type: 'datetime',
     group: 'governance',
     description: required
-      ? 'Date of the most recent material factual review. Required because this content contains changeable guidance.'
-      : 'Optional date of the most recent material factual review. This is not displayed publicly.',
+      ? 'Set this only after the changeable facts have been materially rechecked. Required because this content contains practical guidance.'
+      : 'Set this only after a material factual review—not after a copy edit or simply opening the document.',
     validation: required ? (rule) => rule.required() : undefined,
   })

@@ -19,7 +19,8 @@ export const seo = defineType({
       title: 'Meta Description',
       type: 'text',
       rows: 3,
-      description: 'Optional search description written in the Joshua’s Point voice.',
+      description:
+        'Write one natural summary of this specific page. Describe its value plainly; do not list keywords or repeat the title.',
       validation: (rule) =>
         rule
           .max(160)
