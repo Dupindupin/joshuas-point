@@ -2,7 +2,7 @@ import {defineField, defineType} from 'sanity'
 
 export const placeStory = defineType({
   name: 'placeStory',
-  title: 'Place Story',
+  title: 'The Place',
   type: 'object',
   description: 'The first editorial story following the Homepage Hero.',
   fields: [
@@ -32,15 +32,8 @@ export const placeStory = defineType({
       name: 'image',
       title: 'Image',
       type: 'editorialImage',
-      description: 'Landscape photography supporting this story.',
-      validation: (rule) => rule.required(),
-    }),
-    defineField({
-      name: 'caption',
-      title: 'Caption',
-      type: 'text',
-      rows: 2,
-      description: 'Brief context shown beneath the image.',
+      description:
+        'Landscape photography supporting this story. Use the image Caption field for any public caption.',
       validation: (rule) => rule.required(),
     }),
   ],

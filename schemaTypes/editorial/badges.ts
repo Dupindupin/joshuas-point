@@ -4,16 +4,22 @@ const editorialDocumentTypes = new Set([
   'destination',
   'diveSite',
   'experience',
+  'homePage',
+  'housePage',
   'journalArticle',
   'room',
+  'scenicRoute',
 ])
 
 const staleAfterDays: Record<string, number> = {
   destination: 90,
   diveSite: 90,
   experience: 365,
+  homePage: 365,
+  housePage: 365,
   journalArticle: 365,
   room: 365,
+  scenicRoute: 90,
 }
 
 type EditorialDocument = SanityDocument & {

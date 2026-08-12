@@ -37,6 +37,14 @@ export const contactDetails = defineType({
         }),
     }),
     defineField({
+      name: 'whatsappUrl',
+      title: 'WhatsApp Link',
+      type: 'url',
+      description:
+        'Optional approved public WhatsApp conversation link. Leave empty until Tobias has approved this contact channel.',
+      validation: (rule) => rule.uri({scheme: ['https']}),
+    }),
+    defineField({
       name: 'address',
       title: 'Address',
       type: 'postalAddress',

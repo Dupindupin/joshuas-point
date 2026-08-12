@@ -4,7 +4,8 @@ export const homeHero = defineType({
   name: 'homeHero',
   title: 'Homepage Hero',
   type: 'object',
-  description: 'The opening image and words visitors encounter on the Homepage.',
+  description:
+    'The opening image and words visitors encounter on Home. The Hero creates emotion first and contains no visible action.',
   fields: [
     defineField({
       name: 'eyebrow',
@@ -35,18 +36,6 @@ export const homeHero = defineType({
       type: 'editorialImage',
       description: 'Full-width Homepage photography with enough space for readable text.',
       validation: (rule) => rule.required(),
-    }),
-    defineField({
-      name: 'primaryLink',
-      title: 'Primary Link',
-      type: 'link',
-      description: 'Optional primary editorial destination.',
-    }),
-    defineField({
-      name: 'secondaryLink',
-      title: 'Secondary Link',
-      type: 'link',
-      description: 'Optional quieter editorial destination.',
     }),
   ],
 })

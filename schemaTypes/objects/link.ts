@@ -46,8 +46,18 @@ export const link = defineType({
       title: 'Internal Destination',
       type: 'reference',
       description:
-        'Choose a published page or entry. More destination types will be added with future schemas.',
-      to: [{type: 'homePage'}, {type: 'room'}],
+        'Choose an intentional published destination. Only routes supported by the current frontend are available.',
+      to: [
+        {type: 'homePage'},
+        {type: 'housePage'},
+        {type: 'destinationsPage'},
+        {type: 'destination'},
+        {type: 'diveSitesPage'},
+        {type: 'diveSite'},
+        {type: 'scenicRoutesPage'},
+        {type: 'scenicRoute'},
+        {type: 'room'},
+      ],
       hidden: ({parent}) => parentKind(parent) !== 'internal',
       validation: (rule) =>
         rule.custom((value, context) => {

@@ -31,8 +31,20 @@ export const footer = defineType({
       name: 'socialLinks',
       title: 'Social Links',
       type: 'array',
-      description: 'Only include actively maintained profiles.',
+      description:
+        'The single source for official profiles used by the footer, Contact page, and structured data. Only include accounts Tobias has approved.',
       of: [defineArrayMember({type: 'socialLink'})],
+      validation: (rule) =>
+        rule.custom((value) => {
+          if (!Array.isArray(value)) return true
+          const platforms = value.flatMap((item) => {
+            if (!item || typeof item !== 'object' || !('platform' in item)) return []
+            return typeof item.platform === 'string' ? [item.platform] : []
+          })
+          return new Set(platforms).size === platforms.length
+            ? true
+            : 'Add each social platform only once.'
+        }),
     }),
     defineField({
       name: 'legalLinks',

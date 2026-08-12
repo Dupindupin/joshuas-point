@@ -18,7 +18,7 @@ export const diveSite = defineType({
   title: 'Dive Site',
   type: 'document',
   description:
-    'An editorial and practical field guide to one verified dive site in Southern Negros.',
+    'An editorial field guide to one dive site or established dive area in Southern Negros.',
   validation: defineEditorialWarnings({
     creditImagePaths: ['heroImage'],
     heroImagePath: 'heroImage',
@@ -44,7 +44,7 @@ export const diveSite = defineType({
       title: 'Name',
       type: 'string',
       group: 'identity',
-      description: 'Verified public name of this individual dive site.',
+      description: 'Verified public name of this dive site or established dive area.',
       validation: (rule) => rule.required(),
     }),
     defineField({
@@ -74,7 +74,6 @@ export const diveSite = defineType({
       type: 'editorialImage',
       group: 'identity',
       description: 'Primary underwater or place photograph for this dive-site guide.',
-      validation: (rule) => rule.required(),
     }),
     defineField({
       name: 'gallery',
@@ -83,6 +82,15 @@ export const diveSite = defineType({
       group: 'story',
       description: 'Optional ordered photography that adds editorial understanding of the site.',
       options: {collapsible: true, collapsed: true},
+    }),
+    defineField({
+      name: 'editorialPhotography',
+      title: 'Editorial Photography Story',
+      type: 'editorialPhotography',
+      group: 'story',
+      description:
+        'Guided upload sections for the page’s Hero, Opening, Journey, Details and Closing photography.',
+      options: {collapsible: true, collapsed: false},
     }),
     defineField({
       name: 'description',
@@ -117,7 +125,6 @@ export const diveSite = defineType({
       group: 'story',
       description:
         'Factual guidance reviewed by a qualified local source. Do not publish unverified advice.',
-      validation: (rule) => rule.required(),
     }),
     defineField({
       name: 'diveLevel',
@@ -133,7 +140,6 @@ export const diveSite = defineType({
           {title: 'Advanced', value: 'advanced'},
         ],
       },
-      validation: (rule) => rule.required(),
     }),
     defineField({
       name: 'maximumDepthMeters',
@@ -141,7 +147,7 @@ export const diveSite = defineType({
       type: 'number',
       group: 'conditions',
       description: 'Verified maximum depth in metric units.',
-      validation: (rule) => rule.required().positive(),
+      validation: (rule) => rule.positive(),
     }),
     defineField({
       name: 'averageDepthMeters',
@@ -165,7 +171,6 @@ export const diveSite = defineType({
       type: 'visibilityRange',
       group: 'conditions',
       description: 'Observed visibility range with context about natural variability.',
-      validation: (rule) => rule.required(),
     }),
     defineField({
       name: 'current',
@@ -182,7 +187,6 @@ export const diveSite = defineType({
           {title: 'Variable', value: 'variable'},
         ],
       },
-      validation: (rule) => rule.required(),
     }),
     defineField({
       name: 'entryType',
@@ -198,7 +202,6 @@ export const diveSite = defineType({
           {title: 'Mixed', value: 'mixed'},
         ],
       },
-      validation: (rule) => rule.required(),
     }),
     defineField({
       name: 'bestSeason',
@@ -207,7 +210,6 @@ export const diveSite = defineType({
       rows: 3,
       group: 'conditions',
       description: 'Qualified seasonal guidance acknowledging weather and natural variability.',
-      validation: (rule) => rule.required(),
     }),
     defineField({
       name: 'mapLocation',
@@ -217,7 +219,6 @@ export const diveSite = defineType({
       description:
         'Verified provider-neutral coordinates. Use a safe meeting point when exact coordinates are sensitive.',
       options: {collapsible: true, collapsed: false},
-      validation: (rule) => rule.required(),
     }),
     defineField({
       name: 'interactiveMapEnabled',

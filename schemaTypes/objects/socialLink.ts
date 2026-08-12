@@ -9,19 +9,32 @@ export const socialLink = defineType({
       name: 'platform',
       title: 'Platform',
       type: 'string',
-      description: 'Human-readable platform name.',
+      description:
+        'Choose only an official Joshua’s Point account that Tobias has approved for publication.',
+      options: {
+        list: [
+          {title: 'Instagram', value: 'instagram'},
+          {title: 'Facebook', value: 'facebook'},
+          {title: 'YouTube', value: 'youtube'},
+          {title: 'TikTok', value: 'tiktok'},
+          {title: 'Pinterest', value: 'pinterest'},
+        ],
+        layout: 'dropdown',
+      },
       validation: (rule) => rule.required(),
     }),
     defineField({
       name: 'url',
       title: 'URL',
       type: 'url',
-      description: 'Complete public profile URL.',
-      validation: (rule) => rule.required().uri({scheme: ['http', 'https']}),
+      description:
+        'Complete HTTPS URL for the confirmed public profile. Leave the profile out when it is not approved.',
+      validation: (rule) => rule.required().uri({scheme: ['https']}),
     }),
   ],
   preview: {
     select: {
+      subtitle: 'url',
       title: 'platform',
     },
   },

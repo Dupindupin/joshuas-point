@@ -32,15 +32,9 @@ export const morningNarrative = defineType({
       name: 'image',
       title: 'Image',
       type: 'editorialImage',
-      description: 'Large landscape photography that remains the focus of the section.',
+      description:
+        'Large landscape photography that remains the focus of the section. Use the image Caption field for any public caption.',
       validation: (rule) => rule.required(),
-    }),
-    defineField({
-      name: 'caption',
-      title: 'Caption',
-      type: 'text',
-      rows: 2,
-      description: 'Optional quiet context shown with the image.',
     }),
   ],
 })

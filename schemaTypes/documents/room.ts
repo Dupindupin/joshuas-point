@@ -1,3 +1,4 @@
+import type {SanityDocument} from 'sanity'
 import {defineArrayMember, defineField, defineType} from 'sanity'
 
 import {
@@ -7,22 +8,55 @@ import {
   defineWorkflowStatusField,
 } from '../fields/commonEditorialFields'
 import {prepareEditorialPreview} from '../editorial/preview'
-import {defineEditorialWarnings} from '../editorial/warnings'
+
+type RoomDocumentValue = SanityDocument & {
+  lastReviewedAt?: string
+  previewImage?: {
+    asset?: {_ref?: string}
+    credit?: string
+  }
+}
+
+const millisecondsPerDay = 24 * 60 * 60 * 1000
 
 export const room = defineType({
   name: 'room',
   title: 'Room',
   type: 'document',
   description:
-    'One accommodation and its editorial story. Pricing and availability do not belong here.',
-  validation: defineEditorialWarnings({
-    creditImagePaths: ['previewImage', 'hero.image'],
-    heroImagePath: 'hero.image',
-    staleAfterDays: 365,
-  }),
+    'One verified suite used on the Rooms page. Pricing, availability, and unsupported claims do not belong here.',
+  validation: (rule) => [
+    rule
+      .custom((value) => {
+        const document = value as RoomDocumentValue | undefined
+        if (document?.previewImage?.asset?._ref) return true
+        return 'Add verified suite photography when it is available. Do not guess the room identity.'
+      })
+      .warning(),
+    rule
+      .custom((value) => {
+        const document = value as RoomDocumentValue | undefined
+        if (!document?.previewImage?.asset?._ref || document.previewImage.credit?.trim())
+          return true
+        return 'Add credit information for the preview photograph.'
+      })
+      .warning(),
+    rule
+      .custom((value) => {
+        const document = value as RoomDocumentValue | undefined
+        if (!document?.lastReviewedAt) return 'Add a review date after the room facts are checked.'
+
+        const reviewedAt = new Date(document.lastReviewedAt)
+        if (Number.isNaN(reviewedAt.getTime())) return true
+
+        const ageInDays = (Date.now() - reviewedAt.getTime()) / millisecondsPerDay
+        if (ageInDays <= 365) return true
+        return 'The factual review is more than 365 days old. Recheck the room facts before publication.'
+      })
+      .warning(),
+  ],
   groups: [
     {name: 'identity', title: 'Identity', default: true},
-    {name: 'story', title: 'Story'},
     {name: 'details', title: 'Room Details'},
     {name: 'seo', title: 'SEO'},
     {name: 'governance', title: 'Governance'},
@@ -37,7 +71,7 @@ export const room = defineType({
       title: 'Title',
       type: 'string',
       group: 'identity',
-      description: 'Public room name.',
+      description: 'Verified public suite name.',
       validation: (rule) => rule.required(),
     }),
     defineField({
@@ -45,7 +79,8 @@ export const room = defineType({
       title: 'Slug',
       type: 'slug',
       group: 'identity',
-      description: 'URL path generated from the title. Review before publishing.',
+      description:
+        'Stable content identifier generated from the title. It does not create an individual room page.',
       options: {
         source: 'title',
         maxLength: 96,
@@ -54,11 +89,11 @@ export const room = defineType({
     }),
     defineField({
       name: 'excerpt',
-      title: 'Excerpt',
+      title: 'Short Description',
       type: 'text',
       rows: 3,
       group: 'identity',
-      description: 'Concise editorial summary used on the Rooms page and in related content.',
+      description: 'Owner-approved factual summary used on the Rooms page.',
       validation: (rule) => rule.required(),
     }),
     defineField({
@@ -66,58 +101,15 @@ export const room = defineType({
       title: 'Preview Image',
       type: 'editorialImage',
       group: 'identity',
-      description: 'Primary image used when this room appears in a collection.',
-      validation: (rule) => rule.required(),
-    }),
-    defineField({
-      name: 'hero',
-      title: 'Hero',
-      type: 'pageHero',
-      group: 'story',
-      description: 'Opening content for the individual room page.',
-      options: {collapsible: true, collapsed: false},
-      validation: (rule) => rule.required(),
-    }),
-    defineField({
-      name: 'description',
-      title: 'Description',
-      type: 'text',
-      rows: 4,
-      group: 'story',
-      description: 'Short plain-text room description.',
-      validation: (rule) => rule.required(),
-    }),
-    defineField({
-      name: 'editorialContent',
-      title: 'Editorial Content',
-      type: 'portableText',
-      group: 'story',
-      description: 'Long-form room story using the approved editorial blocks.',
-      validation: (rule) => rule.required().min(1),
-    }),
-    defineField({
-      name: 'gallery',
-      title: 'Gallery',
-      type: 'gallery',
-      group: 'story',
       description:
-        'Optional ordered room gallery. Include different views that help a guest understand the space.',
-      options: {collapsible: true, collapsed: true},
-    }),
-    defineField({
-      name: 'closingReflection',
-      title: 'Closing Reflection',
-      type: 'text',
-      rows: 3,
-      group: 'story',
-      description: 'Optional quiet paragraph closing the room page.',
+        'Optional during development. Assign only after confirming that the photograph shows this suite. Development photography must be replaced before launch.',
     }),
     defineField({
       name: 'capacity',
       title: 'Capacity',
       type: 'capacity',
       group: 'details',
-      description: 'Factual occupancy information.',
+      description: 'Owner-confirmed maximum occupancy.',
       options: {collapsible: true, collapsed: false},
       validation: (rule) => rule.required(),
     }),
@@ -126,9 +118,50 @@ export const room = defineType({
       title: 'Beds',
       type: 'array',
       group: 'details',
-      description: 'Bed configurations appear in this order.',
+      description: 'Owner-confirmed bed configurations shown in this order.',
       of: [defineArrayMember({type: 'bedConfiguration'})],
       validation: (rule) => rule.required().min(1),
+    }),
+    defineField({
+      name: 'bathroom',
+      title: 'Bathroom',
+      type: 'string',
+      group: 'details',
+      description: 'Owner-confirmed bathroom arrangement.',
+      options: {
+        list: [{title: 'Private ensuite', value: 'privateEnsuite'}],
+      },
+    }),
+    defineField({
+      name: 'outlooks',
+      title: 'Confirmed Outlooks',
+      type: 'array',
+      group: 'details',
+      description:
+        'Use only owner-confirmed outlooks. Do not expand this field from assumptions or photography.',
+      of: [
+        defineArrayMember({
+          type: 'string',
+          options: {
+            list: [
+              {title: 'Bohol Sea', value: 'boholSea'},
+              {title: 'Garden', value: 'garden'},
+              {title: 'Pool', value: 'pool'},
+            ],
+          },
+        }),
+      ],
+      validation: (rule) => rule.unique(),
+    }),
+    defineField({
+      name: 'amenities',
+      title: 'Additional Amenities',
+      type: 'array',
+      group: 'details',
+      description:
+        'Optional verified details not already represented by capacity, beds, bathroom, or outlooks.',
+      of: [defineArrayMember({type: 'roomAmenity'})],
+      validation: (rule) => rule.unique(),
     }),
     defineSeoField(),
     defineWorkflowStatusField(),
@@ -137,22 +170,13 @@ export const room = defineType({
   preview: {
     select: {
       capacityLabel: 'capacity.displayLabel',
-      heroMedia: 'hero.image',
       lastReviewedAt: 'lastReviewedAt',
       maxGuests: 'capacity.maxGuests',
       previewMedia: 'previewImage',
       title: 'title',
       workflowStatus: 'workflowStatus',
     },
-    prepare({
-      capacityLabel,
-      heroMedia,
-      lastReviewedAt,
-      maxGuests,
-      previewMedia,
-      title,
-      workflowStatus,
-    }) {
+    prepare({capacityLabel, lastReviewedAt, maxGuests, previewMedia, title, workflowStatus}) {
       const subtitle = capacityLabel
         ? String(capacityLabel)
         : maxGuests
@@ -161,7 +185,7 @@ export const room = defineType({
 
       return prepareEditorialPreview({
         lastReviewedAt,
-        media: heroMedia ?? previewMedia,
+        media: previewMedia,
         subtitle,
         title,
         workflowStatus,

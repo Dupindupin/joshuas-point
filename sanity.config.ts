@@ -1,6 +1,7 @@
 import {defineConfig} from 'sanity'
 import {structureTool} from 'sanity/structure'
 import {visionTool} from '@sanity/vision'
+import DashboardIcon from '@sanity/icons/Dashboard'
 import {schemaTypes} from './schemaTypes'
 import {
   reviewDateBadge,
@@ -8,6 +9,7 @@ import {
   workflowStatusBadge,
 } from './schemaTypes/editorial/badges'
 import {singletonTypes, structure} from './schemaTypes/structure'
+import {OwnerDashboard} from './studio/owner-dashboard/OwnerDashboard'
 
 export default defineConfig({
   name: 'default',
@@ -17,6 +19,16 @@ export default defineConfig({
   dataset: 'production',
 
   plugins: [structureTool({structure}), visionTool()],
+
+  tools: (tools) => [
+    {
+      name: 'owner-dashboard',
+      title: 'Owner Dashboard',
+      icon: DashboardIcon,
+      component: OwnerDashboard,
+    },
+    ...tools,
+  ],
 
   schema: {
     types: schemaTypes,

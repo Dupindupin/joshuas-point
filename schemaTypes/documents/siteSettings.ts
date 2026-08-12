@@ -18,6 +18,7 @@ export const siteSettings = defineType({
     {name: 'location', title: 'Location'},
     {name: 'navigation', title: 'Navigation'},
     {name: 'footer', title: 'Footer'},
+    {name: 'social', title: 'Social Presence'},
     {name: 'booking', title: 'Booking'},
   ],
   initialValue: {
@@ -52,6 +53,38 @@ export const siteSettings = defineType({
       validation: (rule) => rule.required(),
     }),
     defineField({
+      name: 'primaryLogo',
+      title: 'Primary Logo',
+      type: 'editorialImage',
+      group: 'identity',
+      description:
+        'Approved horizontal Joshua’s Point logo. Upload the production PNG from the brand asset package without changing its artwork, colour, or proportions.',
+    }),
+    defineField({
+      name: 'compactLogo',
+      title: 'Compact Logo Mark',
+      type: 'editorialImage',
+      group: 'identity',
+      description:
+        'Approved square JP signature mark for compact identity and structured data. Upload the production application icon or social-profile asset.',
+    }),
+    defineField({
+      name: 'faviconImage',
+      title: 'Favicon Reference',
+      type: 'editorialImage',
+      group: 'identity',
+      description:
+        'Approved compact JP mark used as the source reference for future browser icon exports. Do not upload redesigned artwork here.',
+    }),
+    defineField({
+      name: 'appIconImage',
+      title: 'App Icon Reference',
+      type: 'editorialImage',
+      group: 'identity',
+      description:
+        'Approved square application icon used as the source reference for touch and application icons.',
+    }),
+    defineField({
       name: 'defaultLocale',
       title: 'Default Locale',
       type: 'string',
@@ -83,8 +116,28 @@ export const siteSettings = defineType({
       title: 'Default Social Image',
       type: 'editorialImage',
       group: 'seo',
-      description: 'Landscape image used when a page does not provide its own social image.',
+      description:
+        'Approved 1200 × 630 landscape image used by Open Graph and Twitter/X when a page does not provide its own social image.',
       validation: (rule) => rule.required(),
+    }),
+    defineField({
+      name: 'squareProfileImage',
+      title: 'Square Profile Image',
+      type: 'editorialImage',
+      group: 'social',
+      description:
+        'Owner-approved square Joshua’s Point identity image used to keep official social profiles consistent. Account platforms may crop it to a circle.',
+      validation: (rule) => rule.required(),
+    }),
+    defineField({
+      name: 'instagramHighlights',
+      title: 'Home Instagram Selection',
+      type: 'array',
+      group: 'social',
+      description:
+        'Optional editorial selection for the Home page. Add no more than three approved posts; leave empty for a quiet Instagram profile link instead.',
+      of: [defineArrayMember({type: 'instagramPost'})],
+      validation: (rule) => rule.max(3),
     }),
     defineField({
       name: 'contactDetails',

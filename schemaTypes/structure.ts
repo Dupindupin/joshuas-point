@@ -37,9 +37,10 @@ type DashboardView = {
 const studioApiVersion = '2026-08-09'
 
 const editorialDocuments: EditorialDocument[] = [
-  {type: 'room', heroImagePath: 'hero.image'},
+  {type: 'room', heroImagePath: 'previewImage'},
   {type: 'destination', heroImagePath: 'heroImage'},
   {type: 'diveSite', heroImagePath: 'heroImage'},
+  {type: 'scenicRoute', heroImagePath: 'heroImage'},
   {type: 'experience', heroImagePath: 'heroImage'},
   {type: 'journalArticle', heroImagePath: 'heroImage'},
 ]
@@ -101,6 +102,8 @@ const studioSections: StudioSection[] = [
       {type: 'destination', title: 'Destinations', ordering: [{field: 'title', direction: 'asc'}]},
       {type: 'diveSitesPage', title: 'Dive Sites Page', singleton: true},
       {type: 'diveSite', title: 'Dive Sites', ordering: [{field: 'name', direction: 'asc'}]},
+      {type: 'scenicRoutesPage', title: 'Scenic Routes Page', singleton: true},
+      {type: 'scenicRoute', title: 'Scenic Routes', ordering: [{field: 'title', direction: 'asc'}]},
       {type: 'experience', title: 'Experiences', ordering: [{field: 'title', direction: 'asc'}]},
       {
         type: 'experienceCategory',

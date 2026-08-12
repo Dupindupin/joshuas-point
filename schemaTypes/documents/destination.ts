@@ -43,6 +43,7 @@ export const destination = defineType({
     {name: 'travel', title: 'Travel Information'},
     {name: 'location', title: 'Map and Location'},
     {name: 'relationships', title: 'Related Content'},
+    {name: 'social', title: 'Social Presence'},
     {name: 'seo', title: 'SEO'},
     {name: 'governance', title: 'Governance'},
   ],
@@ -97,8 +98,8 @@ export const destination = defineType({
       title: 'Hero Image',
       type: 'editorialImage',
       group: 'identity',
-      description: 'Atmospheric opening photograph for the destination page.',
-      validation: (rule) => rule.required(),
+      description:
+        'Optional opening photograph. Leave empty when no truthful, place-specific image is available; do not substitute unrelated photography.',
     }),
     defineField({
       name: 'gallery',
@@ -108,6 +109,15 @@ export const destination = defineType({
       description:
         'Optional ordered photography that expands the visual understanding of the place.',
       options: {collapsible: true, collapsed: true},
+    }),
+    defineField({
+      name: 'editorialPhotography',
+      title: 'Editorial Photography Story',
+      type: 'editorialPhotography',
+      group: 'story',
+      description:
+        'Guided upload sections for the page’s Hero, Opening, Journey, Details and Closing photography.',
+      options: {collapsible: true, collapsed: false},
     }),
     defineField({
       name: 'editorialIntroduction',
@@ -153,6 +163,16 @@ export const destination = defineType({
       group: 'story',
       description:
         'Optional guidance about light, respectful camera use, or practical equipment protection.',
+    }),
+    defineField({
+      name: 'instagramHighlights',
+      title: 'Selected Instagram Posts',
+      type: 'array',
+      group: 'social',
+      description:
+        'Optional and editorially selective. Add up to three approved posts only when they deepen this destination story. Leave empty on most destinations.',
+      of: [defineArrayMember({type: 'instagramPost'})],
+      validation: (rule) => rule.max(3),
     }),
     defineField({
       name: 'travelInformation',
