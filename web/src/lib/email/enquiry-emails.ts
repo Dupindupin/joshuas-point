@@ -1,4 +1,5 @@
 import type {EnquirySubmission} from '@/lib/enquiry/types'
+import {stayPolicyLines} from '@/lib/stay/policy'
 
 import type {EmailMessage} from './types'
 
@@ -30,6 +31,7 @@ export function createEnquiryEmails({
   replyTo,
 }: EnquiryEmailPairOptions): readonly EmailMessage[] {
   const summary = enquirySummary(enquiry)
+  const policySummary = ['Current stay information:', ...stayPolicyLines()].join('\n')
 
   return [
     {
@@ -55,6 +57,8 @@ export function createEnquiryEmails({
         'Thank you for writing to Joshua’s Point. Your enquiry has arrived, and the details you shared are included below for reference.',
         '',
         summary,
+        '',
+        policySummary,
         '',
         'This message confirms receipt of your enquiry only. It does not confirm availability or a booking.',
         '',

@@ -3,7 +3,7 @@
 import {headers} from 'next/headers'
 
 import {createEnquiryEmails} from '@/lib/email/enquiry-emails'
-import {getEnquiryEmailConfiguration} from '@/lib/email/email-service'
+import {getEnquiryEmailConfiguration, getEnquiryEmailMode} from '@/lib/email/email-service'
 import {EmailConfigurationError} from '@/lib/email/types'
 import {checkEnquiryRateLimit, hashEnquiryValue} from '@/lib/enquiry/rate-limit'
 import type {EnquiryFormState} from '@/lib/enquiry/types'
@@ -25,6 +25,12 @@ export async function submitEnquiry(
       message: 'Thank you. Your enquiry has been received.',
       status: 'success',
     }
+  }
+
+  if (getEnquiryEmailMode() === 'disabled') {
+    return errorState(
+      'Online enquiry sending is disabled on this private preview. No message was sent.',
+    )
   }
 
   const validation = validateEnquiryForm(formData)
@@ -71,8 +77,9 @@ export async function submitEnquiry(
     }
   } catch (error) {
     if (error instanceof EmailConfigurationError) {
+      console.error('Enquiry email delivery is not configured correctly.')
       return errorState(
-        'Email delivery is not configured yet. Your enquiry was not sent. Please use another confirmed contact method.',
+        'We could not send your enquiry just now. Nothing was stored. Please wait a moment and try again.',
       )
     }
 

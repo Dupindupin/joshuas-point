@@ -18,12 +18,12 @@ const positionClasses = ['md:ml-0', 'md:ml-[18%]', 'md:ml-[7%]', 'md:ml-[28%]'] 
 
 const toneClasses: Record<EditorialTextTone, {description: string; name: string}> = {
   default: {
-    description: 'text-charcoal/70',
-    name: 'text-charcoal',
+    description: 'text-ink/70',
+    name: 'text-ink',
   },
   inverse: {
-    description: 'text-linen/70',
-    name: 'text-linen',
+    description: 'text-inverse/70',
+    name: 'text-inverse',
   },
 }
 

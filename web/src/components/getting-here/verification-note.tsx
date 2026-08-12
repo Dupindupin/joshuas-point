@@ -10,14 +10,14 @@ type VerificationNoteProps = {
 
 const toneClasses: Record<VerificationNoteTone, {body: string; border: string; label: string}> = {
   default: {
-    body: 'text-charcoal/68',
-    border: 'border-charcoal/25',
-    label: 'text-charcoal/55',
+    body: 'text-ink/68',
+    border: 'border-ink/25',
+    label: 'text-ink/55',
   },
   inverse: {
-    body: 'text-linen/68',
-    border: 'border-linen/25',
-    label: 'text-linen/50',
+    body: 'text-inverse/68',
+    border: 'border-inverse/25',
+    label: 'text-inverse/50',
   },
 }
 

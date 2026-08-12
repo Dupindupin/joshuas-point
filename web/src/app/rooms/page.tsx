@@ -1,85 +1,95 @@
 import type {Metadata} from 'next'
+import {notFound} from 'next/navigation'
 
+import {EditorialAmenityList} from '@/components/amenities'
 import {
   EditorialContainer,
+  EditorialFigure,
   EditorialGrid,
-  EditorialMedia,
+  EditorialLink,
   EditorialPageHero,
   EditorialText,
   SectionSpacing,
 } from '@/components/editorial'
-import {RoomPreview, type RoomPreviewData} from '@/components/rooms/room-preview'
+import {RoomPreview} from '@/components/rooms/room-preview'
 import {SiteHeader} from '@/components/site/site-header'
+import {approvedAmenityKeys, selectApprovedAmenities} from '@/lib/amenities'
+import {createPageMetadata} from '@/lib/seo/metadata'
+import {mapSanityRoomsPage} from '@/sanity/mappers/rooms-page'
+import {getPublicAmenities} from '@/sanity/queries/amenities'
+import {getRoomsPage} from '@/sanity/queries/rooms-page'
 
-export const metadata: Metadata = {
-  title: "Rooms | Joshua's Point",
-  description: 'Rooms shaped by natural light, moving air, and the landscape of the ridge.',
+import {roomsPageData} from './rooms-page-data'
+
+export async function generateMetadata(): Promise<Metadata> {
+  const page = await getRoomsPage()
+
+  return createPageMetadata({
+    description: "Ocean Suite and Garden Suite at Joshua's Point.",
+    pathname: '/rooms',
+    seo: page?.seo,
+    socialImage: page?.featuredRooms?.find((room) => room?.previewImage)?.previewImage,
+    title: "Rooms | Joshua's Point",
+  })
 }
 
-const rooms = [
-  {
-    capacity: 'Two guests',
-    description:
-      'A quiet room along the eastern edge of the house, where early light moves slowly across timber and stone.',
-    href: '/rooms/ridge-room',
-    id: 'ridge-room',
-    name: 'The Ridge Room',
-    tone: 'morning',
-  },
-  {
-    capacity: 'Two guests',
-    description:
-      'Set closer to the planted courtyard, this room is held by deep shade, moving air, and a sheltered view of the garden.',
-    href: '/rooms/garden-room',
-    id: 'garden-room',
-    name: 'The Garden Room',
-    tone: 'stone',
-  },
-  {
-    capacity: 'Up to four guests',
-    description:
-      'A generous room for shared mornings, opening toward a quieter pocket of sky at the center of the house.',
-    href: '/rooms/courtyard-room',
-    id: 'courtyard-room',
-    name: 'The Courtyard Room',
-    tone: 'morning',
-  },
-] satisfies readonly RoomPreviewData[]
+export default async function RoomsPage() {
+  const [sanityRoomsPage, publicAmenities] = await Promise.all([
+    getRoomsPage(),
+    getPublicAmenities(),
+  ])
+  const pageData = sanityRoomsPage ? mapSanityRoomsPage(sanityRoomsPage) : roomsPageData
+  if (!pageData) notFound()
+  const sharedRoomAmenities = selectApprovedAmenities(publicAmenities, [
+    approvedAmenityKeys.airConditioning,
+    approvedAmenityKeys.wifi,
+    approvedAmenityKeys.filteredWater,
+    approvedAmenityKeys.exclusiveUse,
+  ])
 
-export default function RoomsPage() {
+  const {
+    closingReflection,
+    collectionIntroduction,
+    comfortPhilosophy,
+    editorialIntroduction,
+    hero,
+    imageBreak,
+    rooms,
+  } = pageData
+
   return (
     <>
       <SiteHeader activeHref="/rooms" appearance="solid" />
-      <main className="bg-linen">
+      <main className="bg-canvas">
         <EditorialPageHero
-          eyebrow="Accommodation"
-          introduction="Rooms arranged for unhurried mornings, open windows, and the quieter hours at the edge of the day."
-          title="Rooms"
+          eyebrow={hero.eyebrow}
+          introduction={hero.introduction}
+          title={hero.title}
         />
 
-        <SectionSpacing aria-labelledby="rooms-introduction-title" size="generous">
-          <EditorialContainer size="reading">
-            <EditorialText
-              as="h2"
-              headingSize="small"
-              id="rooms-introduction-title"
-              variant="heading"
-            >
-              Rest is part of the architecture.
-            </EditorialText>
-            <EditorialText className="mt-10 max-w-xl lg:mt-12" variant="body">
-              The rooms at Joshua’s Point are composed around shade, natural air, and a direct
-              relationship with the outdoors. Each one offers a different way of inhabiting the
-              same landscape.
-            </EditorialText>
-          </EditorialContainer>
-        </SectionSpacing>
+        {editorialIntroduction ? (
+          <SectionSpacing aria-labelledby="rooms-introduction-title" size="generous">
+            <EditorialContainer size="reading">
+              <EditorialText
+                as="h2"
+                headingSize="small"
+                id="rooms-introduction-title"
+                variant="heading"
+              >
+                {editorialIntroduction.heading}
+              </EditorialText>
+              <EditorialText className="mt-10 max-w-xl lg:mt-12" variant="body">
+                {editorialIntroduction.body}
+              </EditorialText>
+            </EditorialContainer>
+          </SectionSpacing>
+        ) : null}
 
         <SectionSpacing aria-labelledby="room-collection-title" size="generous">
           <EditorialContainer>
             <EditorialGrid>
               <EditorialText className="lg:col-span-2" variant="eyebrow">
-                The rooms
+                {collectionIntroduction.eyebrow}
               </EditorialText>
               <EditorialText
                 className="max-w-3xl lg:col-span-8 lg:col-start-3"
@@ -87,72 +97,99 @@ export default function RoomsPage() {
                 id="room-collection-title"
                 variant="heading"
               >
-                Spaces held close to the landscape.
+                {collectionIntroduction.heading}
               </EditorialText>
             </EditorialGrid>
 
             <div className="mt-12 sm:mt-16">
               {rooms.map((room, index) => (
                 <SectionSpacing as="div" key={room.id} size="compact">
-                  <RoomPreview layout={index % 2 === 0 ? 'image-left' : 'image-right'} room={room} />
+                  <RoomPreview
+                    layout={index % 2 === 0 ? 'image-left' : 'image-right'}
+                    room={room}
+                  />
                 </SectionSpacing>
               ))}
             </div>
+            <div className="mt-10 lg:ml-[16.666667%]">
+              <EditorialLink href="/plan-your-stay" label="Plan your stay" />
+            </div>
+            {sharedRoomAmenities.length > 0 ? (
+              <section
+                aria-labelledby="shared-room-amenities-title"
+                className="mt-20 border-t border-border pt-12 lg:ml-[16.666667%] lg:max-w-4xl"
+              >
+                <EditorialText variant="eyebrow">Throughout the house</EditorialText>
+                <EditorialText
+                  as="h3"
+                  className="mt-7"
+                  headingSize="small"
+                  id="shared-room-amenities-title"
+                  variant="heading"
+                >
+                  A few practical details for a stay at Joshua&apos;s Point.
+                </EditorialText>
+                <EditorialAmenityList className="mt-10" items={sharedRoomAmenities} />
+              </section>
+            ) : null}
           </EditorialContainer>
         </SectionSpacing>
 
-        <SectionSpacing aria-label="Rooms opening toward the landscape" size="standard">
-          <figure>
-            <EditorialMedia ratio="panoramic" sizes="100vw" tone="stone" />
+        {imageBreak ? (
+          <SectionSpacing aria-label="Rooms photography" size="standard">
+            <EditorialFigure
+              caption={imageBreak.caption}
+              captionAlignment="end"
+              captionContainer="wide"
+              media={{
+                image: imageBreak.image,
+                ratio: 'panoramic',
+                sizes: '100vw',
+                tone: 'stone',
+              }}
+            />
+          </SectionSpacing>
+        ) : null}
+
+        {comfortPhilosophy ? (
+          <SectionSpacing aria-labelledby="comfort-title" size="immersive">
             <EditorialContainer>
-              <EditorialText
-                as="figcaption"
-                className="mt-4 max-w-sm lg:ml-auto"
-                variant="caption"
-              >
-                Late afternoon settles across the rooms and garden.
+              <EditorialGrid gap="generous">
+                <EditorialText className="lg:col-span-2" variant="eyebrow">
+                  {comfortPhilosophy.eyebrow}
+                </EditorialText>
+                <EditorialText
+                  className="max-w-3xl lg:col-span-8 lg:col-start-3"
+                  headingSize="medium"
+                  id="comfort-title"
+                  variant="heading"
+                >
+                  {comfortPhilosophy.heading}
+                </EditorialText>
+                <EditorialText
+                  className="max-w-xl lg:col-span-5 lg:col-start-8 lg:row-start-2 lg:mt-12"
+                  variant="body"
+                >
+                  {comfortPhilosophy.body}
+                </EditorialText>
+              </EditorialGrid>
+            </EditorialContainer>
+          </SectionSpacing>
+        ) : null}
+
+        {closingReflection ? (
+          <SectionSpacing
+            aria-label="Closing reflection"
+            className="bg-inverse-surface"
+            size="immersive"
+          >
+            <EditorialContainer size="reading">
+              <EditorialText tone="inverse" variant="lead">
+                {closingReflection.body}
               </EditorialText>
             </EditorialContainer>
-          </figure>
-        </SectionSpacing>
-
-        <SectionSpacing aria-labelledby="comfort-title" size="immersive">
-          <EditorialContainer>
-            <EditorialGrid gap="generous">
-              <EditorialText className="lg:col-span-2" variant="eyebrow">
-                Comfort
-              </EditorialText>
-              <EditorialText
-                className="max-w-3xl lg:col-span-8 lg:col-start-3"
-                headingSize="medium"
-                id="comfort-title"
-                variant="heading"
-              >
-                Enough, carefully considered.
-              </EditorialText>
-              <EditorialText
-                className="max-w-xl lg:col-span-5 lg:col-start-8 lg:row-start-2 lg:mt-12"
-                variant="body"
-              >
-                Comfort here is simple: a room that stays cool, materials that feel natural to the
-                touch, soft light at the right hours, and enough quiet to hear the weather change.
-              </EditorialText>
-            </EditorialGrid>
-          </EditorialContainer>
-        </SectionSpacing>
-
-        <SectionSpacing
-          aria-label="Closing reflection"
-          className="bg-charcoal"
-          size="immersive"
-        >
-          <EditorialContainer size="reading">
-            <EditorialText tone="inverse" variant="lead">
-              A room at Joshua’s Point is a place to notice the light, leave the windows open, and
-              let the day arrive in its own time.
-            </EditorialText>
-          </EditorialContainer>
-        </SectionSpacing>
+          </SectionSpacing>
+        ) : null}
       </main>
     </>
   )

@@ -1,6 +1,8 @@
 import type {EditorialFigureMedia, EditorialPhotoEssayItems} from '@/components/editorial'
 import type {HouseMaterialStory} from '@/components/house'
 
+import {houseDevelopmentPhotography} from './house-development-photography'
+
 type HouseTextSection = {
   body: string
   eyebrow: string
@@ -13,7 +15,7 @@ type HouseMediaStory = HouseTextSection & {
 }
 
 export type HousePageData = {
-  dailyRhythms: HouseTextSection & {
+  dailyRhythms?: HouseTextSection & {
     items: EditorialPhotoEssayItems
   }
   finalReflection: {
@@ -28,9 +30,9 @@ export type HousePageData = {
   indoorOutdoor: HouseTextSection & {
     items: EditorialPhotoEssayItems
   }
-  materials: HouseTextSection & {
+  materials?: Omit<HouseTextSection, 'body'> & {
+    body?: string
     items: readonly HouseMaterialStory[]
-    verificationNote: string
   }
   openingReflection: HouseTextSection
   sharedLiving: HouseMediaStory
@@ -44,8 +46,10 @@ export const housePageData: HousePageData = {
   hero: {
     eyebrow: 'The House',
     introduction:
-      'An editorial study of a home understood through its relationship with nature, shared space, and the changing day.',
+      'A home shaped by shared space, changing weather, and a close relationship with the landscape.',
     media: {
+      image: houseDevelopmentPhotography.hero,
+      preload: true,
       ratio: 'panoramic',
       sizes: '100vw',
       tone: 'morning',
@@ -53,57 +57,59 @@ export const housePageData: HousePageData = {
     title: 'The House',
   },
   openingReflection: {
-    body: 'The feeling to protect is simple: homy, connected to nature, and peaceful. The final account of that feeling will be written only from the owner’s lived observations.',
+    body: 'The deck, view, and infinity pool are what people notice first. Beyond that first reaction, the house settles into the landscape and the quiet around it.',
     eyebrow: 'Opening reflection',
-    heading: 'A home before a statement.',
+    heading: 'A place that feels like home.',
   },
   sharedLiving: {
-    body: 'The kitchen, dining area, living room, and deck belong to one connected editorial story. Their final description will come from how people genuinely cook, gather, talk, and spend quiet time here.',
+    body: 'The kitchen, dining area, living room, and deck work as one connected space. People naturally gather here to cook, eat, sit, talk, practise yoga, and relax.',
     eyebrow: 'Shared spaces',
     heading: 'The heart of the house is lived together.',
     media: {
+      image: houseDevelopmentPhotography.sharedHeart,
       ratio: 'landscape',
       sizes: '(min-width: 1024px) 58vw, 100vw',
       tone: 'stone',
     },
   },
   view: {
-    body: 'The final caption and geographical description will be added only after the viewpoint and every visible landmark have been verified.',
+    body: 'From the house, the view reaches the Bohol Sea, Apo Island, Siquijor Island, and Mount Talinis.',
     eyebrow: 'The view',
-    heading: 'Nature holds this page open.',
+    heading: 'The view is always present.',
     media: {
+      image: houseDevelopmentPhotography.view,
       ratio: 'panoramic',
       sizes: '100vw',
       tone: 'morning',
     },
   },
   indoorOutdoor: {
-    body: 'The deck, sliding doors, roof, and pool will be described through observed use and verified architectural relationships—not as a list of amenities.',
+    body: 'The three-meter covered deck creates a semi-outdoor living space beside the connected rooms. Sliding doors, the roof, deck, and pool keep daily life in relationship with the landscape and view.',
     eyebrow: 'Between inside and outside',
     heading: 'The threshold is part of daily life.',
     items: [
       {
-        caption: 'Open threshold — photography and owner observation required.',
         id: 'open-threshold',
         media: {
-          ratio: 'portrait',
+          image: houseDevelopmentPhotography.openThreshold,
+          ratio: 'landscape',
           sizes: '(min-width: 1024px) 58vw, 100vw',
           tone: 'stone',
         },
       },
       {
-        caption: 'Deck and shelter — materials and architectural purpose require verification.',
         id: 'deck-and-shelter',
         media: {
-          ratio: 'portrait',
+          image: houseDevelopmentPhotography.deckAndRoof,
+          ratio: 'landscape',
           sizes: '(min-width: 1024px) 33vw, 100vw',
           tone: 'morning',
         },
       },
       {
-        caption: 'House, deck, pool, and landscape — relationship photography required.',
         id: 'pool-relationship',
         media: {
+          image: houseDevelopmentPhotography.poolRelationship,
           ratio: 'landscape',
           sizes: '(min-width: 1024px) 67vw, 100vw',
           tone: 'stone',
@@ -112,70 +118,40 @@ export const housePageData: HousePageData = {
     ],
   },
   dailyRhythms: {
-    body: 'Morning, rain, and evening are held as three fields for real observation. No routine, weather pattern, or emotional response is assumed here.',
+    body: 'Morning can begin with coffee on the deck, birds, and a view toward sea or mountain. Rain brings the sound of water and bamboo moving in the wind. In the evening, warm air moves across the deck while lights appear on distant islands and around the house.',
     eyebrow: 'The house through the day',
     heading: 'Light and weather change the rooms.',
     items: [
       {
-        caption: 'Morning — owner observation and photography required.',
-        captionTone: 'inverse',
         id: 'morning',
         media: {
+          image: houseDevelopmentPhotography.morning,
           ratio: 'landscape',
           sizes: '(min-width: 1024px) 83vw, 100vw',
           tone: 'morning',
         },
       },
       {
-        caption: 'Rain — seasonal observation and photography required.',
-        captionTone: 'inverse',
         id: 'rain',
         media: {
+          image: houseDevelopmentPhotography.rain,
           ratio: 'portrait',
           sizes: '(min-width: 1024px) 42vw, 100vw',
           tone: 'stone',
         },
       },
       {
-        caption: 'Evening — owner observation and photography required.',
-        captionTone: 'inverse',
         id: 'evening',
         media: {
-          ratio: 'portrait',
+          image: houseDevelopmentPhotography.evening,
+          ratio: 'landscape',
           sizes: '(min-width: 1024px) 42vw, 100vw',
           tone: 'morning',
         },
       },
     ],
   },
-  materials: {
-    body: 'Material stories will appear only when their names, applications, sources, and lived behavior have been confirmed. Light and air remain possible experiential subjects, not assumed construction facts.',
-    eyebrow: 'Materials and architecture',
-    heading: 'What is present must be named truthfully.',
-    items: [
-      {
-        description: 'Description withheld until the material and its application are verified.',
-        id: 'deck-material',
-        name: 'Deck material',
-        verificationStatus: 'unverified',
-      },
-      {
-        description: 'Description withheld until the material and its application are verified.',
-        id: 'principal-interior-material',
-        name: 'Principal interior material',
-        verificationStatus: 'unverified',
-      },
-      {
-        description: 'Description withheld until its form, material, and purpose are verified.',
-        id: 'roof',
-        name: 'Roof',
-        verificationStatus: 'unverified',
-      },
-    ],
-    verificationNote:
-      'No physical material story has yet completed owner and architectural verification.',
-  },
   finalReflection: {
-    body: 'The closing reflection will be written from one real, public-safe observation of the house over time. Until then, the page ends by leaving room for that memory rather than inventing it.',
+    body: 'The corner of the deck remains a quiet place within the shared life of the house, close to birds in the morning, wind through bamboo, and rain when it comes.',
   },
 }

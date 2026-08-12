@@ -1,5 +1,4 @@
-import Link from 'next/link'
-
+import {EditorialAmenityList, type EditorialAmenityIcon} from '@/components/amenities'
 import {
   EditorialGrid,
   EditorialMedia,
@@ -7,11 +6,15 @@ import {
   type EditorialImage,
   type EditorialMediaTone,
 } from '@/components/editorial'
+import {MotionReveal} from '@/components/motion'
 
 export type RoomPreviewData = {
-  capacity: string
   description: string
-  href: string
+  facts: readonly {
+    icon?: EditorialAmenityIcon
+    label: string
+    value: string
+  }[]
   id: string
   image?: EditorialImage
   name: string
@@ -39,15 +42,20 @@ export function RoomPreview({layout = 'image-left', room}: RoomPreviewProps) {
   return (
     <article aria-labelledby={headingId}>
       <EditorialGrid gap="generous">
-        <EditorialMedia
-          className={mediaClasses[layout]}
-          image={room.image}
-          ratio="landscape"
-          sizes="(min-width: 1024px) 58vw, 100vw"
-          tone={room.tone}
-        />
+        <MotionReveal className={mediaClasses[layout]}>
+          <EditorialMedia
+            image={room.image}
+            ratio="landscape"
+            sizes="(min-width: 1024px) 58vw, 100vw"
+            tone={room.tone}
+          />
+        </MotionReveal>
 
-        <div className={contentClasses[layout]}>
+        <MotionReveal
+          className={contentClasses[layout]}
+          delay="short"
+          direction={layout === 'image-left' ? 'left' : 'right'}
+        >
           <EditorialText as="h3" headingSize="small" id={headingId} variant="heading">
             {room.name}
           </EditorialText>
@@ -55,23 +63,15 @@ export function RoomPreview({layout = 'image-left', room}: RoomPreviewProps) {
             {room.description}
           </EditorialText>
 
-          <div className="mt-9 flex flex-wrap items-baseline justify-between gap-6">
-            <dl>
-              <dt className="sr-only">Capacity</dt>
-              <dd>
-                <EditorialText as="span" variant="caption">
-                  {room.capacity}
-                </EditorialText>
-              </dd>
-            </dl>
-            <Link
-              className="rounded-sm font-body text-xs font-semibold tracking-[0.04em] text-charcoal underline decoration-charcoal/30 underline-offset-8 hover:decoration-charcoal focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-forest"
-              href={room.href}
-            >
-              View Room
-            </Link>
-          </div>
-        </div>
+          <EditorialAmenityList
+            className="mt-9"
+            items={room.facts.map(({icon, label, value}) => ({
+              description: value,
+              icon,
+              title: label,
+            }))}
+          />
+        </MotionReveal>
       </EditorialGrid>
     </article>
   )

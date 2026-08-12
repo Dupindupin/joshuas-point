@@ -1,9 +1,12 @@
 import type {Metadata} from 'next'
+import {notFound} from 'next/navigation'
 
+import {EditorialAmenityList} from '@/components/amenities'
 import {
   EditorialContainer,
   EditorialFigure,
   EditorialGrid,
+  EditorialLink,
   EditorialMediaStory,
   EditorialPageHero,
   EditorialPhotoEssay,
@@ -11,17 +14,40 @@ import {
   SectionSpacing,
 } from '@/components/editorial'
 import {HouseMaterialsList} from '@/components/house'
+import {HorizonLine, MotionReveal} from '@/components/motion'
 import {SiteHeader} from '@/components/site/site-header'
+import {createPageMetadata} from '@/lib/seo/metadata'
+import {approvedAmenityKeys, selectApprovedAmenities} from '@/lib/amenities'
+import {mapSanityHousePage} from '@/sanity/mappers/house-page'
+import {getPublicAmenities} from '@/sanity/queries/amenities'
+import {getHousePage} from '@/sanity/queries/house-page'
 
 import {housePageData} from './house-page-data'
 
-export const metadata: Metadata = {
-  title: "The House | Joshua's Point",
-  description:
-    'An editorial introduction to Joshua’s Point through nature, shared spaces, and the changing day.',
+export async function generateMetadata(): Promise<Metadata> {
+  const page = await getHousePage()
+
+  return createPageMetadata({
+    description:
+      'An editorial introduction to Joshua’s Point through nature, shared spaces, and the changing day.',
+    pathname: '/the-house',
+    seo: page?.seo,
+    socialImage: page?.hero?.image,
+    title: "The House | Joshua's Point",
+  })
 }
 
-export default function TheHousePage() {
+export default async function TheHousePage() {
+  const [sanityHousePage, publicAmenities] = await Promise.all([
+    getHousePage(),
+    getPublicAmenities(),
+  ])
+  const pageData = sanityHousePage ? mapSanityHousePage(sanityHousePage) : housePageData
+  if (!pageData) notFound()
+  const houseSystems = selectApprovedAmenities(publicAmenities, [
+    approvedAmenityKeys.solarBatterySystem,
+    approvedAmenityKeys.rainwaterCollection,
+  ])
   const {
     dailyRhythms,
     finalReflection,
@@ -31,15 +57,16 @@ export default function TheHousePage() {
     openingReflection,
     sharedLiving,
     view,
-  } = housePageData
+  } = pageData
 
   return (
     <>
       <SiteHeader activeHref="/the-house" appearance="solid" />
-      <main className="bg-linen">
+      <main className="bg-canvas">
         <EditorialPageHero
           eyebrow={hero.eyebrow}
           introduction={hero.introduction}
+          motion
           title={hero.title}
         />
 
@@ -49,19 +76,22 @@ export default function TheHousePage() {
 
         <SectionSpacing aria-labelledby="house-opening-reflection-title" size="generous">
           <EditorialContainer size="reading">
-            <EditorialText variant="eyebrow">{openingReflection.eyebrow}</EditorialText>
-            <EditorialText className="mt-9" id="house-opening-reflection-title" variant="lead">
-              {openingReflection.heading}
-            </EditorialText>
-            <EditorialText className="mt-12 max-w-2xl" variant="body">
-              {openingReflection.body}
-            </EditorialText>
+            <MotionReveal>
+              <EditorialText variant="eyebrow">{openingReflection.eyebrow}</EditorialText>
+              <EditorialText className="mt-9" id="house-opening-reflection-title" variant="lead">
+                {openingReflection.heading}
+              </EditorialText>
+              <EditorialText className="mt-12 max-w-2xl" variant="body">
+                {openingReflection.body}
+              </EditorialText>
+            </MotionReveal>
+            <HorizonLine className="mt-14" />
           </EditorialContainer>
         </SectionSpacing>
 
         <EditorialMediaStory
           body={<EditorialText variant="body">{sharedLiving.body}</EditorialText>}
-          className="bg-stone/20"
+          className="bg-surface-soft"
           eyebrow={sharedLiving.eyebrow}
           heading={sharedLiving.heading}
           headingId="house-shared-living-title"
@@ -82,14 +112,18 @@ export default function TheHousePage() {
                 <EditorialText className="lg:col-span-2" variant="eyebrow">
                   {view.eyebrow}
                 </EditorialText>
-                <div className="lg:col-span-7 lg:col-start-4">
+                <MotionReveal
+                  className="lg:col-span-7 lg:col-start-4"
+                  delay="short"
+                  direction="right"
+                >
                   <EditorialText headingSize="small" id="house-view-title" variant="heading">
                     {view.heading}
                   </EditorialText>
                   <EditorialText className="mt-10 max-w-2xl" variant="body">
                     {view.body}
                   </EditorialText>
-                </div>
+                </MotionReveal>
               </EditorialGrid>
             </EditorialContainer>
           </SectionSpacing>
@@ -97,7 +131,7 @@ export default function TheHousePage() {
 
         <SectionSpacing
           aria-labelledby="house-indoor-outdoor-title"
-          className="bg-stone/20"
+          className="bg-surface-soft"
           size="immersive"
         >
           <EditorialContainer>
@@ -105,7 +139,11 @@ export default function TheHousePage() {
               <EditorialText className="lg:col-span-2" variant="eyebrow">
                 {indoorOutdoor.eyebrow}
               </EditorialText>
-              <div className="lg:col-span-8 lg:col-start-3">
+              <MotionReveal
+                className="lg:col-span-8 lg:col-start-3"
+                delay="short"
+                direction="right"
+              >
                 <EditorialText
                   className="max-w-4xl"
                   headingSize="medium"
@@ -117,7 +155,7 @@ export default function TheHousePage() {
                 <EditorialText className="mt-11 max-w-2xl" variant="body">
                   {indoorOutdoor.body}
                 </EditorialText>
-              </div>
+              </MotionReveal>
             </EditorialGrid>
 
             <EditorialPhotoEssay
@@ -128,83 +166,109 @@ export default function TheHousePage() {
           </EditorialContainer>
         </SectionSpacing>
 
-        <SectionSpacing
-          aria-labelledby="house-daily-rhythms-title"
-          className="bg-charcoal"
-          size="immersive"
-        >
-          <EditorialContainer>
-            <EditorialGrid gap="generous">
-              <EditorialText className="lg:col-span-2" tone="inverse" variant="eyebrow">
-                {dailyRhythms.eyebrow}
-              </EditorialText>
-              <div className="lg:col-span-8 lg:col-start-3">
-                <EditorialText
-                  className="max-w-4xl"
-                  headingSize="medium"
-                  id="house-daily-rhythms-title"
-                  tone="inverse"
-                  variant="heading"
+        {dailyRhythms ? (
+          <SectionSpacing
+            aria-labelledby="house-daily-rhythms-title"
+            className="bg-inverse-surface"
+            size="immersive"
+          >
+            <EditorialContainer>
+              <EditorialGrid gap="generous">
+                <EditorialText className="lg:col-span-2" tone="inverse" variant="eyebrow">
+                  {dailyRhythms.eyebrow}
+                </EditorialText>
+                <MotionReveal
+                  className="lg:col-span-8 lg:col-start-3"
+                  delay="short"
+                  direction="right"
                 >
-                  {dailyRhythms.heading}
-                </EditorialText>
-                <EditorialText className="mt-11 max-w-2xl" tone="inverse" variant="body">
-                  {dailyRhythms.body}
-                </EditorialText>
-              </div>
-            </EditorialGrid>
+                  <EditorialText
+                    className="max-w-4xl"
+                    headingSize="medium"
+                    id="house-daily-rhythms-title"
+                    tone="inverse"
+                    variant="heading"
+                  >
+                    {dailyRhythms.heading}
+                  </EditorialText>
+                  <EditorialText className="mt-11 max-w-2xl" tone="inverse" variant="body">
+                    {dailyRhythms.body}
+                  </EditorialText>
+                </MotionReveal>
+              </EditorialGrid>
 
-            <EditorialPhotoEssay
-              className="mt-24 sm:mt-32"
-              items={dailyRhythms.items}
-              layout="sequence"
-            />
-          </EditorialContainer>
-        </SectionSpacing>
+              <EditorialPhotoEssay
+                className="mt-24 sm:mt-32"
+                items={dailyRhythms.items}
+                layout="sequence"
+              />
+            </EditorialContainer>
+          </SectionSpacing>
+        ) : null}
 
-        <SectionSpacing aria-labelledby="house-materials-title" size="immersive">
-          <EditorialContainer>
-            <EditorialGrid gap="generous">
-              <EditorialText className="lg:col-span-2" variant="eyebrow">
-                {materials.eyebrow}
-              </EditorialText>
-              <div className="lg:col-span-8 lg:col-start-3">
-                <EditorialText
-                  className="max-w-4xl"
-                  headingSize="medium"
-                  id="house-materials-title"
-                  variant="heading"
+        {houseSystems.length > 0 ? (
+          <SectionSpacing aria-labelledby="house-systems-title" size="generous">
+            <EditorialContainer>
+              <EditorialGrid gap="generous">
+                <EditorialText className="lg:col-span-2" variant="eyebrow">
+                  House systems
+                </EditorialText>
+                <MotionReveal className="lg:col-span-7 lg:col-start-4" delay="short">
+                  <EditorialText headingSize="small" id="house-systems-title" variant="heading">
+                    How the house works, quietly in the background.
+                  </EditorialText>
+                  <EditorialAmenityList className="mt-12 max-w-2xl" items={houseSystems} />
+                </MotionReveal>
+              </EditorialGrid>
+            </EditorialContainer>
+          </SectionSpacing>
+        ) : null}
+
+        {materials ? (
+          <SectionSpacing aria-labelledby="house-materials-title" size="immersive">
+            <EditorialContainer>
+              <EditorialGrid gap="generous">
+                <EditorialText className="lg:col-span-2" variant="eyebrow">
+                  {materials.eyebrow}
+                </EditorialText>
+                <MotionReveal
+                  className="lg:col-span-8 lg:col-start-3"
+                  delay="short"
+                  direction="right"
                 >
-                  {materials.heading}
-                </EditorialText>
-                <EditorialText className="mt-11 max-w-2xl" variant="body">
-                  {materials.body}
-                </EditorialText>
-                <aside
-                  aria-label="Material verification status"
-                  className="mt-10 max-w-2xl border-l border-charcoal/25 pl-5 sm:pl-6"
-                >
-                  <p className="font-body text-[0.6875rem] font-semibold tracking-[0.18em] text-timber uppercase">
-                    Verification pending
-                  </p>
-                  <p className="mt-3 font-body text-sm leading-7 text-charcoal/65">
-                    {materials.verificationNote}
-                  </p>
-                </aside>
-              </div>
-            </EditorialGrid>
+                  <EditorialText
+                    className="max-w-4xl"
+                    headingSize="medium"
+                    id="house-materials-title"
+                    variant="heading"
+                  >
+                    {materials.heading}
+                  </EditorialText>
+                  {materials.body ? (
+                    <EditorialText className="mt-11 max-w-2xl" variant="body">
+                      {materials.body}
+                    </EditorialText>
+                  ) : null}
+                </MotionReveal>
+              </EditorialGrid>
 
-            <HouseMaterialsList
-              aria-label="Verified material stories"
-              className="mt-24 sm:mt-32 lg:ml-[16.666667%]"
-              items={materials.items}
-            />
-          </EditorialContainer>
-        </SectionSpacing>
+              <HouseMaterialsList
+                aria-label="Verified material stories"
+                className="mt-24 sm:mt-32 lg:ml-[16.666667%]"
+                items={materials.items}
+              />
+            </EditorialContainer>
+          </SectionSpacing>
+        ) : null}
 
-        <SectionSpacing aria-label="Final reflection" className="bg-stone/20" size="immersive">
+        <SectionSpacing aria-label="Final reflection" className="bg-surface-soft" size="immersive">
           <EditorialContainer size="reading">
-            <EditorialText variant="lead">{finalReflection.body}</EditorialText>
+            <MotionReveal>
+              <EditorialText variant="lead">{finalReflection.body}</EditorialText>
+              <div className="mt-10">
+                <EditorialLink href="/rooms" label="See the rooms" />
+              </div>
+            </MotionReveal>
           </EditorialContainer>
         </SectionSpacing>
       </main>

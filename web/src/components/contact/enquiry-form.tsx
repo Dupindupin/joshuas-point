@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import {useActionState, useEffect, useRef} from 'react'
 import type {FormEvent, ReactNode} from 'react'
 
@@ -8,21 +9,22 @@ import {
   type EnquiryField,
   type EnquiryFormAction,
 } from '@/lib/enquiry/types'
+import {stayPolicyLines} from '@/lib/stay/policy'
 
 type EnquiryFormProps = {
   action: EnquiryFormAction
 }
 
 const inputClasses =
-  'mt-3 min-h-12 w-full rounded-none border-0 border-b border-charcoal/28 bg-transparent px-0 py-3 font-body text-base text-charcoal outline-none placeholder:text-charcoal/35 focus:border-forest focus:ring-0'
+  'mt-3 min-h-12 w-full rounded-none border-0 border-b border-ink/28 bg-transparent px-0 py-3 font-body text-base text-ink outline-none placeholder:text-ink/35 focus:border-accent focus:ring-0'
 
-const labelClasses = 'font-body text-xs font-semibold tracking-[0.16em] text-charcoal/62 uppercase'
+const labelClasses = 'font-body text-xs font-semibold tracking-[0.16em] text-ink/62 uppercase'
 
 function RequiredLabel({children}: {children: string}) {
   return (
     <>
       {children}
-      <span aria-hidden="true" className="ml-1 text-timber">
+      <span aria-hidden="true" className="ml-1 text-warning">
         *
       </span>
       <span className="sr-only"> (required)</span>
@@ -34,7 +36,7 @@ function FieldError({children, id}: {children?: ReactNode; id: string}) {
   if (!children) return null
 
   return (
-    <p className="mt-2 font-body text-sm leading-6 text-timber" id={id}>
+    <p className="mt-2 font-body text-sm leading-6 text-warning" id={id}>
       {children}
     </p>
   )
@@ -80,11 +82,21 @@ export function EnquiryForm({action}: EnquiryFormProps) {
       ref={formRef}
     >
       <div
-        className="border-l border-charcoal/25 pl-5 font-body text-sm leading-7 text-charcoal/65 sm:pl-6"
+        className="border-l border-ink/25 pl-5 font-body text-sm leading-7 text-ink/65 sm:pl-6"
         id="enquiry-form-delivery-note"
       >
-        Your details are sent securely for the sole purpose of responding to this enquiry. They are
-        not stored in the website CMS.
+        Your details are used only to understand and respond to this enquiry.
+      </div>
+
+      <div className="mt-8 border-l border-ink/25 pl-5 sm:pl-6">
+        <p className="font-body text-xs font-semibold tracking-[0.16em] text-ink/62 uppercase">
+          Current stay information
+        </p>
+        <ul className="mt-4 space-y-1 font-body text-sm leading-7 text-ink/65">
+          {stayPolicyLines().map((line) => (
+            <li key={line}>{line}</li>
+          ))}
+        </ul>
       </div>
 
       <div aria-hidden="true" className="absolute -left-[10000px] h-px w-px overflow-hidden">
@@ -227,16 +239,23 @@ export function EnquiryForm({action}: EnquiryFormProps) {
       </fieldset>
 
       <p
-        className="mt-9 max-w-xl font-body text-sm leading-7 text-charcoal/62"
+        className="mt-9 max-w-xl font-body text-sm leading-7 text-ink/62"
         id="enquiry-form-privacy-note"
       >
         Enquiry details will be used only to understand and respond to your message. They will not
-        be added to a newsletter or used for unrelated marketing.
+        be added to a newsletter or used for unrelated marketing. Read the{' '}
+        <Link
+          className="rounded-sm border-b border-ink/35 pb-0.5 font-semibold text-ink hover:border-accent hover:text-accent focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-focus"
+          href="/privacy"
+        >
+          privacy notice
+        </Link>
+        .
       </p>
 
       <div className="mt-10 flex flex-col items-start gap-6 sm:flex-row sm:items-center">
         <button
-          className="inline-flex min-h-12 items-center justify-center rounded-full border border-charcoal bg-charcoal px-7 py-3 font-body text-sm font-semibold tracking-[0.01em] text-linen hover:border-forest hover:bg-forest focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-forest disabled:cursor-wait disabled:opacity-55"
+          className="inline-flex min-h-12 items-center justify-center rounded-full border border-ink bg-inverse-surface px-7 py-3 font-body text-sm font-semibold tracking-[0.01em] text-inverse hover:border-accent hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-focus disabled:cursor-wait disabled:opacity-55"
           disabled={pending}
           type="submit"
         >
@@ -244,7 +263,7 @@ export function EnquiryForm({action}: EnquiryFormProps) {
         </button>
         <p
           aria-live={state.status === 'error' ? 'assertive' : 'polite'}
-          className={`max-w-md font-body text-sm leading-7 ${state.status === 'error' ? 'text-timber' : 'text-charcoal/68'}`}
+          className={`max-w-md font-body text-sm leading-7 ${state.status === 'error' ? 'text-warning' : 'text-ink-muted'}`}
           role={state.status === 'error' ? 'alert' : 'status'}
         >
           {state.message}
