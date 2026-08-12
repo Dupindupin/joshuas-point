@@ -16,14 +16,50 @@ type ImageValue = {
 
 type HousePageValue = SanityDocument & {
   hero?: {image?: ImageValue}
+  indoorOutdoorStory?: {images?: Array<{image?: ImageValue}>}
   lastReviewedAt?: string
+  materialsAndArchitecture?: {materials?: Array<{image?: ImageValue}>}
   seo?: {metaDescription?: string}
+  sharedHeart?: {images?: ImageValue[]}
+  dailyRhythms?: {
+    evening?: {image?: ImageValue}
+    morning?: {image?: ImageValue}
+    rain?: {image?: ImageValue}
+  }
   view?: {image?: ImageValue}
   workflowStatus?: string
 }
 
+const developmentPhotographyMarkers = [
+  'development photography',
+  'not production approved',
+  'replace before launch',
+]
+
 function isApproved(document: HousePageValue | undefined) {
   return document?.workflowStatus === 'approved'
+}
+
+function pageImages(document: HousePageValue | undefined) {
+  return [
+    document?.hero?.image,
+    ...(document?.sharedHeart?.images ?? []),
+    document?.view?.image,
+    ...(document?.indoorOutdoorStory?.images ?? []).map(({image}) => image),
+    document?.dailyRhythms?.morning?.image,
+    document?.dailyRhythms?.rain?.image,
+    document?.dailyRhythms?.evening?.image,
+    ...(document?.materialsAndArchitecture?.materials ?? []).map(({image}) => image),
+  ].filter((image): image is ImageValue => Boolean(image?.asset?._ref))
+}
+
+function usesDevelopmentPhotography(document: HousePageValue | undefined) {
+  return pageImages(document).some(({credit}) => {
+    const normalizedCredit = credit?.trim().toLowerCase()
+    return normalizedCredit
+      ? developmentPhotographyMarkers.some((marker) => normalizedCredit.includes(marker))
+      : false
+  })
 }
 
 export const housePage = defineType({
@@ -60,6 +96,13 @@ export const housePage = defineType({
         const document = value as HousePageValue | undefined
         if (document?.hero?.image?.credit?.trim()) return true
         return 'Add credit information for the Hero photograph before final review.'
+      })
+      .warning(),
+    rule
+      .custom((value) => {
+        const document = value as HousePageValue | undefined
+        if (!usesDevelopmentPhotography(document)) return true
+        return 'Development photography is still in use. Replace it with production-approved photography before launch.'
       })
       .warning(),
   ],

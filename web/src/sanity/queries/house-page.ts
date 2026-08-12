@@ -26,7 +26,11 @@ const seoProjection = /* groq */ `{
 }`
 
 const housePageQuery = /* groq */ `
-  *[_type == "housePage" && _id == "housePage"][0] {
+  *[
+    _type == "housePage" &&
+    _id == "housePage" &&
+    workflowStatus == "approved"
+  ][0] {
     _id,
     hero {
       eyebrow,

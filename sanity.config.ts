@@ -1,4 +1,4 @@
-import {defineConfig} from 'sanity'
+import {defineConfig, type DocumentActionsResolver} from 'sanity'
 import {structureTool} from 'sanity/structure'
 import {visionTool} from '@sanity/vision'
 import DashboardIcon from '@sanity/icons/Dashboard'
@@ -8,8 +8,23 @@ import {
   supportsEditorialBadges,
   workflowStatusBadge,
 } from './schemaTypes/editorial/badges'
+import {protectHousePublishAction} from './schemaTypes/editorial/protectedPublishAction'
 import {singletonTypes, structure} from './schemaTypes/structure'
 import {OwnerDashboard} from './studio/owner-dashboard/OwnerDashboard'
+
+const resolveDocumentActions: DocumentActionsResolver = (actions, context) => {
+  const availableActions = singletonTypes.has(context.schemaType)
+    ? actions.filter(
+        ({action}) => action && ['publish', 'discardChanges', 'restore'].includes(action),
+      )
+    : actions
+
+  if (context.schemaType !== 'housePage') return availableActions
+
+  return availableActions.map((action) =>
+    action.action === 'publish' ? protectHousePublishAction(action) : action,
+  )
+}
 
 export default defineConfig({
   name: 'default',
@@ -37,12 +52,7 @@ export default defineConfig({
   },
 
   document: {
-    actions: (actions, context) =>
-      singletonTypes.has(context.schemaType)
-        ? actions.filter(
-            ({action}) => action && ['publish', 'discardChanges', 'restore'].includes(action),
-          )
-        : actions,
+    actions: resolveDocumentActions,
     badges: (badges, context) =>
       supportsEditorialBadges(context.schemaType)
         ? [...badges, workflowStatusBadge, reviewDateBadge]
