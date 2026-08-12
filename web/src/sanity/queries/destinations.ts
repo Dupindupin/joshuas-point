@@ -5,7 +5,9 @@ import type {
   DestinationDetailData,
   DestinationsPageData,
   FeaturedDestination,
+  PublishedDestination,
   SanityImage,
+  SanityInstagramPost,
 } from '../types'
 
 const editorialImageProjection = /* groq */ `{
@@ -43,6 +45,8 @@ const destinationsPageQuery = /* groq */ `
     "editorialCopy": editorialCopy[_type == "block"],
     "featuredDestinations": featuredDestinations[]-> {
       _id,
+      "noIndex": coalesce(seo.noIndex, false),
+      "slug": slug.current,
       title,
       editorialIntroduction,
       heroImage ${editorialImageProjection}
@@ -56,6 +60,19 @@ const destinationBySlugQuery = /* groq */ `
     _id,
     destinationType,
     editorialIntroduction,
+    editorialPhotography {
+      "stories": stories[] {
+        _key,
+        accessibleLabel,
+        "closingImages": closingImages[defined(asset)] ${editorialImageProjection},
+        "detailImages": detailImages[defined(asset)] ${editorialImageProjection},
+        heroImage ${editorialImageProjection},
+        introduction,
+        "journeyImages": journeyImages[defined(asset)] ${editorialImageProjection},
+        "openingImages": openingImages[defined(asset)] ${editorialImageProjection},
+        title,
+      }
+    },
     excerpt,
     gallery {
       accessibleLabel,
@@ -64,6 +81,12 @@ const destinationBySlugQuery = /* groq */ `
     },
     heroImage ${editorialImageProjection},
     highlights,
+    instagramHighlights[] {
+      _key,
+      caption,
+      image ${editorialImageProjection},
+      postUrl
+    },
     lastReviewedAt,
     mapLocation {
       coordinates,
@@ -100,17 +123,45 @@ const destinationBySlugQuery = /* groq */ `
 `
 
 const destinationSlugsQuery = /* groq */ `
-  *[_type == "destination" && defined(slug.current)].slug.current
+  *[
+    _type == "destination" &&
+    !(_id in path("drafts.**")) &&
+    defined(slug.current) &&
+    coalesce(seo.noIndex, false) != true
+  ].slug.current
+`
+
+const publishedDestinationsQuery = /* groq */ `
+  *[
+    _type == "destination" &&
+    !(_id in path("drafts.**")) &&
+    defined(slug.current) &&
+    coalesce(seo.noIndex, false) != true
+  ] | order(title asc) {
+    _id,
+    _updatedAt,
+    destinationType,
+    "slug": slug.current,
+    title,
+    editorialIntroduction,
+    heroImage ${editorialImageProjection}
+  }
 `
 
 type DestinationsPageQueryResult = Omit<DestinationsPageData, 'featuredDestinations'> & {
-  featuredDestinations?: Array<FeaturedDestination | null>
+  featuredDestinations?: Array<(FeaturedDestination & {noIndex?: boolean}) | null>
 }
 
 function isFeaturedDestination(
-  destination: FeaturedDestination | null,
+  destination: (FeaturedDestination & {noIndex?: boolean}) | null,
 ): destination is FeaturedDestination {
-  return Boolean(destination?._id && destination.title && destination.editorialIntroduction)
+  return Boolean(
+    destination?._id &&
+    destination.slug &&
+    destination.title &&
+    destination.editorialIntroduction &&
+    !destination.noIndex,
+  )
 }
 
 export const getDestinationsPage = cache(async (): Promise<DestinationsPageData | null> => {
@@ -140,7 +191,13 @@ export const getDestinationsPage = cache(async (): Promise<DestinationsPageData 
 
 type DestinationDetailQueryResult = Omit<
   DestinationDetailData,
-  'gallery' | 'highlights' | 'photographyNotes' | 'story' | 'thingsToBring' | 'tips'
+  | 'gallery'
+  | 'highlights'
+  | 'instagramHighlights'
+  | 'photographyNotes'
+  | 'story'
+  | 'thingsToBring'
+  | 'tips'
 > & {
   gallery?: {
     accessibleLabel?: string
@@ -148,6 +205,7 @@ type DestinationDetailQueryResult = Omit<
     images?: Array<SanityImage | null>
   }
   highlights?: Array<string | null>
+  instagramHighlights?: Array<SanityInstagramPost | null>
   photographyNotes?: DestinationDetailData['photographyNotes']
   story?: DestinationDetailData['story']
   thingsToBring?: Array<string | null>
@@ -156,6 +214,10 @@ type DestinationDetailQueryResult = Omit<
 
 function normalizeStrings(values: Array<string | null> | undefined) {
   return (values ?? []).filter((value): value is string => Boolean(value?.trim()))
+}
+
+function isInstagramPost(post: SanityInstagramPost | null): post is SanityInstagramPost {
+  return Boolean(post?.image?.asset?._ref && post.postUrl?.trim())
 }
 
 export const getDestinationBySlug = cache(
@@ -187,6 +249,7 @@ export const getDestinationBySlug = cache(
             }
           : undefined,
         highlights: normalizeStrings(destination.highlights),
+        instagramHighlights: (destination.instagramHighlights ?? []).filter(isInstagramPost),
         photographyNotes: destination.photographyNotes ?? [],
         story: destination.story ?? [],
         thingsToBring: normalizeStrings(destination.thingsToBring),
@@ -223,6 +286,33 @@ export const getDestinationSlugs = cache(async (): Promise<string[]> => {
     return normalizeStrings(slugs)
   } catch (error) {
     console.error('Unable to load destination slugs from Sanity.', error)
+    return []
+  }
+})
+
+export const getPublishedDestinations = cache(async (): Promise<PublishedDestination[]> => {
+  try {
+    const destinations = await sanityClient.fetch<Array<PublishedDestination | null>>(
+      publishedDestinationsQuery,
+      {},
+      {
+        next: {
+          revalidate: 3600,
+          tags: ['sanity:destinations'],
+        },
+      },
+    )
+
+    return destinations.filter((destination): destination is PublishedDestination =>
+      Boolean(
+        destination?._id &&
+        destination.slug &&
+        destination.title &&
+        destination.editorialIntroduction,
+      ),
+    )
+  } catch (error) {
+    console.error('Unable to load published destinations from Sanity.', error)
     return []
   }
 })

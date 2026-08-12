@@ -19,10 +19,6 @@ export function DestinationMap({
   routes,
   viewport,
 }: DestinationMapProps) {
-  if (!coordinates && !locationLabel && !labels?.length && !markers?.length && !routes?.length) {
-    return null
-  }
-
   const destinationMarkers: readonly EditorialMapMarker[] =
     markers ??
     (coordinates
@@ -35,26 +31,30 @@ export function DestinationMap({
           },
         ]
       : [])
+  const hasMapData = Boolean(coordinates || labels?.length || markers?.length || routes?.length)
 
   return (
     <EditorialMapSection
       coordinates={coordinates}
       directionsUrl={directionsUrl}
-      eyebrow="Map"
-      heading="A point in the landscape."
-      locationLabel={locationLabel}
+      eyebrow={hasMapData ? 'Map' : 'Location'}
+      explorerHref="/explorer"
+      heading={hasMapData ? 'A point in the landscape.' : 'The place in the guide.'}
+      locationLabel={locationLabel ?? destinationTitle}
       titleId="destination-map-title"
     >
-      <EditorialMap
-        ariaLabel={`Map of ${destinationTitle}`}
-        caption="Location details remain available beside the map when an interactive provider is unavailable."
-        coordinates={coordinates}
-        labels={labels}
-        markers={destinationMarkers}
-        provider={provider}
-        routes={routes}
-        viewport={viewport ?? (coordinates ? {center: coordinates, zoom: 12} : undefined)}
-      />
+      {hasMapData ? (
+        <EditorialMap
+          ariaLabel={`Map of ${destinationTitle}`}
+          caption="Location details remain available beside the map when an interactive provider is unavailable."
+          coordinates={coordinates}
+          labels={labels}
+          markers={destinationMarkers}
+          provider={provider}
+          routes={routes}
+          viewport={viewport ?? (coordinates ? {center: coordinates, zoom: 12} : undefined)}
+        />
+      ) : null}
     </EditorialMapSection>
   )
 }

@@ -19,10 +19,6 @@ export function DiveSiteMap({
   routes,
   viewport,
 }: DiveSiteMapProps) {
-  if (!coordinates && !locationLabel && !labels?.length && !markers?.length && !routes?.length) {
-    return null
-  }
-
   const diveSiteMarkers: readonly EditorialMapMarker[] =
     markers ??
     (coordinates
@@ -35,26 +31,30 @@ export function DiveSiteMap({
           },
         ]
       : [])
+  const hasMapData = Boolean(coordinates || labels?.length || markers?.length || routes?.length)
 
   return (
     <EditorialMapSection
       coordinates={coordinates}
       directionsUrl={directionsUrl}
-      eyebrow="Dive map"
-      heading="A point below the surface."
-      locationLabel={locationLabel}
+      eyebrow={hasMapData ? 'Dive map' : 'Dive location'}
+      explorerHref="/explorer"
+      heading={hasMapData ? 'A point below the surface.' : 'The dive area in the guide.'}
+      locationLabel={locationLabel ?? diveSiteName}
       titleId="dive-site-map-title"
     >
-      <EditorialMap
-        ariaLabel={`Map of ${diveSiteName}`}
-        caption="Coordinates provide orientation only and do not replace a current professional dive briefing."
-        coordinates={coordinates}
-        labels={labels}
-        markers={diveSiteMarkers}
-        provider={provider}
-        routes={routes}
-        viewport={viewport ?? (coordinates ? {center: coordinates, zoom: 13} : undefined)}
-      />
+      {hasMapData ? (
+        <EditorialMap
+          ariaLabel={`Map of ${diveSiteName}`}
+          caption="Coordinates provide orientation only and do not replace a current professional dive briefing."
+          coordinates={coordinates}
+          labels={labels}
+          markers={diveSiteMarkers}
+          provider={provider}
+          routes={routes}
+          viewport={viewport ?? (coordinates ? {center: coordinates, zoom: 13} : undefined)}
+        />
+      ) : null}
     </EditorialMapSection>
   )
 }

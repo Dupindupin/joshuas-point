@@ -4,6 +4,8 @@ export {DiveSiteMap} from './dive-site-map'
 export type {DiveSiteMapProps} from './dive-site-map'
 export {EditorialMap} from './editorial-map'
 export type {EditorialMapProps} from './editorial-map'
+export {GettingHereMap} from './getting-here-map'
+export type {GettingHereMapProps} from './getting-here-map'
 export {ScooterRouteMap} from './scooter-route-map'
 export type {ScooterRouteMapProps} from './scooter-route-map'
 export type {

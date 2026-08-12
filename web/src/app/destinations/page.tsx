@@ -1,8 +1,12 @@
 import type {Metadata} from 'next'
+import Link from 'next/link'
+import {notFound} from 'next/navigation'
 
 import {FeaturedDestination} from '@/components/destinations/featured-destination'
 import {
   EditorialContainer,
+  EditorialGrid,
+  EditorialLink,
   EditorialMedia,
   EditorialPageHero,
   EditorialPortableText,
@@ -10,8 +14,9 @@ import {
   SectionSpacing,
 } from '@/components/editorial'
 import {SiteHeader} from '@/components/site/site-header'
+import {createPageMetadata} from '@/lib/seo/metadata'
 import {getEditorialImage} from '@/sanity/image'
-import {getDestinationsPage} from '@/sanity/queries/destinations'
+import {getDestinationsPage, getPublishedDestinations} from '@/sanity/queries/destinations'
 
 const fallbackMetadata: Metadata = {
   title: "Destinations | Joshua's Point",
@@ -20,120 +25,142 @@ const fallbackMetadata: Metadata = {
 
 export async function generateMetadata(): Promise<Metadata> {
   const page = await getDestinationsPage()
-  if (!page) return fallbackMetadata
 
-  const socialImage = getEditorialImage(page.seo?.socialImage, {height: 630, width: 1200})
+  if (!page) {
+    return createPageMetadata({
+      description: String(fallbackMetadata.description),
+      pathname: '/destinations',
+      title: String(fallbackMetadata.title),
+    })
+  }
+
   const title = page.seo?.metaTitle || `${page.hero.title} | Joshua's Point`
   const description = page.seo?.metaDescription || page.hero.introduction
 
-  return {
-    title,
+  return createPageMetadata({
     description,
-    openGraph: {
-      title: page.seo?.socialTitle || title,
-      description: page.seo?.socialDescription || description,
-      images: socialImage ? [{alt: socialImage.alt, url: String(socialImage.src)}] : undefined,
-    },
-    robots: page.seo?.noIndex ? {follow: false, index: false} : undefined,
-  }
-}
-
-function DestinationsPlaceholder() {
-  return (
-    <>
-      <EditorialPageHero
-        eyebrow="Travel Guide"
-        introduction="A slowly gathered guide to the roads, water, forests, and communities of southern Negros."
-        title="Destinations"
-      />
-      <SectionSpacing aria-label="Destination guide introduction" size="generous">
-        <EditorialContainer size="reading">
-          <EditorialText variant="lead">
-            The first field notes are still being prepared.
-          </EditorialText>
-          <EditorialText className="mt-10 max-w-xl" variant="body">
-            Each place will be added only when its story and practical guidance have been carefully
-            observed and reviewed.
-          </EditorialText>
-        </EditorialContainer>
-      </SectionSpacing>
-    </>
-  )
+    pathname: '/destinations',
+    seo: page.seo,
+    socialImage: page.hero.image,
+    title,
+  })
 }
 
 export default async function DestinationsPage() {
-  const page = await getDestinationsPage()
+  const [page, publishedDestinations] = await Promise.all([
+    getDestinationsPage(),
+    getPublishedDestinations(),
+  ])
+  if (!page || publishedDestinations.length === 0) notFound()
 
   return (
     <>
       <SiteHeader activeHref="/destinations" appearance="solid" />
-      <main className="bg-linen">
-        {!page ? (
-          <DestinationsPlaceholder />
-        ) : (
-          <>
-            <EditorialPageHero
-              eyebrow={page.hero.eyebrow}
-              introduction={page.hero.introduction}
-              title={page.hero.title}
+      <main className="bg-canvas">
+        <EditorialPageHero
+          eyebrow={page.hero.eyebrow}
+          introduction={page.hero.introduction}
+          title={page.hero.title}
+        />
+
+        {page.hero.image ? (
+          <figure>
+            <EditorialMedia
+              image={getEditorialImage(page.hero.image, {height: 1080, width: 1920})}
+              preload
+              ratio="panoramic"
+              sizes="100vw"
             />
+          </figure>
+        ) : null}
 
-            {page.hero.image ? (
-              <figure>
-                <EditorialMedia
-                  image={getEditorialImage(page.hero.image, {height: 1080, width: 1920})}
-                  preload
-                  ratio="panoramic"
-                  sizes="100vw"
-                />
-              </figure>
-            ) : null}
+        <SectionSpacing aria-label="Destination guide introduction" size="generous">
+          <EditorialContainer size="reading">
+            <EditorialText variant="lead">{page.introduction}</EditorialText>
+          </EditorialContainer>
+        </SectionSpacing>
 
-            <SectionSpacing aria-label="Destination guide introduction" size="generous">
-              <EditorialContainer size="reading">
-                <EditorialText variant="lead">{page.introduction}</EditorialText>
-              </EditorialContainer>
-            </SectionSpacing>
+        <SectionSpacing aria-label="About the destination guide" size="standard">
+          <EditorialContainer size="reading">
+            <EditorialPortableText value={page.editorialCopy} />
+          </EditorialContainer>
+        </SectionSpacing>
 
-            <SectionSpacing aria-label="About the destination guide" size="standard">
-              <EditorialContainer size="reading">
-                <EditorialPortableText value={page.editorialCopy} />
-              </EditorialContainer>
-            </SectionSpacing>
+        {page.featuredDestinations.length > 0 ? (
+          <SectionSpacing aria-labelledby="featured-destinations-title" size="generous">
+            <EditorialContainer>
+              <EditorialText
+                as="h2"
+                headingSize="medium"
+                id="featured-destinations-title"
+                variant="heading"
+              >
+                Featured destinations
+              </EditorialText>
+              <div className="mt-16 sm:mt-20">
+                {page.featuredDestinations.map((destination) => (
+                  <SectionSpacing as="div" key={destination._id} size="compact">
+                    <FeaturedDestination
+                      destination={{
+                        href: `/destinations/${encodeURIComponent(destination.slug)}`,
+                        id: destination._id,
+                        image: getEditorialImage(destination.heroImage, {
+                          height: 1000,
+                          width: 1500,
+                        }),
+                        introduction: destination.editorialIntroduction,
+                        title: destination.title,
+                      }}
+                    />
+                  </SectionSpacing>
+                ))}
+              </div>
+            </EditorialContainer>
+          </SectionSpacing>
+        ) : null}
 
-            {page.featuredDestinations.length > 0 ? (
-              <SectionSpacing aria-labelledby="featured-destinations-title" size="generous">
-                <EditorialContainer>
-                  <EditorialText
-                    as="h2"
-                    headingSize="medium"
-                    id="featured-destinations-title"
-                    variant="heading"
-                  >
-                    Featured destinations
-                  </EditorialText>
-                  <div className="mt-16 sm:mt-20">
-                    {page.featuredDestinations.map((destination) => (
-                      <SectionSpacing as="div" key={destination._id} size="compact">
-                        <FeaturedDestination
-                          destination={{
-                            id: destination._id,
-                            image: getEditorialImage(destination.heroImage, {
-                              height: 1000,
-                              width: 1500,
-                            }),
-                            introduction: destination.editorialIntroduction,
-                            title: destination.title,
-                          }}
-                        />
-                      </SectionSpacing>
-                    ))}
-                  </div>
-                </EditorialContainer>
-              </SectionSpacing>
-            ) : null}
-          </>
-        )}
+        <SectionSpacing aria-labelledby="all-destinations-title" size="generous">
+          <EditorialContainer>
+            <EditorialGrid gap="generous">
+              <EditorialText className="lg:col-span-2" variant="eyebrow">
+                The guide
+              </EditorialText>
+              <div className="lg:col-span-8 lg:col-start-4">
+                <EditorialText
+                  as="h2"
+                  headingSize="medium"
+                  id="all-destinations-title"
+                  variant="heading"
+                >
+                  All destinations
+                </EditorialText>
+                <ul className="mt-12 border-t border-ink/15 sm:mt-16">
+                  {publishedDestinations.map((destination) => (
+                    <li className="border-b border-ink/15" key={destination._id}>
+                      <Link
+                        className="group flex min-h-20 items-center justify-between gap-6 rounded-sm py-5 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-focus"
+                        href={`/destinations/${encodeURIComponent(destination.slug)}`}
+                      >
+                        <span className="font-display text-2xl leading-tight text-ink sm:text-3xl">
+                          {destination.title}
+                        </span>
+                        <span
+                          aria-hidden="true"
+                          className="font-body text-sm text-ink/50 group-hover:translate-x-1"
+                        >
+                          →
+                        </span>
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+                <div className="mt-12">
+                  <EditorialLink href="/plan-your-stay" label="Plan a stay at Joshua’s Point" />
+                </div>
+              </div>
+            </EditorialGrid>
+          </EditorialContainer>
+        </SectionSpacing>
       </main>
     </>
   )

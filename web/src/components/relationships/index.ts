@@ -5,5 +5,6 @@ export {
   RelatedExperiences,
   RelatedJournalArticles,
   RelatedPlaces,
+  RelatedScenicRoutes,
   StayNearby,
 } from './relationship-sections'

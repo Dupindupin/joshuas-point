@@ -1,6 +1,6 @@
 import type {MapProviderName} from './types'
 
-const supportedProviders = new Set<MapProviderName>(['google-maps', 'leaflet', 'mapbox'])
+const supportedProviders = new Set<MapProviderName>(['google-maps', 'leaflet', 'maplibre'])
 
 export function isMapProviderName(value: string | undefined): value is MapProviderName {
   return Boolean(value && supportedProviders.has(value as MapProviderName))

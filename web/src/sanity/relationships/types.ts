@@ -1,7 +1,13 @@
 import type {EditorialImage} from '@/components/editorial'
 
 export type RelatedContentType =
-  'destination' | 'diveSite' | 'experience' | 'housePage' | 'journalArticle' | 'room'
+  | 'destination'
+  | 'diveSite'
+  | 'experience'
+  | 'housePage'
+  | 'journalArticle'
+  | 'room'
+  | 'scenicRoute'
 
 export type RelatedContentItem = {
   excerpt?: string

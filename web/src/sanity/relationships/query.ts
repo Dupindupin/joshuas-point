@@ -40,6 +40,7 @@ const relationshipItemProjection = /* groq */ `{
     _type == "experience" => "/experiences/" + slug.current,
     _type == "journalArticle" => "/journal/" + slug.current,
     _type == "room" => "/rooms/" + slug.current,
+    _type == "scenicRoute" => "/scenic-routes/" + slug.current,
     _type == "housePage" => "/the-house"
   ),
   "image": select(
@@ -48,6 +49,7 @@ const relationshipItemProjection = /* groq */ `{
     _type == "experience" => coalesce(previewImage, heroImage) ${relationshipImageProjection},
     _type == "journalArticle" => heroImage ${relationshipImageProjection},
     _type == "room" => coalesce(previewImage, hero.image) ${relationshipImageProjection},
+    _type == "scenicRoute" => heroImage ${relationshipImageProjection},
     _type == "housePage" => hero.image ${relationshipImageProjection}
   )
 }`
@@ -76,11 +78,14 @@ const relationshipsQuery = /* groq */ `
         ...coalesce(relatedArticles, [])[]-> ${relationshipItemProjection},
         select(defined(relatedHouse) => relatedHouse-> ${relationshipItemProjection})
       ],
+      _type == "scenicRoute" => [
+        ...coalesce(relatedDestinations, [])[]-> ${relationshipItemProjection}
+      ],
       []
     ),
     "incoming": *[
       _id != $documentId &&
-      _type in ["destination", "diveSite", "experience", "journalArticle", "room", "housePage"] &&
+      _type in ["destination", "diveSite", "experience", "journalArticle", "room", "housePage", "scenicRoute"] &&
       references($documentId)
     ] | order(_updatedAt desc) ${relationshipItemProjection}
   }
@@ -188,4 +193,8 @@ export function getJournalArticleRelationships(documentId: string) {
 
 export function getRoomRelationships(documentId: string) {
   return getRelationships(documentId, 'room')
+}
+
+export function getScenicRouteRelationships(documentId: string) {
+  return getRelationships(documentId, 'scenicRoute')
 }

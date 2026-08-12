@@ -70,3 +70,15 @@ export function StayNearby({items, limit}: RelationshipSectionProps) {
     />
   )
 }
+
+export function RelatedScenicRoutes({items, limit}: RelationshipSectionProps) {
+  return (
+    <RelatedContentSection
+      eyebrow="Scenic routes"
+      items={selectType(items, 'scenicRoute')}
+      limit={limit}
+      sectionId="related-scenic-routes"
+      title="Follow the road into the landscape."
+    />
+  )
+}

@@ -7,7 +7,7 @@ export default function DestinationNotFound() {
   return (
     <>
       <SiteHeader activeHref="/destinations" appearance="solid" />
-      <main className="bg-linen">
+      <main className="bg-canvas">
         <EditorialPageHero
           eyebrow="Destination"
           introduction="This field note may still be in review, or the address may have changed."
@@ -20,7 +20,7 @@ export default function DestinationNotFound() {
               published.
             </EditorialText>
             <Link
-              className="mt-8 inline-flex rounded-sm font-body text-xs font-semibold tracking-[0.04em] text-charcoal underline decoration-charcoal/30 underline-offset-8 hover:decoration-charcoal focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-forest"
+              className="mt-8 inline-flex rounded-sm font-body text-xs font-semibold tracking-[0.04em] text-ink underline decoration-ink/30 underline-offset-8 hover:decoration-ink focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-focus"
               href="/destinations"
             >
               View destinations

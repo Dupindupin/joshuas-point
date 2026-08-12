@@ -60,9 +60,9 @@ function formatReviewDate(value: string) {
 
 function EditorialList({items}: {items: string[]}) {
   return (
-    <ul className="mt-7 space-y-4 font-body text-base leading-8 text-linen/75 sm:text-lg sm:leading-9">
+    <ul className="mt-7 space-y-4 font-body text-base leading-8 text-inverse/75 sm:text-lg sm:leading-9">
       {items.map((item) => (
-        <li className="border-t border-linen/20 pt-4" key={item}>
+        <li className="border-t border-inverse/20 pt-4" key={item}>
           {item}
         </li>
       ))}
@@ -93,7 +93,7 @@ export function DestinationTravelInformation({
   if (!hasPrimaryInformation && !hasSupportingInformation) return null
 
   return (
-    <SectionSpacing aria-labelledby="travel-information-title" className="bg-charcoal text-linen" size="generous">
+    <SectionSpacing aria-labelledby="travel-information-title" className="bg-inverse-surface text-inverse" size="generous">
       <EditorialContainer>
         <EditorialGrid>
           <EditorialText className="lg:col-span-2" tone="inverse" variant="eyebrow">
@@ -114,48 +114,48 @@ export function DestinationTravelInformation({
             {hasPrimaryInformation ? (
               <dl className="mt-16 grid gap-x-12 gap-y-10 sm:grid-cols-2 lg:mt-20">
                 {information?.travelTimeFromJoshuaPoint?.displayLabel ? (
-                  <div className="border-t border-linen/20 pt-5">
-                    <dt className="font-body text-xs font-semibold tracking-[0.18em] text-linen/55 uppercase">
+                  <div className="border-t border-inverse/20 pt-5">
+                    <dt className="font-body text-xs font-semibold tracking-[0.18em] text-inverse/55 uppercase">
                       From Joshua&apos;s Point
                     </dt>
-                    <dd className="mt-3 font-body text-base leading-8 text-linen/78">
+                    <dd className="mt-3 font-body text-base leading-8 text-inverse/78">
                       {information.travelTimeFromJoshuaPoint.displayLabel}
                     </dd>
                   </div>
                 ) : null}
 
                 {transports.length > 0 ? (
-                  <div className="border-t border-linen/20 pt-5">
-                    <dt className="font-body text-xs font-semibold tracking-[0.18em] text-linen/55 uppercase">
+                  <div className="border-t border-inverse/20 pt-5">
+                    <dt className="font-body text-xs font-semibold tracking-[0.18em] text-inverse/55 uppercase">
                       Recommended transport
                     </dt>
-                    <dd className="mt-3 font-body text-base leading-8 text-linen/78">
+                    <dd className="mt-3 font-body text-base leading-8 text-inverse/78">
                       {transports.map((transport) => transportLabels[transport] ?? transport).join(', ')}
                     </dd>
                   </div>
                 ) : null}
 
                 {information?.difficulty ? (
-                  <div className="border-t border-linen/20 pt-5">
-                    <dt className="font-body text-xs font-semibold tracking-[0.18em] text-linen/55 uppercase">
+                  <div className="border-t border-inverse/20 pt-5">
+                    <dt className="font-body text-xs font-semibold tracking-[0.18em] text-inverse/55 uppercase">
                       Visitor difficulty
                     </dt>
-                    <dd className="mt-3 font-body text-base leading-8 text-linen/78">
+                    <dd className="mt-3 font-body text-base leading-8 text-inverse/78">
                       {difficultyLabels[information.difficulty] ?? information.difficulty}
                     </dd>
                   </div>
                 ) : null}
 
                 {fee ? (
-                  <div className="border-t border-linen/20 pt-5">
-                    <dt className="font-body text-xs font-semibold tracking-[0.18em] text-linen/55 uppercase">
+                  <div className="border-t border-inverse/20 pt-5">
+                    <dt className="font-body text-xs font-semibold tracking-[0.18em] text-inverse/55 uppercase">
                       Entrance fee
                     </dt>
-                    <dd className="mt-3 font-body text-base leading-8 text-linen/78">
+                    <dd className="mt-3 font-body text-base leading-8 text-inverse/78">
                       {fee}
                       {information?.entranceFee?.amount !== undefined &&
                       information.entranceFee.notes ? (
-                        <span className="mt-2 block text-sm leading-7 text-linen/60">
+                        <span className="mt-2 block text-sm leading-7 text-inverse/60">
                           {information.entranceFee.notes}
                         </span>
                       ) : null}
@@ -164,14 +164,14 @@ export function DestinationTravelInformation({
                 ) : null}
 
                 {information?.openingHours?.hours ? (
-                  <div className="border-t border-linen/20 pt-5">
-                    <dt className="font-body text-xs font-semibold tracking-[0.18em] text-linen/55 uppercase">
+                  <div className="border-t border-inverse/20 pt-5">
+                    <dt className="font-body text-xs font-semibold tracking-[0.18em] text-inverse/55 uppercase">
                       Opening hours
                     </dt>
-                    <dd className="mt-3 font-body text-base leading-8 text-linen/78">
+                    <dd className="mt-3 font-body text-base leading-8 text-inverse/78">
                       {information.openingHours.hours}
                       {information.openingHours.qualification ? (
-                        <span className="mt-2 block text-sm leading-7 text-linen/60">
+                        <span className="mt-2 block text-sm leading-7 text-inverse/60">
                           {information.openingHours.qualification}
                         </span>
                       ) : null}
@@ -180,11 +180,11 @@ export function DestinationTravelInformation({
                 ) : null}
 
                 {information?.bestTimeToVisit ? (
-                  <div className="border-t border-linen/20 pt-5 sm:col-span-2">
-                    <dt className="font-body text-xs font-semibold tracking-[0.18em] text-linen/55 uppercase">
+                  <div className="border-t border-inverse/20 pt-5 sm:col-span-2">
+                    <dt className="font-body text-xs font-semibold tracking-[0.18em] text-inverse/55 uppercase">
                       Best time to visit
                     </dt>
-                    <dd className="mt-3 max-w-2xl font-body text-base leading-8 text-linen/78">
+                    <dd className="mt-3 max-w-2xl font-body text-base leading-8 text-inverse/78">
                       {information.bestTimeToVisit}
                     </dd>
                   </div>
@@ -224,7 +224,7 @@ export function DestinationTravelInformation({
         ) : null}
 
         {lastReviewedAt ? (
-          <EditorialText className="mt-16 text-linen/50" tone="inverse" variant="caption">
+          <EditorialText className="mt-16 text-inverse/50" tone="inverse" variant="caption">
             Practical information last reviewed {formatReviewDate(lastReviewedAt)}.
           </EditorialText>
         ) : null}

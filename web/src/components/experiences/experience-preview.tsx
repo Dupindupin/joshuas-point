@@ -7,6 +7,7 @@ import {
   type EditorialImage,
   type EditorialMediaTone,
 } from '@/components/editorial'
+import {MotionReveal} from '@/components/motion'
 
 export type ExperiencePreviewData = {
   description: string
@@ -39,15 +40,22 @@ export function ExperiencePreview({experience, layout = 'wide-left'}: Experience
   return (
     <article aria-labelledby={headingId}>
       <EditorialGrid gap="generous">
-        <EditorialMedia
-          className={mediaClasses[layout]}
-          image={experience.image}
-          ratio={portrait ? 'portrait' : 'landscape'}
-          sizes={portrait ? '(min-width: 1024px) 42vw, 100vw' : '(min-width: 1024px) 66vw, 100vw'}
-          tone={experience.tone}
-        />
+        <MotionReveal className={mediaClasses[layout]}>
+          <EditorialMedia
+            image={experience.image}
+            ratio={portrait ? 'portrait' : 'landscape'}
+            sizes={
+              portrait ? '(min-width: 1024px) 42vw, 100vw' : '(min-width: 1024px) 66vw, 100vw'
+            }
+            tone={experience.tone}
+          />
+        </MotionReveal>
 
-        <div className={contentClasses[layout]}>
+        <MotionReveal
+          className={contentClasses[layout]}
+          delay="short"
+          direction={layout === 'wide-left' ? 'left' : 'right'}
+        >
           <EditorialText as="h3" headingSize="small" id={headingId} variant="heading">
             {experience.name}
           </EditorialText>
@@ -55,12 +63,12 @@ export function ExperiencePreview({experience, layout = 'wide-left'}: Experience
             {experience.description}
           </EditorialText>
           <Link
-            className="mt-9 inline-flex rounded-sm font-body text-xs font-semibold tracking-[0.04em] text-charcoal underline decoration-charcoal/30 underline-offset-8 hover:decoration-charcoal focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-forest"
+            className="mt-9 inline-flex rounded-sm font-body text-xs font-semibold tracking-[0.04em] text-ink underline decoration-ink/30 underline-offset-8 hover:decoration-ink focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-focus"
             href={experience.href}
           >
             Read more
           </Link>
-        </div>
+        </MotionReveal>
       </EditorialGrid>
     </article>
   )

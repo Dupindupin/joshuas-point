@@ -19,10 +19,6 @@ export function ScooterRouteMap({
   routes,
   viewport,
 }: ScooterRouteMapProps) {
-  if (!coordinates && !originLabel && !labels?.length && !markers?.length && !routes?.length) {
-    return null
-  }
-
   const routeMarkers: readonly EditorialMapMarker[] =
     markers ??
     (coordinates
@@ -35,26 +31,35 @@ export function ScooterRouteMap({
           },
         ]
       : [])
+  const labelledRoutes = routes?.map((route, index) => ({
+    ...route,
+    featuredLabel: route.featuredLabel ?? index === 0,
+  }))
+  const hasMapData = Boolean(coordinates || labels?.length || markers?.length || routes?.length)
 
   return (
     <EditorialMapSection
       coordinates={coordinates}
       directionsUrl={directionsUrl}
       eyebrow="Route"
-      heading="The road as part of the journey."
-      locationLabel={originLabel}
+      explorerHref="/explorer"
+      heading={hasMapData ? 'The road as part of the journey.' : 'The journey in the guide.'}
+      locationLabel={originLabel ?? routeName}
       titleId="scooter-route-map-title"
     >
-      <EditorialMap
-        ariaLabel={`Map of ${routeName}`}
-        caption="Route information is editorial guidance, not turn-by-turn navigation or a guarantee of current road conditions."
-        coordinates={coordinates}
-        labels={labels}
-        markers={routeMarkers}
-        provider={provider}
-        routes={routes}
-        viewport={viewport}
-      />
+      {hasMapData ? (
+        <EditorialMap
+          ariaLabel={`Map of ${routeName}`}
+          caption="Use this route for orientation, not as turn-by-turn navigation. Road conditions can change."
+          coordinates={coordinates}
+          labels={labels}
+          markers={routeMarkers}
+          provider={provider}
+          routes={labelledRoutes}
+          selectedItemId={labelledRoutes?.[0]?.id ?? routeMarkers[0]?.id}
+          viewport={viewport}
+        />
+      ) : null}
     </EditorialMapSection>
   )
 }

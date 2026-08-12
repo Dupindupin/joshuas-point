@@ -34,7 +34,7 @@ function PhotographCaption({photograph}: {photograph: DestinationPhotograph}) {
           Photograph:{' '}
           {photograph.creditUrl ? (
             <a
-              className="rounded-sm underline decoration-charcoal/30 underline-offset-4 hover:decoration-charcoal focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-forest"
+              className="rounded-sm underline decoration-ink/30 underline-offset-4 hover:decoration-ink focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-focus"
               href={photograph.creditUrl}
             >
               {photograph.credit}

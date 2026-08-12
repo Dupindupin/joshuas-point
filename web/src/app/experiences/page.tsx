@@ -1,4 +1,5 @@
 import type {Metadata} from 'next'
+import {notFound} from 'next/navigation'
 
 import {
   EditorialContainer,
@@ -55,10 +56,12 @@ const experiences = [
 ] satisfies readonly ExperiencePreviewData[]
 
 export default function ExperiencesPage() {
+  notFound()
+
   return (
     <>
       <SiteHeader activeHref="/experiences" appearance="solid" />
-      <main className="bg-linen">
+      <main className="bg-canvas">
         <EditorialPageHero
           eyebrow="Experiences"
           introduction="Journeys shaped by water, weather, distance, and the people who know this landscape well."
@@ -83,9 +86,9 @@ export default function ExperiencesPage() {
                 className="max-w-xl lg:col-span-5 lg:col-start-7 lg:row-start-2 lg:mt-12"
                 variant="body"
               >
-                Joshua’s Point is a starting point for discovering sea, mountains, islands,
-                forests, and local communities. The experience of this landscape lives in the
-                movement between them, and in the quiet intervals along the way.
+                Joshua’s Point is a starting point for discovering sea, mountains, islands, forests,
+                and local communities. The experience of this landscape lives in the movement
+                between them, and in the quiet intervals along the way.
               </EditorialText>
             </EditorialGrid>
           </EditorialContainer>
@@ -124,11 +127,7 @@ export default function ExperiencesPage() {
           <figure>
             <EditorialMedia ratio="panoramic" sizes="100vw" />
             <EditorialContainer>
-              <EditorialText
-                as="figcaption"
-                className="mt-4 max-w-sm lg:ml-auto"
-                variant="caption"
-              >
+              <EditorialText as="figcaption" className="mt-4 max-w-sm lg:ml-auto" variant="caption">
                 The coast continues beyond the ridge in long changes of light and weather.
               </EditorialText>
             </EditorialContainer>
@@ -137,7 +136,7 @@ export default function ExperiencesPage() {
 
         <SectionSpacing
           aria-labelledby="slow-travel-title"
-          className="bg-charcoal"
+          className="bg-inverse-surface"
           size="immersive"
         >
           <EditorialContainer>
@@ -170,10 +169,7 @@ export default function ExperiencesPage() {
         <SectionSpacing aria-label="Closing reflection" size="immersive">
           <EditorialContainer>
             <EditorialGrid>
-              <EditorialText
-                className="max-w-3xl lg:col-span-8 lg:col-start-3"
-                variant="lead"
-              >
+              <EditorialText className="max-w-3xl lg:col-span-8 lg:col-start-3" variant="lead">
                 The days remembered most clearly are often the ones that were given enough time.
               </EditorialText>
             </EditorialGrid>

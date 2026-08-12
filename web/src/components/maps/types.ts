@@ -1,4 +1,4 @@
-export type MapProviderName = 'google-maps' | 'leaflet' | 'mapbox'
+export type MapProviderName = 'google-maps' | 'leaflet' | 'maplibre'
 
 export type MapCoordinates = {
   latitude: number
@@ -10,6 +10,7 @@ export type MapMarkerKind = 'destination' | 'dive-site' | 'origin' | 'route-stop
 export type EditorialMapMarker = {
   coordinates: MapCoordinates
   description?: string
+  featuredLabel?: boolean
   id: string
   kind?: MapMarkerKind
   label: string
@@ -24,6 +25,7 @@ export type EditorialMapLabel = {
 export type EditorialMapRoute = {
   coordinates: readonly MapCoordinates[]
   description?: string
+  featuredLabel?: boolean
   id: string
   label?: string
 }
@@ -63,4 +65,6 @@ export type NormalizedEditorialMapData = {
 export type MapProviderAdapterProps = {
   ariaLabel: string
   data: NormalizedEditorialMapData
+  onItemSelect?: (id: string) => void
+  selectedItemId?: string
 }

@@ -10,11 +10,18 @@ export type EditorialMapProps = EditorialMapData & {
   ariaLabel: string
   caption?: string
   className?: string
+  onItemSelect?: (id: string) => void
   provider?: MapProviderName | null
+  selectedItemId?: string
 }
 
 function formatCoordinates({latitude, longitude}: {latitude: number; longitude: number}) {
   return `${latitude.toFixed(5)}, ${longitude.toFixed(5)}`
+}
+
+function endSentence(value: string | undefined) {
+  if (!value) return '.'
+  return /[.!?]$/.test(value.trim()) ? ` ${value.trim()}` : ` ${value.trim()}.`
 }
 
 function EditorialMapSummary({data}: {data: NormalizedEditorialMapData}) {
@@ -28,7 +35,7 @@ function EditorialMapSummary({data}: {data: NormalizedEditorialMapData}) {
           {data.markers.map((marker) => (
             <li key={marker.id}>
               {marker.label}: {formatCoordinates(marker.coordinates)}
-              {marker.description ? `. ${marker.description}` : ''}
+              {endSentence(marker.description)}
             </li>
           ))}
         </ul>
@@ -45,7 +52,7 @@ function EditorialMapSummary({data}: {data: NormalizedEditorialMapData}) {
       {data.routes.map((route) => (
         <p key={route.id}>
           {route.label ?? 'Route'} with {route.coordinates.length} mapped points
-          {route.description ? `. ${route.description}` : ''}.
+          {endSentence(route.description)}
         </p>
       ))}
     </div>
@@ -59,8 +66,10 @@ export function EditorialMap({
   coordinates,
   labels,
   markers,
+  onItemSelect,
   provider: providerOverride,
   routes,
+  selectedItemId,
   viewport,
 }: EditorialMapProps) {
   const data = normalizeEditorialMapData({coordinates, labels, markers, routes, viewport})
@@ -69,7 +78,13 @@ export function EditorialMap({
   return (
     <figure className={className}>
       {provider ? (
-        <MapProviderHost ariaLabel={ariaLabel} data={data} provider={provider} />
+        <MapProviderHost
+          ariaLabel={ariaLabel}
+          data={data}
+          onItemSelect={onItemSelect}
+          provider={provider}
+          selectedItemId={selectedItemId}
+        />
       ) : (
         <EditorialMapPlaceholder ariaLabel={ariaLabel} data={data} />
       )}

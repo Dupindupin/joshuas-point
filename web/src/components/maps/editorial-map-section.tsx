@@ -10,10 +10,11 @@ import {
 import type {MapCoordinates} from './types'
 
 type EditorialMapSectionProps = {
-  children: ReactNode
+  children?: ReactNode
   coordinates?: MapCoordinates
   directionsUrl?: string
   eyebrow: string
+  explorerHref?: string
   heading: string
   locationLabel?: string
   titleId: string
@@ -28,6 +29,7 @@ export function EditorialMapSection({
   coordinates,
   directionsUrl,
   eyebrow,
+  explorerHref,
   heading,
   locationLabel,
   titleId,
@@ -40,7 +42,13 @@ export function EditorialMapSection({
     <SectionSpacing aria-labelledby={titleId} size="generous">
       <EditorialContainer>
         <EditorialGrid gap="generous">
-          <div className="lg:col-span-4 lg:self-end lg:pb-8">
+          <div
+            className={
+              children
+                ? 'lg:col-span-4 lg:self-end lg:pb-8'
+                : 'max-w-2xl lg:col-span-7 lg:col-start-3'
+            }
+          >
             <EditorialText variant="eyebrow">{eyebrow}</EditorialText>
             <EditorialText
               as="h2"
@@ -64,17 +72,29 @@ export function EditorialMapSection({
                 {formattedCoordinates}
               </EditorialText>
             ) : null}
-            {directionsUrl ? (
-              <a
-                className="mt-8 inline-flex rounded-sm font-body text-xs font-semibold tracking-[0.04em] text-charcoal underline decoration-charcoal/30 underline-offset-8 hover:decoration-charcoal focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-forest"
-                href={directionsUrl}
-              >
-                Open directions
-              </a>
+            {directionsUrl || explorerHref ? (
+              <div className="mt-8 flex flex-wrap gap-x-7 gap-y-4">
+                {directionsUrl ? (
+                  <a
+                    className="inline-flex rounded-sm font-body text-xs font-semibold tracking-[0.04em] text-ink underline decoration-ink/30 underline-offset-8 hover:decoration-ink focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-focus"
+                    href={directionsUrl}
+                  >
+                    Open directions
+                  </a>
+                ) : null}
+                {explorerHref ? (
+                  <a
+                    className="inline-flex rounded-sm font-body text-xs font-semibold tracking-[0.04em] text-ink underline decoration-ink/30 underline-offset-8 hover:decoration-ink focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-focus"
+                    href={explorerHref}
+                  >
+                    Open the Explorer
+                  </a>
+                ) : null}
+              </div>
             ) : null}
           </div>
 
-          <div className="lg:col-span-8">{children}</div>
+          {children ? <div className="min-w-0 lg:col-span-8">{children}</div> : null}
         </EditorialGrid>
       </EditorialContainer>
     </SectionSpacing>

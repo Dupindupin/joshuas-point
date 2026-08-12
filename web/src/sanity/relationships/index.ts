@@ -5,6 +5,7 @@ export {
   getJournalArticleRelationships,
   getRelationships,
   getRoomRelationships,
+  getScenicRouteRelationships,
 } from './query'
 export {emptyRelationshipSet} from './types'
 export type {

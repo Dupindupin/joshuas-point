@@ -7,6 +7,7 @@ import {
   EditorialText,
   SectionSpacing,
 } from '@/components/editorial'
+import {MotionReveal} from '@/components/motion'
 import type {RelatedContentItem} from '@/sanity/relationships'
 
 export type RelatedContentSectionProps = {
@@ -24,6 +25,7 @@ const typeLabels: Record<RelatedContentItem['type'], string> = {
   housePage: 'The House',
   journalArticle: 'Journal',
   room: 'Room',
+  scenicRoute: 'Scenic route',
 }
 
 export function RelatedContentSection({
@@ -41,7 +43,8 @@ export function RelatedContentSection({
   return (
     <SectionSpacing aria-labelledby={headingId} size="generous">
       <EditorialContainer>
-        <EditorialGrid>
+        <MotionReveal>
+          <EditorialGrid>
           <EditorialText className="lg:col-span-2" variant="eyebrow">
             {eyebrow}
           </EditorialText>
@@ -53,16 +56,19 @@ export function RelatedContentSection({
           >
             {title}
           </EditorialText>
-        </EditorialGrid>
+          </EditorialGrid>
+        </MotionReveal>
 
         <div className="mt-16 sm:mt-20">
           {visibleItems.map((item) => {
             const itemHeadingId = `${sectionId}-${item.id.replace(/[^a-zA-Z0-9_-]/g, '-')}-title`
 
             return (
-              <article
+              <MotionReveal
+                as="article"
                 aria-labelledby={itemHeadingId}
                 className="py-12 first:pt-0 last:pb-0 sm:py-16"
+                delay="short"
                 key={item.id}
               >
                 <EditorialGrid gap="generous">
@@ -91,14 +97,14 @@ export function RelatedContentSection({
                     ) : null}
                     <Link
                       aria-label={`Read more about ${item.title}`}
-                      className="mt-8 inline-flex rounded-sm font-body text-xs font-semibold tracking-[0.04em] text-charcoal underline decoration-charcoal/30 underline-offset-8 hover:decoration-charcoal focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-forest"
+                      className="mt-8 inline-flex rounded-sm font-body text-xs font-semibold tracking-[0.04em] text-ink underline decoration-ink/30 underline-offset-8 hover:decoration-ink focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-focus"
                       href={item.href}
                     >
                       Read more
                     </Link>
                   </div>
                 </EditorialGrid>
-              </article>
+              </MotionReveal>
             )
           })}
         </div>

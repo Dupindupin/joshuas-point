@@ -11,14 +11,14 @@ const GoogleMapsAdapter = dynamic<MapProviderAdapterProps>(() =>
 const LeafletAdapter = dynamic<MapProviderAdapterProps>(() =>
   import('./providers/leaflet-adapter').then((module) => module.LeafletAdapter),
 )
-const MapboxAdapter = dynamic<MapProviderAdapterProps>(() =>
-  import('./providers/mapbox-adapter').then((module) => module.MapboxAdapter),
+const MapLibreAdapter = dynamic<MapProviderAdapterProps>(() =>
+  import('./providers/maplibre-adapter').then((module) => module.MapLibreAdapter),
 )
 
 const providerAdapters: Record<MapProviderName, ComponentType<MapProviderAdapterProps>> = {
   'google-maps': GoogleMapsAdapter,
   leaflet: LeafletAdapter,
-  mapbox: MapboxAdapter,
+  maplibre: MapLibreAdapter,
 }
 
 type MapProviderHostProps = MapProviderAdapterProps & {
