@@ -1,6 +1,7 @@
 import {getDestinationsPage, getPublishedDestinations} from '@/sanity/queries/destinations'
 import {getSiteSeoSettings} from '@/sanity/queries/site-settings'
 import {normalizeSocialProfiles} from '@/lib/social-profiles'
+import {getBrandImageSource} from '@/sanity/image'
 
 import {SiteHeaderClient, type SiteHeaderClientProps} from './site-header-client'
 
@@ -24,6 +25,10 @@ export async function SiteHeader(props: SiteHeaderClientProps) {
     (right._updatedAt ?? '').localeCompare(left._updatedAt ?? ''),
   )
   const seen = new Set<string>()
+  const logoSources = {
+    horizontal: getBrandImageSource(siteSettings?.primaryLogo, 1200),
+    mark: getBrandImageSource(siteSettings?.compactLogo, 512),
+  }
   const destinationLinks = [...featuredDestinations, ...newestDestinations]
     .filter((destination) => {
       if (seen.has(destination.slug)) return false
@@ -40,6 +45,7 @@ export async function SiteHeader(props: SiteHeaderClientProps) {
         siteSettings?.bookingLinks?.enabled ? siteSettings.bookingLinks.primary : undefined
       }
       featuredDestinations={destinationLinks}
+      logoSources={logoSources}
       primaryNavigation={siteSettings?.primaryNavigation ?? []}
       socialProfiles={normalizeSocialProfiles(siteSettings?.socialProfiles)}
     />

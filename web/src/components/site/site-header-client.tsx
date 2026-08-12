@@ -5,7 +5,7 @@ import {useEffect, useState} from 'react'
 
 import type {SocialProfile} from '@/lib/social-profiles'
 
-import {BrandLogo} from './brand-logo'
+import {BrandLogo, type BrandLogoSources} from './brand-logo'
 import {DesktopMegaNavigation, type DesktopMegaNavigationGroup} from './desktop-mega-navigation'
 import {MobileNavigation, type MobileNavigationItem} from './mobile-navigation'
 
@@ -25,6 +25,7 @@ export type SiteHeaderClientProps = {
 type SiteHeaderClientInternalProps = SiteHeaderClientProps & {
   bookingLink?: NavigationLink
   featuredDestinations: readonly NavigationLink[]
+  logoSources: BrandLogoSources
   primaryNavigation: readonly NavigationLink[]
   socialProfiles: readonly SocialProfile[]
 }
@@ -93,7 +94,13 @@ const focusClasses: Record<HeaderAppearance, string> = {
   solid: 'focus-visible:outline-focus',
 }
 
-function SiteWordmark({appearance}: {appearance: HeaderAppearance}) {
+function SiteWordmark({
+  appearance,
+  sources,
+}: {
+  appearance: HeaderAppearance
+  sources: BrandLogoSources
+}) {
   return (
     <Link
       aria-label="Joshua’s Point home"
@@ -104,6 +111,7 @@ function SiteWordmark({appearance}: {appearance: HeaderAppearance}) {
         alt=""
         className="size-[3.25rem] min-[480px]:hidden"
         priority
+        sources={sources}
         tone="inverse"
         variant="mark"
       />
@@ -111,6 +119,7 @@ function SiteWordmark({appearance}: {appearance: HeaderAppearance}) {
         alt=""
         className="hidden min-[480px]:inline-block min-[480px]:w-[9.5rem] sm:w-[12.5rem] md:w-[13.5rem] lg:w-[14.75rem] xl:w-64"
         priority
+        sources={sources}
         tone={appearance === 'transparent' ? 'inverse' : 'adaptive'}
       />
     </Link>
@@ -122,6 +131,7 @@ export function SiteHeaderClient({
   appearance = 'transparent',
   bookingLink,
   featuredDestinations,
+  logoSources,
   primaryNavigation: sanityPrimaryNavigation,
   socialProfiles,
 }: SiteHeaderClientInternalProps) {
@@ -155,7 +165,7 @@ export function SiteHeaderClient({
           isScrolled ? 'h-20' : 'h-24'
         }`}
       >
-        <SiteWordmark appearance={effectiveAppearance} />
+        <SiteWordmark appearance={effectiveAppearance} sources={logoSources} />
 
         <DesktopMegaNavigation
           activeHref={activeHref}

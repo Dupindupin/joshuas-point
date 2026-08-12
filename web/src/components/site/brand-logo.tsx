@@ -1,9 +1,15 @@
 import Image from 'next/image'
 
+export type BrandLogoSources = {
+  horizontal?: string
+  mark?: string
+}
+
 type BrandLogoProps = {
   alt?: string
   className?: string
   priority?: boolean
+  sources?: BrandLogoSources
   tone?: 'adaptive' | 'inverse'
   variant?: 'horizontal' | 'mark'
 }
@@ -22,6 +28,7 @@ export function BrandLogo({
   alt = "Joshua's Point",
   className = '',
   priority = false,
+  sources,
   tone = 'adaptive',
   variant = 'horizontal',
 }: BrandLogoProps) {
@@ -32,8 +39,8 @@ export function BrandLogo({
         className={className}
         height={markDimensions.height}
         priority={priority}
-        src="/brand/favicon.svg"
-        unoptimized
+        src={sources?.mark ?? '/brand/favicon.svg'}
+        unoptimized={!sources?.mark}
         width={markDimensions.width}
       />
     )
@@ -60,7 +67,7 @@ export function BrandLogo({
         fill
         priority={priority}
         sizes="(min-width: 640px) 240px, 200px"
-        src="/brand/logo-horizontal.png"
+        src={sources?.horizontal ?? '/brand/logo-horizontal.png'}
       />
       <Image
         alt=""

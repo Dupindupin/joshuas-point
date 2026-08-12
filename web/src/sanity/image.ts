@@ -12,6 +12,16 @@ type EditorialImageOptions = {
   width: number
 }
 
+/** Builds an uncropped brand-asset URL while preserving transparent padding and proportions. */
+export function getBrandImageSource(
+  image: SanityImage | null | undefined,
+  width: number,
+): string | undefined {
+  if (!image?.asset?._ref) return undefined
+
+  return imageBuilder.image(image.asset).width(width).fit('max').auto('format').url()
+}
+
 export function getEditorialImage(
   image: SanityImage | null | undefined,
   {height, width}: EditorialImageOptions,

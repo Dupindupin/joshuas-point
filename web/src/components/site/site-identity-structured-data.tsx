@@ -1,6 +1,6 @@
 import {isSearchIndexingAllowed} from '@/lib/deployment'
 import {normalizeSocialProfiles} from '@/lib/social-profiles'
-import {getEditorialImage} from '@/sanity/image'
+import {getBrandImageSource} from '@/sanity/image'
 import {getSiteSeoSettings} from '@/sanity/queries/site-settings'
 
 export async function SiteIdentityStructuredData() {
@@ -13,19 +13,11 @@ export async function SiteIdentityStructuredData() {
   if (!name || !url) return null
 
   const sameAs = normalizeSocialProfiles(settings?.socialProfiles).map((profile) => profile.href)
-  const compactLogo = getEditorialImage(settings?.compactLogo, {
-    height: 1024,
-    width: 1024,
-  })
-  const profileImage = getEditorialImage(settings?.squareProfileImage, {
-    height: 1000,
-    width: 1000,
-  })
+  const compactLogo = getBrandImageSource(settings?.compactLogo, 1024)
+  const profileImage = getBrandImageSource(settings?.squareProfileImage, 1000)
   const origin = url.replace(/\/$/, '')
-  const logoUrl = compactLogo ? String(compactLogo.src) : `${origin}/brand/app-icon.png`
-  const identityImageUrl = profileImage
-    ? String(profileImage.src)
-    : `${origin}/brand/social-profile.png`
+  const logoUrl = compactLogo ?? `${origin}/brand/app-icon.png`
+  const identityImageUrl = profileImage ?? `${origin}/brand/social-profile.png`
   const structuredData = {
     '@context': 'https://schema.org',
     '@id': `${url.replace(/\/$/, '')}/#organization`,

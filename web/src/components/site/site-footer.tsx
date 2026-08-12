@@ -9,6 +9,7 @@ import {
 import {ThemeControl} from '@/components/theme/theme-control'
 import {normalizeSocialProfiles, type SocialProfile} from '@/lib/social-profiles'
 import {getSiteSeoSettings} from '@/sanity/queries/site-settings'
+import {getBrandImageSource} from '@/sanity/image'
 
 import {BrandLogo} from './brand-logo'
 import {SocialProfileLinks} from './social-profile-links'
@@ -234,6 +235,10 @@ export async function SiteFooter(props: SiteFooterProps = {}) {
     props.stayLinks ??
     (sanityStayLinks && sanityStayLinks.length > 0 ? sanityStayLinks : defaultStayLinks)
   const year = new Date().getFullYear()
+  const logoSources = {
+    horizontal: getBrandImageSource(settings?.primaryLogo, 1200),
+    mark: getBrandImageSource(settings?.compactLogo, 512),
+  }
 
   return (
     <footer className="mt-auto bg-footer text-inverse">
@@ -249,6 +254,7 @@ export async function SiteFooter(props: SiteFooterProps = {}) {
                   <BrandLogo
                     alt={siteName}
                     className="h-auto w-[17rem] sm:w-[22rem]"
+                    sources={logoSources}
                     tone="inverse"
                   />
                 </Link>

@@ -6,6 +6,8 @@ import {SiteIdentityStructuredData} from '@/components/site/site-identity-struct
 import {createPageMetadata} from '@/lib/seo/metadata'
 import {getSiteUrl} from '@/lib/site-url'
 import {themeInitializationScript} from '@/lib/theme'
+import {getBrandImageSource} from '@/sanity/image'
+import {getSiteSeoSettings} from '@/sanity/queries/site-settings'
 import {brandFontVariables} from '@/styles/fonts'
 
 import 'maplibre-gl/dist/maplibre-gl.css'
@@ -17,16 +19,23 @@ const geistMono = Geist_Mono({
 })
 
 export async function generateMetadata(): Promise<Metadata> {
-  const metadata = await createPageMetadata({
-    pathname: '/',
-  })
+  const [metadata, settings] = await Promise.all([
+    createPageMetadata({pathname: '/'}),
+    getSiteSeoSettings(),
+  ])
+  const favicon = getBrandImageSource(settings?.faviconImage, 64)
+  const appIcon = getBrandImageSource(settings?.appIconImage, 180)
 
   return {
     ...metadata,
     icons: {
-      apple: [{sizes: '180x180', type: 'image/png', url: '/brand/apple-touch-icon.png'}],
+      apple: [
+        appIcon
+          ? {sizes: '180x180', url: appIcon}
+          : {sizes: '180x180', type: 'image/png', url: '/brand/apple-touch-icon.png'},
+      ],
       icon: [
-        {type: 'image/svg+xml', url: '/brand/favicon.svg'},
+        favicon ? {url: favicon} : {type: 'image/svg+xml', url: '/brand/favicon.svg'},
         {sizes: '32x32', type: 'image/png', url: '/brand/favicon-32.png'},
       ],
     },
