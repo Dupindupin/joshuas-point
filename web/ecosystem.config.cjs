@@ -1,12 +1,14 @@
 /* eslint-disable @typescript-eslint/no-require-imports */
 const path = require('node:path')
 
+const webApplicationDirectory = path.resolve(__dirname)
+
 module.exports = {
   apps: [
     {
       name: 'joshuas-point-preview',
-      cwd: __dirname,
-      script: path.join(__dirname, 'node_modules', 'next', 'dist', 'bin', 'next'),
+      cwd: webApplicationDirectory,
+      script: path.join(webApplicationDirectory, 'node_modules', 'next', 'dist', 'bin', 'next'),
       args: 'start --hostname 0.0.0.0 --port 3001',
       interpreter: 'node',
       instances: 1,
