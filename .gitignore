@@ -23,6 +23,10 @@ yarn-error.log*
 # Coverage
 /coverage
 
+# Generated editorial exports and local render workspaces
+/output
+/tmp
+
 # Environment
 .env
 .env.local
