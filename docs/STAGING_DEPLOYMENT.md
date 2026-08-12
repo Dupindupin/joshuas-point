@@ -86,7 +86,7 @@ xCloud may detect the repository root even when the website lives in `web/`. The
 
 This is a deployment safeguard, not a generic workspace conversion. Sanity Studio commands remain explicit under the `studio:*` namespace. The preview website must never use a `studio:*` command.
 
-For xCloud, use `npm ci`, `npm run build`, and `npm start` at the repository root if its monorepo root setting cannot be changed. Do not use `cd web && ...` as a PM2 start command.
+For xCloud, use `npm ci`, `npm run build`, and `npm start` at the repository root if its monorepo root setting cannot be changed. Configure the xCloud SSR application port as `3001`. Do not use `cd web && ...` as a PM2 start command.
 
 The Studio project and production dataset are fixed in the reviewed Sanity configuration as project `8m6fb3x7`, dataset `production`; they are not secret values.
 
