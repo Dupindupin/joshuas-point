@@ -29,6 +29,9 @@ Required non-secret configuration:
 | `NEXT_PUBLIC_MAPLIBRE_STYLE_URL_DARK` | `/maps/styles/joshuas-point-dark.json` |
 | `ENQUIRY_EMAIL_MODE` | `disabled` |
 
+MapLibre is also the centralized application default when `NEXT_PUBLIC_MAP_PROVIDER` is absent.
+Keep the explicit staging value so the active provider remains visible in deployment settings.
+
 Use the normal Next.js production build and start commands. MapLibre loads the repository’s Joshua’s Point style files, while the styles reference OpenFreeMap vector tiles and glyphs. No Mapbox token is required.
 
 ### Private access
