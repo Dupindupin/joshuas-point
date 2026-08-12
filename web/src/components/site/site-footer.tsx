@@ -56,10 +56,7 @@ const defaultExploreLinks: SiteFooterLink[] = [
   {href: '/dive-sites', label: 'Dive Guide'},
 ]
 
-const defaultGuides: SiteFooterGuide[] = [
-  {href: '/guide', title: 'Southern Negros Explorer'},
-  {href: '/dive-sites', title: 'Dive Guide'},
-]
+const defaultGuides: SiteFooterGuide[] = [{href: '/guide', title: 'Southern Negros Explorer'}]
 
 const defaultLegalLinks: SiteFooterLink[] = [
   {href: '/privacy', label: 'Privacy'},
@@ -211,7 +208,7 @@ export async function SiteFooter(props: SiteFooterProps = {}) {
   const exploreLinks =
     props.exploreLinks ??
     (sanityExploreLinks && sanityExploreLinks.length > 0 ? sanityExploreLinks : defaultExploreLinks)
-  const guides =
+  const guideCandidates =
     props.guides ??
     (sanityGuideLinks && sanityGuideLinks.length > 0
       ? sanityGuideLinks.map((link) => ({
@@ -220,6 +217,8 @@ export async function SiteFooter(props: SiteFooterProps = {}) {
           title: link.label,
         }))
       : defaultGuides)
+  const exploreHrefs = new Set(exploreLinks.map(({href}) => href))
+  const guides = guideCandidates.filter(({href}) => !href || !exploreHrefs.has(href))
   const legalLinks =
     props.legalLinks ??
     (footerSettings?.legalLinks && footerSettings.legalLinks.length > 0

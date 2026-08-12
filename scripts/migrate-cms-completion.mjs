@@ -249,10 +249,7 @@ function buildSiteSettings(current, brandImageValues) {
           _key: 'guides',
           _type: 'navigationGroup',
           title: 'Guides',
-          items: [
-            routeLink('Southern Negros Explorer', '/guide'),
-            routeLink('Dive Guide', '/dive-sites'),
-          ],
+          items: [routeLink('Southern Negros Explorer', '/guide')],
         },
       ],
       socialLinks,

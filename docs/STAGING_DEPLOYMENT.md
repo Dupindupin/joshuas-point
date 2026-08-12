@@ -24,6 +24,7 @@ Required non-secret configuration:
 | `NEXT_PUBLIC_SITE_URL` | `https://preview.joshuaspoint.com` |
 | `NEXT_PUBLIC_SANITY_PROJECT_ID` | `8m6fb3x7` |
 | `NEXT_PUBLIC_SANITY_DATASET` | `production` |
+| `SANITY_REVALIDATE_SECRET` | A unique, long staging-only secret shared with the Sanity webhook |
 | `NEXT_PUBLIC_MAP_PROVIDER` | `maplibre` |
 | `NEXT_PUBLIC_MAPLIBRE_STYLE_URL_LIGHT` | `/maps/styles/joshuas-point-light.json` |
 | `NEXT_PUBLIC_MAPLIBRE_STYLE_URL_DARK` | `/maps/styles/joshuas-point-dark.json` |
@@ -31,6 +32,26 @@ Required non-secret configuration:
 
 MapLibre is also the centralized application default when `NEXT_PUBLIC_MAP_PROVIDER` is absent.
 Keep the explicit staging value so the active provider remains visible in deployment settings.
+The application also fails safely to `https://preview.joshuaspoint.com` when the deployment is
+explicitly marked `staging` but `NEXT_PUBLIC_SITE_URL` is accidentally omitted. Production URL
+resolution is unchanged and still uses its own environment value or the published Site Settings
+URL.
+
+### Sanity cache revalidation
+
+Create a signed Sanity document webhook after the staging secret is present in xCloud:
+
+- URL: `https://preview.joshuaspoint.com/api/sanity/revalidate`
+- method: `POST`
+- dataset: `production`
+- drafts: excluded
+- secret: exactly the value stored as `SANITY_REVALIDATE_SECRET` in xCloud
+- projection: `{"_id": coalesce(_id, before()._id), "_type": coalesce(_type, before()._type), "slug": coalesce(slug.current, before().slug.current)}`
+
+The endpoint verifies Sanity's `sanity-webhook-signature` header against the unmodified request
+body, then invalidates only an allowlisted set of existing Sanity cache tags. The existing
+one-hour query revalidation remains active as a fallback if a webhook delivery is delayed or
+missed. Use a separate secret for a future production deployment.
 
 Use the normal Next.js production build and start commands. MapLibre loads the repository’s Joshua’s Point style files, while the styles reference OpenFreeMap vector tiles and glyphs. No Mapbox token is required.
 
