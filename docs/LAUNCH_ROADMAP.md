@@ -1,5 +1,10 @@
 # Joshua's Point — Launch Roadmap
 
+> **Planning baseline:** This roadmap records the earlier Version 1 scope. The current release gate,
+> live inventory, and final launch decisions are maintained in
+> [`JOSHUAS_POINT_V1_LAUNCH_CHECKLIST.md`](./JOSHUAS_POINT_V1_LAUNCH_CHECKLIST.md) and
+> [`JOSHUAS_POINT_CONTENT_STATUS.md`](./JOSHUAS_POINT_CONTENT_STATUS.md).
+
 ## Status and purpose
 
 This document defines the scope, quality gates, and release path for **Joshua's Point Version
@@ -645,4 +650,3 @@ through Southern Negros with greater care?**
    commerce or campaign complexity.
 9. **Review after 30 days.** Compare evidence with the goals in this roadmap before selecting
    Version 1.1 work.
-

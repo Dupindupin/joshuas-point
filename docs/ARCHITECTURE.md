@@ -1,5 +1,10 @@
 # Joshua's Point — Architecture
 
+> **Legacy foundation note:** This document records the project's early architecture and local
+> workflow. It predates the completed Sanity integration and Explorer Platform. For the current
+> Version 1 system and authority rules, use
+> [`JOSHUAS_POINT_TECHNICAL_ARCHITECTURE.md`](./JOSHUAS_POINT_TECHNICAL_ARCHITECTURE.md).
+
 This document is the technical orientation guide for Joshua's Point. Read it together with
 [`project-rules.md`](./project-rules.md), the [`design-system`](./design-system/) documentation,
 and the [`joshuas-point-book`](./joshuas-point-book/) before making product changes.
