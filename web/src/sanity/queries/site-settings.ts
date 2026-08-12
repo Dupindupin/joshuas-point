@@ -1,7 +1,8 @@
 import {cache} from 'react'
 
 import {sanityClient} from '../client'
-import type {SanityImage, SanityInstagramPost} from '../types'
+import {mapSanitySiteSettings, type SiteSettingsData} from '../mappers/site-settings'
+import type {SanitySiteSettingsData} from '../types'
 
 const editorialImageProjection = /* groq */ `{
   alt,
@@ -15,59 +16,113 @@ const editorialImageProjection = /* groq */ `{
   "lqip": asset->metadata.lqip
 }`
 
-const siteSeoSettingsQuery = /* groq */ `
+const seoProjection = /* groq */ `{
+  canonicalUrl,
+  metaDescription,
+  metaTitle,
+  noIndex,
+  socialDescription,
+  socialImage ${editorialImageProjection},
+  socialTitle
+}`
+
+const linkProjection = /* groq */ `{
+  email,
+  externalUrl,
+  internalRoute,
+  kind,
+  label,
+  openInNewTab,
+  phone,
+  "reference": reference->{
+    _id,
+    _type,
+    "slug": slug.current
+  }
+}`
+
+const contactDetailsProjection = /* groq */ `{
+  address {
+    country,
+    locality,
+    postalCode,
+    region
+  },
+  email,
+  inquiryNote,
+  mapUrl,
+  phone,
+  phoneHref,
+  whatsappUrl
+}`
+
+const siteSettingsQuery = /* groq */ `
   *[_type == "siteSettings" && _id == "siteSettings"][0] {
+    _id,
+    appIconImage ${editorialImageProjection},
+    bookingLinks {
+      disclosure,
+      enabled,
+      inquiry ${linkProjection},
+      primary ${linkProjection}
+    },
     compactLogo ${editorialImageProjection},
+    contactDetails ${contactDetailsProjection},
+    defaultSeo ${seoProjection},
     defaultSocialImage ${editorialImageProjection},
+    faviconImage ${editorialImageProjection},
+    footer {
+      contactDetailsOverride ${contactDetailsProjection},
+      copyrightText,
+      introduction,
+      legalLinks[] {
+        _key,
+        label,
+        link ${linkProjection}
+      },
+      navigationGroups[] {
+        _key,
+        title,
+        items[] {
+          _key,
+          label,
+          link ${linkProjection}
+        }
+      }
+    },
     instagramHighlights[] {
       _key,
       caption,
       image ${editorialImageProjection},
       postUrl
     },
+    primaryLogo ${editorialImageProjection},
+    primaryNavigation[] {
+      _key,
+      label,
+      link ${linkProjection}
+    },
     propertyLocation {
       coordinates,
       directionsUrl,
       label
     },
-    primaryLogo ${editorialImageProjection},
     "socialProfiles": footer.socialLinks[] {
       platform,
       url
     },
     siteDescription,
-    squareProfileImage ${editorialImageProjection},
     siteTitle,
-    siteUrl
+    siteUrl,
+    squareProfileImage ${editorialImageProjection}
   }
 `
 
-export type SiteSocialProfile = {
-  platform?: string | null
-  url?: string | null
-}
-
-export type SiteSeoSettings = {
-  compactLogo?: SanityImage | null
-  defaultSocialImage?: SanityImage | null
-  instagramHighlights?: SanityInstagramPost[] | null
-  propertyLocation?: {
-    coordinates?: {lat?: number | null; lng?: number | null} | null
-    directionsUrl?: string | null
-    label?: string | null
-  } | null
-  primaryLogo?: SanityImage | null
-  siteDescription?: string | null
-  siteTitle?: string | null
-  siteUrl?: string | null
-  socialProfiles?: SiteSocialProfile[] | null
-  squareProfileImage?: SanityImage | null
-}
-
-export const getSiteSeoSettings = cache(async (): Promise<SiteSeoSettings | null> => {
+/** Returns the complete, normalized public Site Settings read model. */
+export const getSiteSeoSettings = cache(async (): Promise<SiteSettingsData | null> => {
   try {
-    return await sanityClient.fetch<SiteSeoSettings | null>(
-      siteSeoSettingsQuery,
+    const settings = await sanityClient.fetch<SanitySiteSettingsData | null>(
+      siteSettingsQuery,
       {},
       {
         next: {
@@ -76,8 +131,12 @@ export const getSiteSeoSettings = cache(async (): Promise<SiteSeoSettings | null
         },
       },
     )
+
+    return mapSanitySiteSettings(settings)
   } catch (error) {
-    console.error('Unable to load SEO settings from Sanity.', error)
+    console.error('Unable to load Site Settings from Sanity.', error)
     return null
   }
 })
+
+export type {SiteSettingsData} from '../mappers/site-settings'

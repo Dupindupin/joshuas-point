@@ -80,6 +80,7 @@ export type SanityLinkReference = {
     | 'homePage'
     | 'housePage'
     | 'room'
+    | 'roomsPage'
     | 'scenicRoute'
     | 'scenicRoutesPage'
     | null
@@ -89,11 +90,76 @@ export type SanityLinkReference = {
 export type SanityLink = {
   email?: string | null
   externalUrl?: string | null
-  kind?: 'email' | 'external' | 'internal' | 'phone' | null
+  internalRoute?: string | null
+  kind?: 'email' | 'external' | 'internal' | 'phone' | 'route' | null
   label?: string | null
   openInNewTab?: boolean | null
   phone?: string | null
   reference?: SanityLinkReference | null
+}
+
+export type SanityContactDetails = {
+  address?: {
+    country?: string | null
+    locality?: string | null
+    postalCode?: string | null
+    region?: string | null
+  } | null
+  email?: string | null
+  inquiryNote?: string | null
+  mapUrl?: string | null
+  phone?: string | null
+  phoneHref?: string | null
+  whatsappUrl?: string | null
+}
+
+export type SanityNavigationItem = {
+  _key?: string | null
+  label?: string | null
+  link?: SanityLink | null
+}
+
+export type SanitySiteSettingsData = {
+  _id: string
+  appIconImage?: SanityImage | null
+  bookingLinks?: {
+    disclosure?: string | null
+    enabled?: boolean | null
+    inquiry?: SanityLink | null
+    primary?: SanityLink | null
+  } | null
+  compactLogo?: SanityImage | null
+  contactDetails?: SanityContactDetails | null
+  defaultSeo?: SeoData | null
+  defaultSocialImage?: SanityImage | null
+  faviconImage?: SanityImage | null
+  footer?: {
+    contactDetailsOverride?: SanityContactDetails | null
+    copyrightText?: string | null
+    introduction?: string | null
+    legalLinks?: Array<SanityNavigationItem | null> | null
+    navigationGroups?: Array<{
+      _key?: string | null
+      items?: Array<SanityNavigationItem | null> | null
+      title?: string | null
+    } | null> | null
+  } | null
+  instagramHighlights?: SanityInstagramPost[] | null
+  primaryLogo?: SanityImage | null
+  primaryNavigation?: Array<SanityNavigationItem | null> | null
+  propertyLocation?: {
+    coordinates?: {lat?: number | null; lng?: number | null} | null
+    directionsUrl?: string | null
+    label?: string | null
+  } | null
+  siteDescription?: string | null
+  siteTitle?: string | null
+  siteUrl?: string | null
+  socialProfiles?: Array<{
+    platform?: string | null
+    url?: string | null
+  }> | null
+  squareProfileImage?: SanityImage | null
 }
 
 type SanityHomeImageSection = {

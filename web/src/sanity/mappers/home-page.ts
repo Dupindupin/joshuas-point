@@ -1,8 +1,9 @@
-import type {HomeEditorialLink, HomePageData} from '@/app/home-page-data'
+import type {HomePageData} from '@/app/home-page-data'
 import type {EditorialImage} from '@/components/editorial'
 
 import {getEditorialImage} from '../image'
-import type {SanityHomePageData, SanityImage, SanityLink} from '../types'
+import type {SanityHomePageData, SanityImage} from '../types'
+import {mapSanityLink} from './link'
 
 type SanityHomeImageSection = {
   body?: string | null
@@ -40,66 +41,6 @@ function mapImageSection(
     heading,
     image,
     paragraph,
-  }
-}
-
-function mapInternalReference(link: SanityLink) {
-  const reference = link.reference
-  if (!reference?._type) return undefined
-
-  switch (reference._type) {
-    case 'homePage':
-      return '/'
-    case 'housePage':
-      return '/the-house'
-    case 'destinationsPage':
-      return '/destinations'
-    case 'destination': {
-      const slug = cleanText(reference.slug)
-      return slug ? `/destinations/${encodeURIComponent(slug)}` : undefined
-    }
-    case 'diveSitesPage':
-      return '/dive-sites'
-    case 'scenicRoutesPage':
-      return '/scenic-routes'
-    case 'scenicRoute': {
-      const slug = cleanText(reference.slug)
-      return slug ? `/scenic-routes/${encodeURIComponent(slug)}` : undefined
-    }
-    default:
-      return undefined
-  }
-}
-
-function mapLink(link: SanityLink | null | undefined): HomeEditorialLink | undefined {
-  const label = cleanText(link?.label)
-  if (!label || !link?.kind) return undefined
-
-  let href: string | undefined
-  switch (link.kind) {
-    case 'email': {
-      const email = cleanText(link.email)
-      href = email ? `mailto:${email}` : undefined
-      break
-    }
-    case 'external':
-      href = cleanText(link.externalUrl)
-      break
-    case 'internal':
-      href = mapInternalReference(link)
-      break
-    case 'phone': {
-      const phone = cleanText(link.phone)
-      href = phone ? `tel:${phone}` : undefined
-      break
-    }
-  }
-
-  if (!href) return undefined
-  return {
-    href,
-    label,
-    openInNewTab: link.kind === 'external' && link.openInNewTab === true,
   }
 }
 
@@ -144,7 +85,7 @@ export function mapSanityHomePage(page: SanityHomePageData): HomePageData | null
               height: 1200,
               width: 1800,
             }),
-            link: mapLink(page.southernNegrosIntroduction?.primaryLink),
+            link: mapSanityLink(page.southernNegrosIntroduction?.primaryLink),
             paragraph: southernParagraph,
           }
         : undefined,

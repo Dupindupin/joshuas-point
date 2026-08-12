@@ -36,7 +36,11 @@ export async function SiteHeader(props: SiteHeaderClientProps) {
   return (
     <SiteHeaderClient
       {...props}
+      bookingLink={
+        siteSettings?.bookingLinks?.enabled ? siteSettings.bookingLinks.primary : undefined
+      }
       featuredDestinations={destinationLinks}
+      primaryNavigation={siteSettings?.primaryNavigation ?? []}
       socialProfiles={normalizeSocialProfiles(siteSettings?.socialProfiles)}
     />
   )

@@ -16,10 +16,12 @@ export type DesktopMegaNavigationGroup = {
   links: readonly {
     href: string
     label: string
+    openInNewTab?: boolean
   }[]
   overviewLink?: {
     href: string
     label: string
+    openInNewTab?: boolean
   }
   title: string
 }
@@ -277,8 +279,8 @@ export function DesktopMegaNavigation({
             group.links.some((link) => link.href === activeHref) ||
             Boolean(
               group.overviewLink &&
-                (group.overviewLink.href === activeHref ||
-                  activeHref?.startsWith(`${group.overviewLink.href}/`)),
+              (group.overviewLink.href === activeHref ||
+                activeHref?.startsWith(`${group.overviewLink.href}/`)),
             )
 
           return (
@@ -347,6 +349,8 @@ export function DesktopMegaNavigation({
                   href={activeGroup.overviewLink.href}
                   onClick={() => closeMenu()}
                   ref={firstLinkRef}
+                  rel={activeGroup.overviewLink.openInNewTab ? 'noopener noreferrer' : undefined}
+                  target={activeGroup.overviewLink.openInNewTab ? '_blank' : undefined}
                 >
                   {activeGroup.overviewLink.label}
                   <span aria-hidden="true" className="font-body text-base">
@@ -380,6 +384,8 @@ export function DesktopMegaNavigation({
                         href={link.href}
                         onClick={() => closeMenu()}
                         ref={!activeGroup.overviewLink && index === 0 ? firstLinkRef : undefined}
+                        rel={link.openInNewTab ? 'noopener noreferrer' : undefined}
+                        target={link.openInNewTab ? '_blank' : undefined}
                       >
                         {link.label}
                       </Link>

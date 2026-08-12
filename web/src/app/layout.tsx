@@ -18,10 +18,7 @@ const geistMono = Geist_Mono({
 
 export async function generateMetadata(): Promise<Metadata> {
   const metadata = await createPageMetadata({
-    description:
-      'Joshua’s Point is a home connected to nature in Southern Negros, shaped by shared spaces, sea, mountain, and the changing day.',
     pathname: '/',
-    title: "Joshua's Point | A Home Connected to Nature",
   })
 
   return {

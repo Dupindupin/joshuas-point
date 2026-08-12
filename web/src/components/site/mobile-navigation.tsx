@@ -13,6 +13,7 @@ export type MobileNavigationAppearance = 'solid' | 'transparent'
 export type MobileNavigationItem = {
   href: string
   label: string
+  openInNewTab?: boolean
 }
 
 type MobileNavigationProps = {
@@ -98,6 +99,8 @@ export function MobileNavigation({
                     href={item.href}
                     onClick={() => setIsOpen(false)}
                     ref={index === 0 ? firstLinkRef : undefined}
+                    rel={item.openInNewTab ? 'noopener noreferrer' : undefined}
+                    target={item.openInNewTab ? '_blank' : undefined}
                   >
                     {item.label}
                   </Link>

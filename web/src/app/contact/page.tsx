@@ -33,19 +33,42 @@ const enquiryReasons = [
   'Special requests',
 ] as const
 
-const contactMethods = [
-  {
-    description: 'Write to us about a stay, arrival planning, or exploring Southern Negros.',
-    href: 'mailto:mail@joshuaspoint.com',
-    id: 'email',
-    label: 'Email',
-    value: 'mail@joshuaspoint.com',
-  },
-] satisfies readonly ContactMethod[]
-
 export default async function ContactPage() {
   const settings = await getSiteSeoSettings()
   const socialProfiles = normalizeSocialProfiles(settings?.socialProfiles)
+  const publicContact = settings?.contactDetails
+  const email = publicContact?.email ?? 'mail@joshuaspoint.com'
+  const contactMethods: ContactMethod[] = [
+    {
+      description: 'Write to us about a stay, arrival planning, or exploring Southern Negros.',
+      href: `mailto:${email}`,
+      id: 'email',
+      label: 'Email',
+      value: email,
+    },
+    ...(publicContact?.phone && publicContact.phoneHref
+      ? [
+          {
+            description: 'Call when speaking directly is the clearest way to begin.',
+            href: publicContact.phoneHref,
+            id: 'phone' as const,
+            label: 'Phone',
+            value: publicContact.phone,
+          },
+        ]
+      : []),
+    ...(publicContact?.whatsappUrl
+      ? [
+          {
+            description: 'Send a written message through the approved WhatsApp contact.',
+            href: publicContact.whatsappUrl,
+            id: 'whatsapp' as const,
+            label: 'WhatsApp',
+            value: 'Message Joshua’s Point',
+          },
+        ]
+      : []),
+  ]
 
   return (
     <>

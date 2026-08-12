@@ -16,12 +16,14 @@ import {SocialProfileLinks} from './social-profile-links'
 export type SiteFooterLink = {
   href: string
   label: string
+  openInNewTab?: boolean
 }
 
 export type SiteFooterSocialLink = Pick<SocialProfile, 'href' | 'label' | 'platform'>
 
 export type SiteFooterGuide = {
   href?: string
+  openInNewTab?: boolean
   status?: string
   title: string
 }
@@ -75,6 +77,8 @@ function FooterLinkGroup({links, title}: {links: SiteFooterLink[]; title: string
             <Link
               className="rounded-sm font-body text-sm leading-7 text-inverse/78 hover:text-inverse focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-evening-accent"
               href={link.href}
+              rel={link.openInNewTab ? 'noopener noreferrer' : undefined}
+              target={link.openInNewTab ? '_blank' : undefined}
             >
               {link.label}
             </Link>
@@ -104,6 +108,8 @@ function FooterGuides({guides}: {guides: SiteFooterGuide[]}) {
               <Link
                 className="rounded-sm hover:text-inverse focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-evening-accent"
                 href={guide.href}
+                rel={guide.openInNewTab ? 'noopener noreferrer' : undefined}
+                target={guide.openInNewTab ? '_blank' : undefined}
               >
                 {guide.title}
               </Link>
@@ -184,21 +190,49 @@ function FooterContact({
 
 export async function SiteFooter(props: SiteFooterProps = {}) {
   const settings = await getSiteSeoSettings()
+  const footerSettings = settings?.footer
+  const footerContact = footerSettings?.contactDetailsOverride ?? settings?.contactDetails
+  const findNavigationGroup = (title: string) =>
+    footerSettings?.navigationGroups.find(
+      (group) => group.title.trim().toLowerCase() === title.toLowerCase(),
+    )
+  const sanityStayLinks = findNavigationGroup('Stay')?.links
+  const sanityExploreLinks = findNavigationGroup('Explore')?.links
+  const sanityGuideLinks = findNavigationGroup('Guides')?.links
   const closingStatement =
-    props.closingStatement ?? 'A quiet place from which to discover Southern Negros.'
-  const contactHref = props.contactHref ?? '/contact'
-  const copyrightText = props.copyrightText ?? "Joshua's Point"
-  const email = props.email ?? 'mail@joshuaspoint.com'
-  const exploreLinks = props.exploreLinks ?? defaultExploreLinks
-  const guides = props.guides ?? defaultGuides
-  const legalLinks = props.legalLinks ?? defaultLegalLinks
+    props.closingStatement ??
+    footerSettings?.introduction ??
+    'A quiet place from which to discover Southern Negros.'
+  const contactHref = props.contactHref ?? settings?.bookingLinks?.inquiry?.href ?? '/contact'
+  const copyrightText =
+    props.copyrightText ?? footerSettings?.copyrightText ?? settings?.siteTitle ?? "Joshua's Point"
+  const email = props.email ?? footerContact?.email ?? 'mail@joshuaspoint.com'
+  const exploreLinks =
+    props.exploreLinks ??
+    (sanityExploreLinks && sanityExploreLinks.length > 0 ? sanityExploreLinks : defaultExploreLinks)
+  const guides =
+    props.guides ??
+    (sanityGuideLinks && sanityGuideLinks.length > 0
+      ? sanityGuideLinks.map((link) => ({
+          href: link.href,
+          openInNewTab: link.openInNewTab,
+          title: link.label,
+        }))
+      : defaultGuides)
+  const legalLinks =
+    props.legalLinks ??
+    (footerSettings?.legalLinks && footerSettings.legalLinks.length > 0
+      ? footerSettings.legalLinks
+      : defaultLegalLinks)
   const location =
     props.location ??
     settings?.propertyLocation?.label?.trim() ??
     "Joshua's Point, Calango, Zamboanguita 6218, Negros Oriental, Philippines"
-  const siteName = props.siteName ?? "Joshua's Point"
+  const siteName = props.siteName ?? settings?.siteTitle?.trim() ?? "Joshua's Point"
   const socialLinks = props.socialLinks ?? normalizeSocialProfiles(settings?.socialProfiles)
-  const stayLinks = props.stayLinks ?? defaultStayLinks
+  const stayLinks =
+    props.stayLinks ??
+    (sanityStayLinks && sanityStayLinks.length > 0 ? sanityStayLinks : defaultStayLinks)
   const year = new Date().getFullYear()
 
   return (
@@ -262,6 +296,8 @@ export async function SiteFooter(props: SiteFooterProps = {}) {
                       <Link
                         className="rounded-sm font-body text-[0.6875rem] leading-6 text-inverse/60 hover:text-inverse/80 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-evening-accent"
                         href={link.href}
+                        rel={link.openInNewTab ? 'noopener noreferrer' : undefined}
+                        target={link.openInNewTab ? '_blank' : undefined}
                       >
                         {link.label}
                       </Link>

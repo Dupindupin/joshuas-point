@@ -1,10 +1,11 @@
 import {defineField, defineType} from 'sanity'
 
-type LinkKind = 'email' | 'external' | 'internal' | 'phone'
+type LinkKind = 'email' | 'external' | 'internal' | 'route' | 'phone'
 
 type LinkValue = {
   email?: string
   externalUrl?: string
+  internalRoute?: string
   kind?: LinkKind
   phone?: string
   reference?: {_ref?: string}
@@ -27,12 +28,44 @@ export const link = defineType({
         layout: 'radio',
         list: [
           {title: 'Internal', value: 'internal'},
+          {title: 'Website Route', value: 'route'},
           {title: 'External', value: 'external'},
           {title: 'Email', value: 'email'},
           {title: 'Phone', value: 'phone'},
         ],
       },
       validation: (rule) => rule.required(),
+    }),
+    defineField({
+      name: 'internalRoute',
+      title: 'Website Route',
+      type: 'string',
+      description:
+        'Choose an existing public website page that is not represented by a Sanity document.',
+      options: {
+        list: [
+          {title: 'Home', value: '/'},
+          {title: 'The House', value: '/the-house'},
+          {title: 'Rooms', value: '/rooms'},
+          {title: 'Destinations', value: '/destinations'},
+          {title: 'Explorer Map', value: '/explorer'},
+          {title: 'Scenic Routes', value: '/scenic-routes'},
+          {title: 'Southern Negros Guide', value: '/guide'},
+          {title: 'Dive Guide', value: '/dive-sites'},
+          {title: 'Getting Here', value: '/getting-here'},
+          {title: 'Plan Your Stay', value: '/plan-your-stay'},
+          {title: 'FAQ', value: '/faq'},
+          {title: 'Contact', value: '/contact'},
+          {title: 'Privacy', value: '/privacy'},
+          {title: 'Terms', value: '/terms'},
+        ],
+      },
+      hidden: ({parent}) => parentKind(parent) !== 'route',
+      validation: (rule) =>
+        rule.custom((value, context) => {
+          if (parentKind(context.parent) !== 'route') return true
+          return value ? true : 'Choose a website route.'
+        }),
     }),
     defineField({
       name: 'label',
@@ -56,6 +89,7 @@ export const link = defineType({
         {type: 'diveSite'},
         {type: 'scenicRoutesPage'},
         {type: 'scenicRoute'},
+        {type: 'roomsPage'},
         {type: 'room'},
       ],
       hidden: ({parent}) => parentKind(parent) !== 'internal',
@@ -124,6 +158,7 @@ export const link = defineType({
 
       const destinationByKind: Record<LinkKind, unknown> = {
         internal: linkValue.reference,
+        route: linkValue.internalRoute,
         external: linkValue.externalUrl,
         email: linkValue.email,
         phone: linkValue.phone,

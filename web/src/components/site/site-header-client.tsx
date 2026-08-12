@@ -14,6 +14,7 @@ export type HeaderAppearance = 'transparent' | 'solid'
 type NavigationLink = {
   href: string
   label: string
+  openInNewTab?: boolean
 }
 
 export type SiteHeaderClientProps = {
@@ -22,11 +23,13 @@ export type SiteHeaderClientProps = {
 }
 
 type SiteHeaderClientInternalProps = SiteHeaderClientProps & {
+  bookingLink?: NavigationLink
   featuredDestinations: readonly NavigationLink[]
+  primaryNavigation: readonly NavigationLink[]
   socialProfiles: readonly SocialProfile[]
 }
 
-const primaryNavigation: readonly MobileNavigationItem[] = [
+const defaultPrimaryNavigation: readonly MobileNavigationItem[] = [
   {href: '/', label: 'Home'},
   {href: '/the-house', label: 'The House'},
   {href: '/rooms', label: 'Rooms'},
@@ -40,26 +43,22 @@ const primaryNavigation: readonly MobileNavigationItem[] = [
 
 function getDesktopNavigation(
   featuredDestinations: readonly NavigationLink[],
+  primaryNavigation: readonly NavigationLink[],
 ): readonly DesktopMegaNavigationGroup[] {
-  return [
+  const selectLinks = (hrefs: readonly string[]) =>
+    hrefs.flatMap((href) => {
+      const link = primaryNavigation.find((item) => item.href === href)
+      return link ? [link] : []
+    })
+  const groups: DesktopMegaNavigationGroup[] = [
     {
       id: 'stay',
-      links: [
-        {href: '/the-house', label: 'The House'},
-        {href: '/rooms', label: 'Rooms'},
-        {href: '/plan-your-stay', label: 'Plan Your Stay'},
-      ],
+      links: selectLinks(['/the-house', '/rooms', '/plan-your-stay']),
       title: 'Stay',
     },
     {
       id: 'explore',
-      links: [
-        {href: '/explorer', label: 'Explorer Map'},
-        {href: '/destinations', label: 'Destinations'},
-        {href: '/scenic-routes', label: 'Scenic Routes'},
-        {href: '/guide', label: 'Southern Negros Explorer'},
-        {href: '/dive-sites', label: 'Dive Guide'},
-      ],
+      links: selectLinks(['/explorer', '/destinations', '/scenic-routes', '/guide', '/dive-sites']),
       title: 'Explore',
     },
     {
@@ -71,14 +70,12 @@ function getDesktopNavigation(
     },
     {
       id: 'about',
-      links: [
-        {href: '/getting-here', label: 'Getting Here'},
-        {href: '/faq', label: 'FAQ'},
-        {href: '/contact', label: 'Contact'},
-      ],
+      links: selectLinks(['/getting-here', '/faq', '/contact']),
       title: 'About',
     },
   ]
+
+  return groups.filter((group) => group.overviewLink || group.links.length > 0)
 }
 
 const appearanceClasses: Record<HeaderAppearance, string> = {
@@ -123,14 +120,19 @@ function SiteWordmark({appearance}: {appearance: HeaderAppearance}) {
 export function SiteHeaderClient({
   activeHref,
   appearance = 'transparent',
+  bookingLink,
   featuredDestinations,
+  primaryNavigation: sanityPrimaryNavigation,
   socialProfiles,
 }: SiteHeaderClientInternalProps) {
   const [isScrolled, setIsScrolled] = useState(false)
   const [isDesktopMenuOpen, setIsDesktopMenuOpen] = useState(false)
   const effectiveAppearance =
     appearance === 'transparent' && !isScrolled && !isDesktopMenuOpen ? 'transparent' : 'solid'
-  const desktopNavigation = getDesktopNavigation(featuredDestinations)
+  const primaryNavigation =
+    sanityPrimaryNavigation.length > 0 ? sanityPrimaryNavigation : defaultPrimaryNavigation
+  const desktopNavigation = getDesktopNavigation(featuredDestinations, primaryNavigation)
+  const planStayLink = bookingLink ?? {href: '/plan-your-stay', label: 'Plan Your Stay'}
 
   useEffect(() => {
     function updateScrollState() {
@@ -165,9 +167,11 @@ export function SiteHeaderClient({
         <div className="flex items-center gap-2 sm:gap-4">
           <Link
             className={`inline-flex min-h-11 items-center justify-center rounded-full border px-3 py-2.5 font-body text-[0.6875rem] font-semibold tracking-[0.04em] transition-colors duration-[var(--jp-motion-duration-hover)] sm:px-5 sm:text-xs focus-visible:outline-2 focus-visible:outline-offset-4 ${planStayClasses[effectiveAppearance]} ${focusClasses[effectiveAppearance]}`}
-            href="/plan-your-stay"
+            href={planStayLink.href}
+            rel={planStayLink.openInNewTab ? 'noopener noreferrer' : undefined}
+            target={planStayLink.openInNewTab ? '_blank' : undefined}
           >
-            Plan Your Stay
+            {planStayLink.label}
           </Link>
           <MobileNavigation
             activeHref={activeHref}
