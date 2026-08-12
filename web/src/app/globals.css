@@ -1,9 +1,6 @@
 @import 'tailwindcss';
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-
   /* Joshua's Point — foundational brand tokens */
   --jp-color-linen: #f6f2eb;
   --jp-color-charcoal: #242424;
@@ -16,6 +13,26 @@
   --jp-color-evening-text: #f2efea;
   --jp-color-evening-accent: #c89a64;
 
+  /* Semantic color roles — components should prefer these over raw palette names. */
+  --jp-color-canvas: var(--jp-color-linen);
+  --jp-color-surface: #fbf8f2;
+  --jp-color-surface-soft: #eee8df;
+  --jp-color-surface-deep: #e4ddd2;
+  --jp-color-ink: var(--jp-color-charcoal);
+  --jp-color-ink-muted: rgb(36 36 36 / 72%);
+  --jp-color-ink-subtle: rgb(36 36 36 / 64%);
+  --jp-color-border: rgb(183 176 166 / 62%);
+  --jp-color-accent: var(--jp-color-forest);
+  --jp-color-focus: var(--jp-color-forest);
+  --jp-color-inverse-surface: #242925;
+  --jp-color-inverse: var(--jp-color-evening-text);
+  --jp-color-footer: var(--jp-color-evening);
+  --jp-color-map-surface: #252a27;
+  --jp-color-warning: #8a4a32;
+
+  --background: var(--jp-color-canvas);
+  --foreground: var(--jp-color-ink);
+
   --jp-space-xs: 0.5rem;
   --jp-space-sm: 1rem;
   --jp-space-md: 1.5rem;
@@ -26,6 +43,258 @@
   --jp-font-display: var(--font-jp-display, Georgia, 'Times New Roman', serif);
   --jp-font-body: var(--font-jp-body, Arial, Helvetica, sans-serif);
   --jp-ease-natural: cubic-bezier(0.22, 1, 0.36, 1);
+  --jp-motion-ease-soft: cubic-bezier(0.22, 0.72, 0.2, 1);
+  --jp-motion-duration-hover: 180ms;
+  --jp-motion-duration-ui: 240ms;
+  --jp-motion-duration-theme: 160ms;
+  --jp-motion-duration-reveal: 760ms;
+  --jp-motion-duration-reveal-slow: 960ms;
+  --jp-motion-duration-hero: 1100ms;
+  --jp-motion-stagger: 90ms;
+  --jp-motion-distance: 0.75rem;
+  --jp-motion-distance-inline: 0.625rem;
+  --jp-motion-opacity-start: 0.08;
+  --jp-radius-focus: 0.125rem;
+  --jp-radius-action: 9999px;
+}
+
+[data-theme='light'] {
+  color-scheme: light;
+}
+
+[data-theme='dark'] {
+  color-scheme: dark;
+  --jp-color-canvas: #191c1a;
+  --jp-color-surface: #202420;
+  --jp-color-surface-soft: #252a26;
+  --jp-color-surface-deep: #2b312c;
+  --jp-color-ink: #f1ede6;
+  --jp-color-ink-muted: rgb(241 237 230 / 76%);
+  --jp-color-ink-subtle: rgb(241 237 230 / 58%);
+  --jp-color-border: rgb(183 176 166 / 30%);
+  --jp-color-accent: #d0a16b;
+  --jp-color-focus: #e0b982;
+  --jp-color-inverse-surface: #101512;
+  --jp-color-inverse: #f3efe8;
+  --jp-color-footer: #0e120f;
+  --jp-color-map-surface: #152126;
+  --jp-color-warning: #e7ad8d;
+}
+
+.jp-brand-logo-on-dark {
+  visibility: hidden;
+}
+
+[data-theme='dark'] .jp-brand-logo-on-light {
+  visibility: hidden;
+}
+
+[data-theme='dark'] .jp-brand-logo-on-dark {
+  visibility: visible;
+}
+
+.jp-map-marker {
+  width: 2rem;
+  height: 2rem;
+  cursor: pointer;
+  border: 1px solid color-mix(in srgb, var(--jp-color-ink) 52%, transparent);
+  border-radius: 9999px;
+  background: var(--jp-color-surface);
+  box-shadow: 0 0.35rem 1rem rgb(0 0 0 / 18%);
+  color: var(--jp-color-accent);
+  transition:
+    scale var(--jp-motion-duration-hover) var(--jp-motion-ease-soft),
+    background-color var(--jp-motion-duration-hover) var(--jp-motion-ease-soft),
+    border-color var(--jp-motion-duration-hover) var(--jp-motion-ease-soft);
+}
+
+.jp-map-marker::after {
+  position: absolute;
+  inset: 50% auto auto 50%;
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 9999px;
+  background: currentColor;
+  content: '';
+  translate: -50% -50%;
+}
+
+.jp-map-marker[data-kind='dive-site'] {
+  color: var(--jp-color-ocean);
+}
+
+.jp-map-marker[data-kind='origin'] {
+  color: var(--jp-color-timber);
+}
+
+.jp-map-marker[data-kind='route-stop'] {
+  color: var(--jp-color-timber);
+}
+
+.jp-map-marker-label,
+.jp-map-route-label {
+  display: none;
+  width: max-content;
+  max-width: 12rem;
+  border: 1px solid color-mix(in srgb, var(--jp-color-border) 82%, transparent);
+  border-radius: 0.125rem;
+  background: color-mix(in srgb, var(--jp-color-surface) 94%, transparent);
+  box-shadow: 0 0.35rem 1rem rgb(0 0 0 / 12%);
+  color: var(--jp-color-ink);
+  font-family: var(--jp-font-body);
+  font-size: 0.6875rem;
+  font-weight: 650;
+  letter-spacing: 0.015em;
+  line-height: 1.35;
+  text-align: left;
+}
+
+.jp-map-marker-label {
+  position: absolute;
+  top: 50%;
+  padding: 0.45rem 0.65rem;
+  pointer-events: none;
+  translate: 0 -50%;
+}
+
+.jp-map-marker[data-label-side='right'] .jp-map-marker-label {
+  left: calc(100% + 0.65rem);
+}
+
+.jp-map-marker[data-label-side='left'] .jp-map-marker-label {
+  right: calc(100% + 0.65rem);
+}
+
+.jp-map-marker[aria-pressed='true'] .jp-map-marker-label,
+.jp-map-marker[data-featured-label='true'] .jp-map-marker-label,
+.jp-map-route-label[aria-pressed='true'],
+.jp-map-route-label[data-featured-label='true'] {
+  display: block;
+}
+
+.jp-map-route-label {
+  cursor: pointer;
+  padding: 0.5rem 0.7rem;
+}
+
+.jp-map-route-label[aria-pressed='true'] {
+  border-color: color-mix(in srgb, var(--jp-color-accent) 68%, var(--jp-color-border));
+}
+
+.jp-map-route-label:focus-visible {
+  outline: 3px solid var(--jp-color-focus);
+  outline-offset: 3px;
+}
+
+.jp-map-marker[aria-pressed='true'] {
+  border-color: currentColor;
+  background: var(--jp-color-surface-soft);
+  scale: 1.24;
+}
+
+.jp-map-marker:focus-visible {
+  outline: 3px solid var(--jp-color-focus);
+  outline-offset: 4px;
+}
+
+/* MapLibre ships unlayered positioning styles that otherwise override Tailwind's layered
+   `absolute` utility and collapse the map container to zero height. */
+.jp-maplibre-container.maplibregl-map {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.jp-map-label {
+  max-width: 12rem;
+  border: 1px solid var(--jp-color-border);
+  border-radius: 9999px;
+  background: color-mix(in srgb, var(--jp-color-surface) 92%, transparent);
+  padding: 0.35rem 0.65rem;
+  box-shadow: 0 0.25rem 0.8rem rgb(0 0 0 / 12%);
+  color: var(--jp-color-ink);
+  font-family: var(--jp-font-body);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  line-height: 1.25;
+  text-align: center;
+}
+
+.maplibregl-popup-content {
+  border: 1px solid var(--jp-color-border);
+  border-radius: 0;
+  background: var(--jp-color-surface);
+  box-shadow: 0 1rem 2.5rem rgb(0 0 0 / 18%);
+  color: var(--jp-color-ink);
+  padding: 1rem 1.25rem;
+}
+
+.maplibregl-popup-anchor-bottom .maplibregl-popup-tip {
+  border-top-color: var(--jp-color-surface);
+}
+
+.maplibregl-popup-anchor-top .maplibregl-popup-tip {
+  border-bottom-color: var(--jp-color-surface);
+}
+
+.jp-map-popup-title {
+  padding-right: 1.25rem;
+  font-family: var(--jp-font-display);
+  font-size: 1.2rem;
+  line-height: 1.2;
+}
+
+.jp-map-popup-description {
+  margin-top: 0.6rem;
+  color: var(--jp-color-ink-muted);
+  font-family: var(--jp-font-body);
+  font-size: 0.75rem;
+  line-height: 1.55;
+}
+
+.maplibregl-popup-close-button {
+  width: 2.25rem;
+  height: 2.25rem;
+  color: var(--jp-color-ink);
+  font-size: 1.25rem;
+}
+
+.maplibregl-ctrl-group {
+  border: 1px solid var(--jp-color-border);
+  border-radius: 0;
+  background: var(--jp-color-surface);
+  box-shadow: 0 0.35rem 1rem rgb(0 0 0 / 14%);
+}
+
+.maplibregl-ctrl-group button {
+  width: 2.75rem;
+  height: 2.75rem;
+}
+
+.maplibregl-ctrl-group button:focus-visible,
+.maplibregl-popup-close-button:focus-visible {
+  outline: 3px solid var(--jp-color-focus);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .jp-map-marker {
+    transition: none;
+  }
+}
+
+@media (max-width: 47.999rem) {
+  .jp-map-marker[data-featured-label='true']:not([aria-pressed='true']) .jp-map-marker-label,
+  .jp-map-route-label[data-featured-label='true']:not([aria-pressed='true']) {
+    display: none;
+  }
+
+  .jp-map-marker-label,
+  .jp-map-route-label {
+    max-width: 9.5rem;
+    font-size: 0.625rem;
+  }
 }
 
 [data-atmosphere='morning'] {
@@ -67,6 +336,21 @@
   --color-evening-surface: var(--jp-color-evening-surface);
   --color-evening-text: var(--jp-color-evening-text);
   --color-evening-accent: var(--jp-color-evening-accent);
+  --color-canvas: var(--jp-color-canvas);
+  --color-surface: var(--jp-color-surface);
+  --color-surface-soft: var(--jp-color-surface-soft);
+  --color-surface-deep: var(--jp-color-surface-deep);
+  --color-ink: var(--jp-color-ink);
+  --color-ink-muted: var(--jp-color-ink-muted);
+  --color-ink-subtle: var(--jp-color-ink-subtle);
+  --color-border: var(--jp-color-border);
+  --color-accent: var(--jp-color-accent);
+  --color-focus: var(--jp-color-focus);
+  --color-inverse-surface: var(--jp-color-inverse-surface);
+  --color-inverse: var(--jp-color-inverse);
+  --color-footer: var(--jp-color-footer);
+  --color-map-surface: var(--jp-color-map-surface);
+  --color-warning: var(--jp-color-warning);
   --color-atmosphere-canvas: var(--jp-atmosphere-canvas);
   --color-atmosphere-surface: var(--jp-atmosphere-surface);
   --color-atmosphere-surface-soft: var(--jp-atmosphere-surface-soft);
@@ -82,15 +366,146 @@
   --font-body: var(--jp-font-body);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--jp-font-body);
+  text-rendering: optimizeLegibility;
+  transition:
+    background-color var(--jp-motion-duration-theme) var(--jp-ease-natural),
+    color var(--jp-motion-duration-theme) var(--jp-ease-natural);
+}
+
+[data-motion-reveal] {
+  opacity: 1;
+  transform: none;
+}
+
+[data-motion-reveal][data-motion-state='pending'] {
+  opacity: var(--jp-motion-opacity-start);
+}
+
+[data-motion-reveal][data-motion-state='pending'][data-motion-direction='up'] {
+  transform: translate3d(0, var(--jp-motion-distance), 0);
+}
+
+[data-motion-reveal][data-motion-state='pending'][data-motion-direction='left'] {
+  transform: translate3d(var(--jp-motion-distance-inline), 0, 0);
+}
+
+[data-motion-reveal][data-motion-state='pending'][data-motion-direction='right'] {
+  transform: translate3d(calc(var(--jp-motion-distance-inline) * -1), 0, 0);
+}
+
+[data-motion-reveal][data-motion-state='visible'] {
+  transition:
+    opacity var(--jp-motion-duration-reveal) var(--jp-motion-ease-soft),
+    transform var(--jp-motion-duration-reveal-slow) var(--jp-motion-ease-soft);
+}
+
+[data-motion-reveal][data-motion-delay='short'] {
+  transition-delay: var(--jp-motion-stagger);
+}
+
+[data-motion-reveal][data-motion-delay='medium'] {
+  transition-delay: calc(var(--jp-motion-stagger) * 2);
+}
+
+[data-motion-reveal][data-motion-delay='long'] {
+  transition-delay: calc(var(--jp-motion-stagger) * 3);
+}
+
+.jp-hero-enter {
+  animation: jp-hero-enter var(--jp-motion-duration-hero) var(--jp-motion-ease-soft) both;
+}
+
+.jp-hero-enter[data-motion-delay='short'] {
+  animation-delay: var(--jp-motion-stagger);
+}
+
+.jp-hero-enter[data-motion-delay='medium'] {
+  animation-delay: calc(var(--jp-motion-stagger) * 2);
+}
+
+.jp-hero-enter[data-motion-delay='long'] {
+  animation-delay: calc(var(--jp-motion-stagger) * 3);
+}
+
+.jp-hero-media {
+  animation: jp-hero-media-settle 1400ms var(--jp-motion-ease-soft) both;
+}
+
+.jp-mobile-menu[data-open='true'] {
+  animation: jp-mobile-menu-enter var(--jp-motion-duration-ui) var(--jp-motion-ease-soft) both;
+}
+
+.jp-horizon-path {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 0;
+}
+
+[data-motion-reveal][data-motion-state='pending'] .jp-horizon-path {
+  stroke-dashoffset: 1;
+}
+
+[data-motion-reveal][data-motion-state='visible'] .jp-horizon-path {
+  transition: stroke-dashoffset 1400ms var(--jp-motion-ease-soft) 120ms;
+}
+
+@keyframes jp-hero-enter {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 0.625rem, 0);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes jp-hero-media-settle {
+  from {
+    transform: scale(1.012);
+  }
+
+  to {
+    transform: scale(1);
+  }
+}
+
+@keyframes jp-mobile-menu-enter {
+  from {
+    opacity: 0;
+    transform: translate3d(0, -0.375rem, 0);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+::selection {
+  background: rgb(64 85 72 / 22%);
+  color: var(--jp-color-ink);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body {
+    transition: none;
+  }
+
+  [data-motion-reveal],
+  [data-motion-reveal] .jp-horizon-path,
+  .jp-hero-enter,
+  .jp-hero-media,
+  .jp-mobile-menu {
+    animation: none !important;
+    opacity: 1 !important;
+    scroll-behavior: auto !important;
+    stroke-dashoffset: 0 !important;
+    transform: none !important;
+    transition: none !important;
+  }
 }

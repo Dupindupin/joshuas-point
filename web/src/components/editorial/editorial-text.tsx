@@ -29,9 +29,11 @@ const variantClasses: Record<EditorialTextVariant, string> = {
   body: 'font-body text-base leading-8 sm:text-lg sm:leading-9',
   caption: 'font-body text-[0.8125rem] leading-6',
   eyebrow: 'font-body text-xs font-semibold tracking-[0.26em] uppercase',
-  heading: 'font-display leading-[0.98] font-medium tracking-[-0.03em]',
-  lead: 'font-display text-[2.25rem] leading-[1.12] font-medium tracking-[-0.025em] sm:text-[3rem]',
-  quote: 'font-display text-[2.5rem] leading-[1.12] font-medium tracking-[-0.025em] sm:text-[3.5rem]',
+  heading: 'text-balance font-display leading-[0.98] font-medium tracking-[-0.03em]',
+  lead:
+    'text-pretty font-display text-[2.25rem] leading-[1.12] font-medium tracking-[-0.025em] sm:text-[3rem]',
+  quote:
+    'text-pretty font-display text-[2.5rem] leading-[1.12] font-medium tracking-[-0.025em] sm:text-[3.5rem]',
 }
 
 const headingSizeClasses: Record<EditorialHeadingSize, string> = {
@@ -43,20 +45,20 @@ const headingSizeClasses: Record<EditorialHeadingSize, string> = {
 
 const toneClasses: Record<EditorialTextTone, Record<EditorialTextVariant, string>> = {
   default: {
-    body: 'text-charcoal/75',
-    caption: 'text-charcoal/65',
-    eyebrow: 'text-charcoal/60',
-    heading: 'text-charcoal',
-    lead: 'text-charcoal',
-    quote: 'text-charcoal/90',
+    body: 'text-ink-muted',
+    caption: 'text-ink-subtle',
+    eyebrow: 'text-ink-subtle',
+    heading: 'text-ink',
+    lead: 'text-ink',
+    quote: 'text-ink/90',
   },
   inverse: {
-    body: 'text-linen/75',
-    caption: 'text-linen/65',
-    eyebrow: 'text-linen/60',
-    heading: 'text-linen',
-    lead: 'text-linen',
-    quote: 'text-linen/90',
+    body: 'text-inverse/75',
+    caption: 'text-inverse/65',
+    eyebrow: 'text-inverse/60',
+    heading: 'text-inverse',
+    lead: 'text-inverse',
+    quote: 'text-inverse/90',
   },
 }
 

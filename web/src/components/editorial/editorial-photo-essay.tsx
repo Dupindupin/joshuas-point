@@ -17,6 +17,7 @@ export type EditorialPhotoEssayItem = {
 }
 
 export type EditorialPhotoEssayItems =
+  | readonly [EditorialPhotoEssayItem]
   | readonly [EditorialPhotoEssayItem, EditorialPhotoEssayItem]
   | readonly [EditorialPhotoEssayItem, EditorialPhotoEssayItem, EditorialPhotoEssayItem]
 
@@ -30,9 +31,13 @@ type EditorialPhotoEssayProps = {
 
 const layoutClasses: Record<
   EditorialPhotoEssayLayout,
-  Record<2 | 3, readonly [string, string] | readonly [string, string, string]>
+  Record<
+    1 | 2 | 3,
+    readonly [string] | readonly [string, string] | readonly [string, string, string]
+  >
 > = {
   staggered: {
+    1: ['lg:col-span-8 lg:col-start-3'],
     2: ['lg:col-span-7', 'lg:col-span-4 lg:col-start-9 lg:mt-36'],
     3: [
       'lg:col-span-7',
@@ -41,6 +46,7 @@ const layoutClasses: Record<
     ],
   },
   sequence: {
+    1: ['lg:col-span-10 lg:col-start-2'],
     2: ['lg:col-span-10', 'lg:col-span-7 lg:col-start-5 lg:mt-20'],
     3: [
       'lg:col-span-10',
@@ -55,7 +61,7 @@ export function EditorialPhotoEssay({
   items,
   layout = 'staggered',
 }: EditorialPhotoEssayProps) {
-  const count = items.length as 2 | 3
+  const count = items.length as 1 | 2 | 3
   const itemClasses = layoutClasses[layout][count]
 
   return (
@@ -68,6 +74,7 @@ export function EditorialPhotoEssay({
           className={itemClasses[index]}
           key={item.id}
           media={item.media}
+          motionDelay={index === 0 ? 'none' : index === 1 ? 'short' : 'medium'}
         />
       ))}
     </EditorialGrid>

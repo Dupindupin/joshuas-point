@@ -6,6 +6,11 @@ import {
 } from '@/components/editorial/editorial-container'
 import {EditorialMedia} from '@/components/editorial/editorial-media'
 import {EditorialText, type EditorialTextTone} from '@/components/editorial/editorial-text'
+import {
+  MotionReveal,
+  type MotionRevealDelay,
+  type MotionRevealDirection,
+} from '@/components/motion'
 
 export type EditorialFigureMedia = ComponentProps<typeof EditorialMedia>
 export type EditorialFigureCaptionContainer = EditorialContainerSize | false
@@ -19,6 +24,8 @@ export type EditorialFigureProps = {
   captionTone?: EditorialTextTone
   className?: string
   media: EditorialFigureMedia
+  motionDelay?: MotionRevealDelay
+  motionDirection?: MotionRevealDirection
 }
 
 export function EditorialFigure({
@@ -29,6 +36,8 @@ export function EditorialFigure({
   captionTone = 'default',
   className = '',
   media,
+  motionDelay = 'none',
+  motionDirection = 'up',
 }: EditorialFigureProps) {
   const captionElement = caption ? (
     <EditorialText
@@ -42,13 +51,18 @@ export function EditorialFigure({
   ) : null
 
   return (
-    <figure className={className}>
+    <MotionReveal
+      as="figure"
+      className={className}
+      delay={motionDelay}
+      direction={motionDirection}
+    >
       <EditorialMedia {...media} />
       {captionElement && captionContainer ? (
         <EditorialContainer size={captionContainer}>{captionElement}</EditorialContainer>
       ) : (
         captionElement
       )}
-    </figure>
+    </MotionReveal>
   )
 }

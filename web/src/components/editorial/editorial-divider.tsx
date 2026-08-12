@@ -13,7 +13,7 @@ export function EditorialDivider({
 }: EditorialDividerProps) {
   return (
     <EditorialContainer className={className} size={width} {...props}>
-      <hr className="border-0 border-t border-stone/35" />
+      <hr className="border-0 border-t border-border/35" />
     </EditorialContainer>
   )
 }

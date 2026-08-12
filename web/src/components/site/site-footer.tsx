@@ -6,16 +6,23 @@ import {
   EditorialText,
   SectionSpacing,
 } from '@/components/editorial'
+import {ThemeControl} from '@/components/theme/theme-control'
+import {normalizeSocialProfiles, type SocialProfile} from '@/lib/social-profiles'
+import {getSiteSeoSettings} from '@/sanity/queries/site-settings'
+
+import {BrandLogo} from './brand-logo'
+import {SocialProfileLinks} from './social-profile-links'
 
 export type SiteFooterLink = {
   href: string
   label: string
 }
 
-export type SiteFooterSocialLink = SiteFooterLink
+export type SiteFooterSocialLink = Pick<SocialProfile, 'href' | 'label' | 'platform'>
 
 export type SiteFooterGuide = {
-  status: string
+  href?: string
+  status?: string
   title: string
 }
 
@@ -36,20 +43,19 @@ export type SiteFooterProps = {
 const defaultStayLinks: SiteFooterLink[] = [
   {href: '/the-house', label: 'The House'},
   {href: '/rooms', label: 'Rooms'},
-  {href: '/contact', label: 'Plan Your Stay'},
+  {href: '/plan-your-stay', label: 'Plan Your Stay'},
 ]
 
 const defaultExploreLinks: SiteFooterLink[] = [
+  {href: '/explorer', label: 'Explorer Map'},
   {href: '/destinations', label: 'Destinations'},
+  {href: '/scenic-routes', label: 'Scenic Routes'},
   {href: '/dive-sites', label: 'Dive Guide'},
-  {href: '/experiences', label: 'Experiences'},
-  {href: '/journal', label: 'Journal'},
 ]
 
 const defaultGuides: SiteFooterGuide[] = [
-  {status: 'Coming soon', title: 'Southern Negros Explorer'},
-  {status: 'Coming soon', title: 'Dive Guide'},
-  {status: 'Coming soon', title: 'Scooter Guide'},
+  {href: '/guide', title: 'Southern Negros Explorer'},
+  {href: '/dive-sites', title: 'Dive Guide'},
 ]
 
 const defaultLegalLinks: SiteFooterLink[] = [
@@ -60,14 +66,14 @@ const defaultLegalLinks: SiteFooterLink[] = [
 function FooterLinkGroup({links, title}: {links: SiteFooterLink[]; title: string}) {
   return (
     <nav aria-label={`${title} links`}>
-      <EditorialText as="h3" className="text-linen/50" tone="inverse" variant="eyebrow">
+      <EditorialText as="h3" className="text-inverse/50" tone="inverse" variant="eyebrow">
         {title}
       </EditorialText>
       <ul className="mt-7 space-y-3">
         {links.map((link) => (
           <li key={link.href}>
             <Link
-              className="rounded-sm font-body text-sm leading-7 text-linen/78 hover:text-linen focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-evening-accent"
+              className="rounded-sm font-body text-sm leading-7 text-inverse/78 hover:text-inverse focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-evening-accent"
               href={link.href}
             >
               {link.label}
@@ -84,7 +90,7 @@ function FooterGuides({guides}: {guides: SiteFooterGuide[]}) {
     <section aria-labelledby="footer-guides-title">
       <EditorialText
         as="h3"
-        className="text-linen/50"
+        className="text-inverse/50"
         id="footer-guides-title"
         tone="inverse"
         variant="eyebrow"
@@ -93,11 +99,22 @@ function FooterGuides({guides}: {guides: SiteFooterGuide[]}) {
       </EditorialText>
       <ul className="mt-7 space-y-4">
         {guides.map((guide) => (
-          <li className="font-body text-sm leading-6 text-linen/72" key={guide.title}>
-            <span className="block">{guide.title}</span>
-            <span className="mt-1 block text-[0.6875rem] tracking-[0.12em] text-linen/38 uppercase">
-              {guide.status}
-            </span>
+          <li className="font-body text-sm leading-6 text-inverse/72" key={guide.title}>
+            {guide.href ? (
+              <Link
+                className="rounded-sm hover:text-inverse focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-evening-accent"
+                href={guide.href}
+              >
+                {guide.title}
+              </Link>
+            ) : (
+              <span className="block">{guide.title}</span>
+            )}
+            {guide.status ? (
+              <span className="mt-1 block text-[0.6875rem] tracking-[0.12em] text-inverse/60 uppercase">
+                {guide.status}
+              </span>
+            ) : null}
           </li>
         ))}
       </ul>
@@ -116,7 +133,7 @@ function FooterContact({
     <section aria-labelledby="footer-contact-title">
       <EditorialText
         as="h3"
-        className="text-linen/50"
+        className="text-inverse/50"
         id="footer-contact-title"
         tone="inverse"
         variant="eyebrow"
@@ -125,19 +142,19 @@ function FooterContact({
       </EditorialText>
       <address className="mt-7 space-y-6 not-italic">
         <div>
-          <p className="font-body text-[0.6875rem] tracking-[0.12em] text-linen/38 uppercase">
+          <p className="font-body text-[0.6875rem] tracking-[0.12em] text-inverse/60 uppercase">
             Email
           </p>
           {email ? (
             <a
-              className="mt-2 inline-flex rounded-sm font-body text-sm leading-7 text-linen/78 hover:text-linen focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-evening-accent"
+              className="mt-2 inline-flex rounded-sm font-body text-sm leading-7 text-inverse/78 hover:text-inverse focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-evening-accent"
               href={`mailto:${email}`}
             >
               {email}
             </a>
           ) : (
             <Link
-              className="mt-2 inline-flex rounded-sm font-body text-sm leading-7 text-linen/78 hover:text-linen focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-evening-accent"
+              className="mt-2 inline-flex rounded-sm font-body text-sm leading-7 text-inverse/78 hover:text-inverse focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-evening-accent"
               href={contactHref}
             >
               Contact Joshua&apos;s Point
@@ -146,29 +163,18 @@ function FooterContact({
         </div>
 
         <div>
-          <p className="font-body text-[0.6875rem] tracking-[0.12em] text-linen/38 uppercase">
+          <p className="font-body text-[0.6875rem] tracking-[0.12em] text-inverse/60 uppercase">
             Location
           </p>
-          <p className="mt-2 font-body text-sm leading-7 text-linen/72">{location}</p>
+          <p className="mt-2 font-body text-sm leading-7 text-inverse/72">{location}</p>
         </div>
 
         {socialLinks.length > 0 ? (
           <div>
-            <p className="font-body text-[0.6875rem] tracking-[0.12em] text-linen/38 uppercase">
+            <p className="font-body text-[0.6875rem] tracking-[0.12em] text-inverse/60 uppercase">
               Social
             </p>
-            <ul className="mt-2 flex flex-wrap gap-x-5 gap-y-2">
-              {socialLinks.map((link) => (
-                <li key={link.href}>
-                  <a
-                    className="rounded-sm font-body text-sm leading-7 text-linen/78 hover:text-linen focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-evening-accent"
-                    href={link.href}
-                  >
-                    {link.label}
-                  </a>
-                </li>
-              ))}
-            </ul>
+            <SocialProfileLinks profiles={socialLinks} tone="inverse" />
           </div>
         ) : null}
       </address>
@@ -176,37 +182,48 @@ function FooterContact({
   )
 }
 
-export function SiteFooter({
-  closingStatement = 'A quiet place from which to discover Southern Negros.',
-  contactHref = '/contact',
-  copyrightText = "Joshua's Point",
-  email,
-  exploreLinks = defaultExploreLinks,
-  guides = defaultGuides,
-  legalLinks = defaultLegalLinks,
-  location = 'Southern Negros, Philippines',
-  siteName = "Joshua's Point",
-  socialLinks = [],
-  stayLinks = defaultStayLinks,
-}: SiteFooterProps) {
+export async function SiteFooter(props: SiteFooterProps = {}) {
+  const settings = await getSiteSeoSettings()
+  const closingStatement =
+    props.closingStatement ?? 'A quiet place from which to discover Southern Negros.'
+  const contactHref = props.contactHref ?? '/contact'
+  const copyrightText = props.copyrightText ?? "Joshua's Point"
+  const email = props.email ?? 'mail@joshuaspoint.com'
+  const exploreLinks = props.exploreLinks ?? defaultExploreLinks
+  const guides = props.guides ?? defaultGuides
+  const legalLinks = props.legalLinks ?? defaultLegalLinks
+  const location =
+    props.location ??
+    settings?.propertyLocation?.label?.trim() ??
+    "Joshua's Point, Calango, Zamboanguita 6218, Negros Oriental, Philippines"
+  const siteName = props.siteName ?? "Joshua's Point"
+  const socialLinks = props.socialLinks ?? normalizeSocialProfiles(settings?.socialProfiles)
+  const stayLinks = props.stayLinks ?? defaultStayLinks
   const year = new Date().getFullYear()
 
   return (
-    <footer className="mt-auto bg-evening text-linen">
+    <footer className="mt-auto bg-footer text-inverse">
       <SectionSpacing as="div" size="generous">
         <EditorialContainer>
           <EditorialGrid gap="generous">
             <div className="lg:col-span-8">
+              <h2>
+                <Link
+                  className="inline-flex rounded-sm focus-visible:outline-2 focus-visible:outline-offset-8 focus-visible:outline-evening-accent"
+                  href="/"
+                >
+                  <BrandLogo
+                    alt={siteName}
+                    className="h-auto w-[17rem] sm:w-[22rem]"
+                    tone="inverse"
+                  />
+                </Link>
+              </h2>
               <EditorialText
-                as="h2"
-                className="max-w-4xl"
-                headingSize="large"
+                className="mt-8 max-w-2xl text-inverse/68"
                 tone="inverse"
-                variant="heading"
+                variant="lead"
               >
-                {siteName}
-              </EditorialText>
-              <EditorialText className="mt-8 max-w-2xl text-linen/68" tone="inverse" variant="lead">
                 {closingStatement}
               </EditorialText>
             </div>
@@ -232,24 +249,27 @@ export function SiteFooter({
             </div>
           </div>
 
-          <div className="mt-24 border-t border-linen/16 pt-7 sm:mt-32 sm:flex sm:items-center sm:justify-between sm:gap-8">
-            <p className="font-body text-[0.6875rem] leading-6 tracking-[0.06em] text-linen/42">
+          <div className="mt-24 border-t border-inverse/16 pt-7 sm:mt-32 sm:flex sm:items-center sm:justify-between sm:gap-8">
+            <p className="font-body text-[0.6875rem] leading-6 tracking-[0.06em] text-inverse/60">
               © {year} {copyrightText}
             </p>
-            <nav aria-label="Legal" className="mt-4 sm:mt-0">
-              <ul className="flex gap-6">
-                {legalLinks.map((link) => (
-                  <li key={link.href}>
-                    <Link
-                      className="rounded-sm font-body text-[0.6875rem] leading-6 text-linen/42 hover:text-linen/75 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-evening-accent"
-                      href={link.href}
-                    >
-                      {link.label}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </nav>
+            <div className="mt-6 flex flex-wrap items-center gap-6 sm:mt-0">
+              <ThemeControl tone="inverse" />
+              <nav aria-label="Legal">
+                <ul className="flex gap-6">
+                  {legalLinks.map((link) => (
+                    <li key={link.href}>
+                      <Link
+                        className="rounded-sm font-body text-[0.6875rem] leading-6 text-inverse/60 hover:text-inverse/80 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-evening-accent"
+                        href={link.href}
+                      >
+                        {link.label}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </nav>
+            </div>
           </div>
         </EditorialContainer>
       </SectionSpacing>

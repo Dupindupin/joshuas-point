@@ -9,6 +9,7 @@ import {EditorialContainer} from '@/components/editorial/editorial-container'
 import {EditorialGrid} from '@/components/editorial/editorial-grid'
 import {EditorialText, type EditorialTextTone} from '@/components/editorial/editorial-text'
 import {SectionSpacing, type SectionSpacingSize} from '@/components/editorial/section-spacing'
+import {MotionReveal} from '@/components/motion'
 
 export type EditorialMediaStoryPosition = 'end' | 'start'
 
@@ -61,7 +62,11 @@ export function EditorialMediaStory({
             media={media}
           />
 
-          <div className={`max-w-xl lg:pt-24 ${textPositionClasses[mediaPosition]}`}>
+          <MotionReveal
+            className={`max-w-xl lg:pt-24 ${textPositionClasses[mediaPosition]}`}
+            delay="short"
+            direction={mediaPosition === 'start' ? 'left' : 'right'}
+          >
             {eyebrow ? (
               <EditorialText tone={tone} variant="eyebrow">
                 {eyebrow}
@@ -77,7 +82,7 @@ export function EditorialMediaStory({
               {heading}
             </EditorialText>
             <div className="mt-10 sm:mt-12">{body}</div>
-          </div>
+          </MotionReveal>
         </EditorialGrid>
       </EditorialContainer>
     </SectionSpacing>

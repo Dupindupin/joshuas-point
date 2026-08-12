@@ -45,21 +45,21 @@ const specimens = [
 
 export default function TypographyLabPage() {
   return (
-    <main className="min-h-screen bg-linen font-body text-charcoal">
+    <main className="min-h-screen bg-canvas font-body text-ink">
       <header className="px-6 py-20 md:px-10 md:py-28">
         <div className="mx-auto max-w-7xl">
           <div className="flex flex-wrap items-center justify-between gap-4">
-            <p className="text-sm font-bold tracking-[0.18em] text-charcoal uppercase">
+            <p className="text-sm font-bold tracking-[0.18em] text-ink uppercase">
               Joshua&apos;s Point
             </p>
-            <p className="text-[0.625rem] font-medium tracking-[0.12em] text-charcoal/45 uppercase">
+            <p className="text-[0.625rem] font-medium tracking-[0.12em] text-ink/45 uppercase">
               Internal typography lab
             </p>
           </div>
 
-          <div className="mt-20 grid gap-10 border-t border-stone/70 pt-10 lg:grid-cols-[minmax(0,2fr)_minmax(18rem,1fr)] lg:items-end">
+          <div className="mt-20 grid gap-10 border-t border-border/70 pt-10 lg:grid-cols-[minmax(0,2fr)_minmax(18rem,1fr)] lg:items-end">
             <div>
-              <p className="text-xs font-semibold tracking-[0.18em] text-forest uppercase">
+              <p className="text-xs font-semibold tracking-[0.18em] text-accent uppercase">
                 Approved pairing
               </p>
               <h1 className="mt-6 max-w-3xl font-display text-4xl leading-tight font-medium tracking-[-0.025em] md:text-5xl">
@@ -71,18 +71,18 @@ export default function TypographyLabPage() {
                 aria-label="Official brand typography"
                 className="border-l border-timber py-1 pl-6"
               >
-                <p className="flex items-center gap-2 text-xs font-semibold tracking-[0.14em] text-forest uppercase">
+                <p className="flex items-center gap-2 text-xs font-semibold tracking-[0.14em] text-accent uppercase">
                   <span aria-hidden="true">✓</span>
                   Official Brand Typography
                 </p>
                 <dl className="mt-6 grid grid-cols-[auto_1fr] items-baseline gap-x-5 gap-y-3">
-                  <dt className="text-sm text-charcoal/55">Display</dt>
+                  <dt className="text-sm text-ink/55">Display</dt>
                   <dd className="font-display text-2xl leading-none">{brandDisplayFontName}</dd>
-                  <dt className="text-sm text-charcoal/55">Body</dt>
+                  <dt className="text-sm text-ink/55">Body</dt>
                   <dd className="text-base font-semibold">{brandBodyFontName}</dd>
                 </dl>
               </aside>
-              <p className="mt-7 text-sm leading-7 text-charcoal/65">
+              <p className="mt-7 text-sm leading-7 text-ink/65">
                 Earlier candidates remain below as a visual record. Every specimen keeps identical
                 copy, sizing, spacing, and color.
               </p>
@@ -101,8 +101,8 @@ export default function TypographyLabPage() {
         ))}
       </div>
 
-      <footer className="border-t border-stone/70 px-6 py-14 md:px-10">
-        <div className="mx-auto max-w-7xl text-sm text-charcoal/50">
+      <footer className="border-t border-border/70 px-6 py-14 md:px-10">
+        <div className="mx-auto max-w-7xl text-sm text-ink/50">
           Approved pairing · {brandDisplayFontName} / {brandBodyFontName}
         </div>
       </footer>

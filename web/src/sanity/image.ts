@@ -23,7 +23,7 @@ export function getEditorialImage(
 
   return {
     alt,
-    blurDataURL: image.lqip,
+    blurDataURL: image.lqip ?? undefined,
     src: imageBuilder.image(image).width(width).height(height).fit('crop').auto('format').url(),
   }
 }

@@ -10,6 +10,7 @@ export type {
 } from './editorial-figure'
 export {EditorialGrid} from './editorial-grid'
 export type {EditorialGridGap} from './editorial-grid'
+export {EditorialLink} from './editorial-link'
 export {EditorialMedia} from './editorial-media'
 export type {EditorialImage, EditorialMediaRatio, EditorialMediaTone} from './editorial-media'
 export {EditorialPageHero} from './editorial-page-hero'
@@ -21,6 +22,12 @@ export type {
   EditorialPhotoEssayItems,
   EditorialPhotoEssayLayout,
 } from './editorial-photo-essay'
+export {EditorialPhotoStories, EditorialPhotoStory} from './editorial-photo-story'
+export type {
+  EditorialPhotoStoryData,
+  EditorialPhotoStoryFrame,
+  EditorialPhotoStoryPhase,
+} from './editorial-photo-story'
 export {EditorialPortableText} from './editorial-portable-text'
 export {EditorialText} from './editorial-text'
 export type {EditorialHeadingSize, EditorialTextTone, EditorialTextVariant} from './editorial-text'

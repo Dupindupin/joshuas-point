@@ -35,12 +35,12 @@ const components: PortableTextComponents = {
   },
   list: {
     bullet: ({children}) => (
-      <ul className="mb-8 list-disc space-y-3 pl-6 font-body text-base leading-8 text-charcoal/75 marker:text-charcoal/40 sm:text-lg sm:leading-9">
+      <ul className="mb-8 list-disc space-y-3 pl-6 font-body text-base leading-8 text-ink/75 marker:text-ink/40 sm:text-lg sm:leading-9">
         {children}
       </ul>
     ),
     number: ({children}) => (
-      <ol className="mb-8 list-decimal space-y-3 pl-6 font-body text-base leading-8 text-charcoal/75 marker:text-charcoal/50 sm:text-lg sm:leading-9">
+      <ol className="mb-8 list-decimal space-y-3 pl-6 font-body text-base leading-8 text-ink/75 marker:text-ink/50 sm:text-lg sm:leading-9">
         {children}
       </ol>
     ),
