@@ -158,8 +158,8 @@ npm run build
 For Studio changes, work from the repository root:
 
 ```bash
-npm run dev
-npm run build
+npm run studio:dev
+npm run studio:build
 ```
 
 Run the checks relevant to the area changed. For shared foundations or route work, run the website
@@ -198,7 +198,7 @@ Run the applications in separate terminal sessions:
 
 ```bash
 # Terminal 1 — repository root
-npm run dev
+npm run studio:dev
 
 # Terminal 2 — web/
 npm run dev

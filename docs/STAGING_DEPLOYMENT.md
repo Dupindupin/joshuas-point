@@ -61,7 +61,7 @@ Do not add a production Resend API key, SMTP password, sender credential, or tra
 Deploy the repository root as a separate static Studio project:
 
 - install: `npm ci`
-- build: `npm run build`
+- build: `npm run studio:build`
 - output directory: `dist`
 - SPA fallback: all unknown paths must serve `dist/index.html`
 
@@ -75,6 +75,18 @@ Set:
 | `SANITY_STUDIO_MAP_PROVIDER_CONFIGURED` | `true` after the preview map is verified |
 
 Only `SANITY_STUDIO_` variables intended for display in the browser may be used here. Never add API keys, write tokens, SMTP passwords, map tokens, GitHub tokens, or deployment credentials.
+
+## xCloud monorepo compatibility
+
+xCloud may detect the repository root even when the website lives in `web/`. The root package scripts therefore delegate the default deployment lifecycle to the Next.js application:
+
+- root `npm run build` installs `web/package-lock.json` and runs `web`'s `next build`;
+- root `npm start` runs `web`'s `next start`;
+- root `npm run dev` runs the Next.js development server.
+
+This is a deployment safeguard, not a generic workspace conversion. Sanity Studio commands remain explicit under the `studio:*` namespace. The preview website must never use a `studio:*` command.
+
+For xCloud, use `npm ci`, `npm run build`, and `npm start` at the repository root if its monorepo root setting cannot be changed. Do not use `cd web && ...` as a PM2 start command.
 
 The Studio project and production dataset are fixed in the reviewed Sanity configuration as project `8m6fb3x7`, dataset `production`; they are not secret values.
 

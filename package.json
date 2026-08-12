@@ -5,11 +5,15 @@
   "main": "package.json",
   "license": "UNLICENSED",
   "scripts": {
-    "build": "sanity build",
-    "deploy": "sanity deploy",
-    "deploy-graphql": "sanity graphql deploy",
-    "dev": "sanity dev",
-    "start": "sanity start"
+    "build": "npm --prefix web ci --include=dev && npm --prefix web run build",
+    "start": "npm --prefix web run start",
+    "dev": "npm --prefix web run dev",
+    "lint": "npm --prefix web run lint",
+    "studio:build": "sanity build",
+    "studio:deploy": "sanity deploy",
+    "studio:deploy-graphql": "sanity graphql deploy",
+    "studio:dev": "sanity dev",
+    "studio:start": "sanity start"
   },
   "keywords": [
     "sanity"
