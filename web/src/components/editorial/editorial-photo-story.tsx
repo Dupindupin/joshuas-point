@@ -49,14 +49,22 @@ function getFramePresentation(phase: EditorialPhotoStoryPhase, index: number) {
   }
 }
 
+function normalizeCredit(credit: string | undefined) {
+  return credit
+    ?.trim()
+    .replace(/^(?:photograph(?:y|er)?|photo)(?:\s+by)?\s*:\s*/i, '')
+    .trim()
+}
+
 function FrameCaption({frame}: {frame: EditorialPhotoStoryFrame}) {
-  if (!frame.caption && !frame.credit) return null
+  const credit = normalizeCredit(frame.credit)
+  if (!frame.caption && !credit) return null
 
   return (
     <span>
       {frame.caption}
-      {frame.caption && frame.credit ? ' ' : null}
-      {frame.credit ? (
+      {frame.caption && credit ? ' ' : null}
+      {credit ? (
         <span>
           Photograph:{' '}
           {frame.creditUrl ? (
@@ -64,10 +72,10 @@ function FrameCaption({frame}: {frame: EditorialPhotoStoryFrame}) {
               className="rounded-sm underline decoration-ink/30 underline-offset-4 hover:decoration-ink focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-focus"
               href={frame.creditUrl}
             >
-              {frame.credit}
+              {credit}
             </a>
           ) : (
-            frame.credit
+            credit
           )}
           .
         </span>

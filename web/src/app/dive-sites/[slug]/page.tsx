@@ -191,7 +191,9 @@ export default async function DiveSitePage({params}: DiveSitePageProps) {
 
         <EditorialPhotoStories stories={photoStories} />
 
-        {gallery ? <MasonryGallery {...gallery} /> : null}
+        {gallery ? (
+          <MasonryGallery {...gallery} heading="More from the underwater world" />
+        ) : null}
 
         {practicalItems.length > 0 || diveSite.safetyNotes ? (
           <SectionSpacing aria-labelledby="dive-practical-title" size="generous">

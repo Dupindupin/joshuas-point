@@ -16,6 +16,7 @@ export type MasonryGalleryImage = {
 export type MasonryGalleryData = {
   accessibleLabel: string
   caption?: string
+  heading?: string
   images: readonly MasonryGalleryImage[]
 }
 
@@ -95,13 +96,19 @@ function GalleryCaption({item}: {item: MasonryGalleryImage}) {
   )
 }
 
-export function MasonryGallery({accessibleLabel, caption, images}: MasonryGalleryProps) {
+export function MasonryGallery({accessibleLabel, caption, heading, images}: MasonryGalleryProps) {
   if (images.length < 2) return null
 
   return (
     <SectionSpacing aria-label={accessibleLabel} size="immersive">
-      <h2 className="sr-only">Photography</h2>
       <EditorialContainer>
+        {heading ? (
+          <EditorialText as="h2" className="mb-12 sm:mb-16" headingSize="small" variant="heading">
+            {heading}
+          </EditorialText>
+        ) : (
+          <h2 className="sr-only">Photography</h2>
+        )}
         <div className="grid grid-cols-1 gap-x-8 gap-y-20 md:grid-cols-6 md:gap-y-24 lg:grid-cols-12 lg:gap-x-10 lg:gap-y-36">
           {images.map((item, index) => {
             const presentation = itemPresentations[index % itemPresentations.length]
