@@ -1,6 +1,5 @@
 import {normalizeSocialProfiles} from '@/lib/social-profiles'
 import {getSiteUrl} from '@/lib/site-url'
-import {getBrandImageSource} from '@/sanity/image'
 import {getSiteSeoSettings} from '@/sanity/queries/site-settings'
 
 import {defaultEmailBrand} from './email-shell'
@@ -17,9 +16,8 @@ export async function getEmailBrand(): Promise<EmailBrand> {
   return {
     contactEmail: settings?.contactDetails?.email ?? defaultEmailBrand.contactEmail,
     location: location || settings?.propertyLocation?.label?.trim() || defaultEmailBrand.location,
-    logoUrl:
-      getBrandImageSource(settings?.primaryLogo, 600) ??
-      new URL('/brand/logo-horizontal.png', siteUrl).toString(),
+    // Keep email rendering on a stable PNG instead of negotiated image formats.
+    logoUrl: new URL('/brand/logo-horizontal.png', siteUrl).toString(),
     siteName: settings?.siteTitle?.trim() || defaultEmailBrand.siteName,
     siteUrl,
     socialLinks: normalizeSocialProfiles(settings?.socialProfiles).map(({label, href}) => ({

@@ -5,6 +5,7 @@ import type {EmailMessage} from './types'
 import {
   emailDetails,
   emailHeading,
+  emailInformationBlock,
   emailParagraph,
   escapeEmailHtml,
   renderEmailShell,
@@ -17,6 +18,16 @@ type EnquiryEmailPairOptions = {
   internalRecipient: string
   replyTo: string
   brand?: EmailBrand
+}
+
+function formatEmailDate(value: string) {
+  const date = new Date(`${value}T00:00:00.000Z`)
+  return new Intl.DateTimeFormat('en', {
+    day: 'numeric',
+    month: 'long',
+    timeZone: 'UTC',
+    year: 'numeric',
+  }).format(date)
 }
 
 function enquirySummary(enquiry: EnquirySubmission) {
@@ -42,6 +53,12 @@ export function createEnquiryEmails({
 }: EnquiryEmailPairOptions): readonly EmailMessage[] {
   const summary = enquirySummary(enquiry)
   const policySummary = ['Current stay information:', ...stayPolicyLines()].join('\n')
+  const arrivalDate = formatEmailDate(enquiry.arrivalDate)
+  const departureDate = formatEmailDate(enquiry.departureDate)
+  const guestEmailLink = `<a href="mailto:${escapeEmailHtml(enquiry.email)}" style="color:#1f3d3a;text-decoration:underline;text-decoration-color:#c8a26a;overflow-wrap:anywhere;word-break:break-word">${escapeEmailHtml(enquiry.email)}</a>`
+  const phoneLink = enquiry.phone
+    ? `<a href="tel:${escapeEmailHtml(enquiry.phone.replace(/[^+\d]/g, ''))}" style="color:#1f3d3a;text-decoration:underline;text-decoration-color:#c8a26a">${escapeEmailHtml(enquiry.phone)}</a>`
+    : undefined
 
   return [
     {
@@ -53,10 +70,12 @@ export function createEnquiryEmails({
           emailParagraph('A new enquiry has arrived through the Joshua’s Point website.'),
           emailDetails([
             ['Name', enquiry.name],
-            ['Email', enquiry.email],
-            ['Phone / WhatsApp', enquiry.phone ?? 'Not provided'],
-            ['Arrival', enquiry.arrivalDate],
-            ['Departure', enquiry.departureDate],
+            ['Email', enquiry.email, guestEmailLink],
+            phoneLink
+              ? ['Phone / WhatsApp', enquiry.phone ?? 'Not provided', phoneLink]
+              : ['Phone / WhatsApp', 'Not provided'],
+            ['Arrival', arrivalDate],
+            ['Departure', departureDate],
             ['Guests', String(enquiry.guests)],
             ['Message', enquiry.message],
           ]),
@@ -67,7 +86,7 @@ export function createEnquiryEmails({
         preheader: `New stay enquiry from ${enquiry.name}`,
       }),
       replyTo: enquiry.email,
-      subject: 'New stay enquiry',
+      subject: `Stay enquiry — ${enquiry.name}, ${arrivalDate}`,
       text: [
         'A new enquiry has arrived through the Joshua’s Point website.',
         '',
@@ -90,12 +109,12 @@ export function createEnquiryEmails({
             ['Name', enquiry.name],
             ['Email', enquiry.email],
             ['Phone / WhatsApp', enquiry.phone ?? 'Not provided'],
-            ['Arrival', enquiry.arrivalDate],
-            ['Departure', enquiry.departureDate],
+            ['Arrival', arrivalDate],
+            ['Departure', departureDate],
             ['Guests', String(enquiry.guests)],
             ['Message', enquiry.message],
           ]),
-          emailParagraph(escapeEmailHtml(policySummary).replaceAll('\n', '<br />')),
+          emailInformationBlock('Current stay information', stayPolicyLines()),
           emailParagraph(
             'This message confirms receipt of your enquiry only. It does not confirm availability or a booking.',
           ),

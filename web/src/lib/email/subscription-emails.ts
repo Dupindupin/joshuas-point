@@ -1,4 +1,10 @@
-import {emailButton, emailHeading, emailParagraph, renderEmailShell} from './email-shell'
+import {
+  emailButton,
+  emailFallbackUrl,
+  emailHeading,
+  emailParagraph,
+  renderEmailShell,
+} from './email-shell'
 import type {EmailBrand, EmailMessage} from './types'
 
 type SubscriptionEmailOptions = {
@@ -20,16 +26,18 @@ export function createSubscriptionConfirmationEmail({
     html: renderEmailShell({
       brand,
       content: [
-        emailHeading('One quiet step before we write'),
+        emailHeading('Confirm your email'),
         emailParagraph(
-          'Please confirm that you would like to receive occasional news from Joshua’s Point.',
+          'One quiet step before we write: please confirm that you would like to receive occasional news from Joshua’s Point.',
         ),
         emailButton(confirmationUrl, 'Confirm my email'),
+        emailFallbackUrl(confirmationUrl),
         emailParagraph(
           'This link is valid for 24 hours. If you did not request it, you can simply ignore this message.',
         ),
       ].join(''),
       preheader: 'Confirm your Joshua’s Point updates subscription.',
+      purpose: 'subscription',
     }),
     replyTo,
     subject: 'Confirm your Joshua’s Point updates',
@@ -59,10 +67,14 @@ export function createSubscriptionWelcomeEmail({
         emailParagraph(
           'Thank you for joining us. We will write occasionally with news from the house and the places around Southern Negros that we genuinely enjoy sharing.',
         ),
-        emailButton(`${brand.siteUrl}/destinations`, 'Discover the surroundings'),
+        emailButton(brand.siteUrl, 'Visit Joshua’s Point'),
+        emailParagraph(
+          'Every future update will include a simple way to leave the list whenever you wish.',
+        ),
         emailParagraph('Warmly,<br>Joshua’s Point'),
       ].join(''),
       preheader: 'A warm welcome from Joshua’s Point.',
+      purpose: 'subscription',
     }),
     replyTo,
     subject: 'Welcome to Joshua’s Point',
@@ -71,7 +83,9 @@ export function createSubscriptionWelcomeEmail({
       '',
       'We will write occasionally with news from the house and the places around Southern Negros that we genuinely enjoy sharing.',
       '',
-      `${brand.siteUrl}/destinations`,
+      brand.siteUrl,
+      '',
+      'Every future update will include a simple way to leave the list whenever you wish.',
       '',
       'Warmly,',
       'Joshua’s Point',

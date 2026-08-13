@@ -16,6 +16,8 @@ export type EmailBrand = {
   socialLinks: Array<{label: string; url: string}>
 }
 
+export type EmailPurpose = 'subscription' | 'transactional'
+
 export type SendEmailBatchOptions = {
   idempotencyKey: string
   messages: readonly EmailMessage[]
