@@ -7,7 +7,10 @@ export function getDeploymentEnvironment(): DeploymentEnvironment {
 }
 
 export function isSearchIndexingAllowed() {
-  return getDeploymentEnvironment() === 'production'
+  return (
+    getDeploymentEnvironment() === 'production' &&
+    process.env.COMING_SOON_MODE?.trim().toLowerCase() !== 'enabled'
+  )
 }
 
 export function isStagingDeployment() {

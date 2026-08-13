@@ -3,7 +3,9 @@ import type {NextConfig} from 'next'
 
 import {sanityConfig} from './src/sanity/config'
 
-const indexingAllowed = process.env.NEXT_PUBLIC_DEPLOYMENT_ENVIRONMENT === 'production'
+const indexingAllowed =
+  process.env.NEXT_PUBLIC_DEPLOYMENT_ENVIRONMENT === 'production' &&
+  process.env.COMING_SOON_MODE?.trim().toLowerCase() !== 'enabled'
 
 const nextConfig: NextConfig = {
   async headers() {
