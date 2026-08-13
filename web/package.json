@@ -6,6 +6,7 @@
     "dev": "next dev",
     "build": "next build --webpack",
     "email:test": "tsx scripts/test-enquiry-emails.ts",
+    "email:test:subscriptions": "tsx scripts/test-subscription-foundation.ts",
     "start": "next start",
     "lint": "eslint"
   },

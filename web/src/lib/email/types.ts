@@ -1,9 +1,19 @@
 export type EmailMessage = {
   from: string
+  html?: string
   replyTo?: string
   subject: string
   text: string
   to: readonly string[]
+}
+
+export type EmailBrand = {
+  contactEmail: string
+  location: string
+  logoUrl: string
+  siteName: string
+  siteUrl: string
+  socialLinks: Array<{label: string; url: string}>
 }
 
 export type SendEmailBatchOptions = {

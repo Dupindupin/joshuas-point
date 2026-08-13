@@ -44,6 +44,14 @@ const privacySections = [
     ],
   },
   {
+    id: 'email-updates',
+    heading: 'Optional email updates',
+    body: [
+      'If you ask to receive Joshua’s Point updates, we send a confirmation link before adding your address to the mailing list. The email address is held by our email provider rather than in Sanity, and it is used only for the updates you confirmed.',
+      'Future update emails will include a way to unsubscribe. Leaving the list does not affect an enquiry or any conversation about a stay.',
+    ],
+  },
+  {
     id: 'abuse-protection',
     heading: 'Abuse protection',
     body: [

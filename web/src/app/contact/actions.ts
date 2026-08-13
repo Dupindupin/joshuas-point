@@ -4,6 +4,7 @@ import {headers} from 'next/headers'
 
 import {createEnquiryEmails} from '@/lib/email/enquiry-emails'
 import {getEnquiryEmailConfiguration, getEnquiryEmailMode} from '@/lib/email/email-service'
+import {getEmailBrand} from '@/lib/email/email-brand'
 import {EmailConfigurationError} from '@/lib/email/types'
 import {checkEnquiryRateLimit, hashEnquiryValue} from '@/lib/enquiry/rate-limit'
 import type {EnquiryFormState} from '@/lib/enquiry/types'
@@ -59,7 +60,9 @@ export async function submitEnquiry(
 
   try {
     const configuration = getEnquiryEmailConfiguration()
+    const brand = await getEmailBrand()
     const messages = createEnquiryEmails({
+      brand,
       enquiry: validation.data,
       from: configuration.from,
       internalRecipient: configuration.to,

@@ -33,8 +33,8 @@ if (sendRequested && publicEmailMode && publicEmailMode !== 'disabled') {
   throw new Error('Refusing to send because ENQUIRY_EMAIL_MODE is not disabled.')
 }
 
-const from = process.env.ENQUIRY_FROM_EMAIL?.trim() ||
-  "Joshua's Point <enquiries@updates.joshuaspoint.com>"
+const from =
+  process.env.ENQUIRY_FROM_EMAIL?.trim() || "Joshua's Point <enquiries@updates.joshuaspoint.com>"
 const replyTo = process.env.ENQUIRY_REPLY_TO_EMAIL?.trim() || 'mail@joshuaspoint.com'
 
 const renderedMessages = createEnquiryEmails({
@@ -52,17 +52,23 @@ for (const message of renderedMessages) {
   if (message.to.length !== 1 || message.to[0] !== ownerTestAddress) {
     throw new Error('The test recipient safety check failed.')
   }
-  if (!message.subject || !message.text || message.text.includes('undefined')) {
+  if (
+    !message.subject ||
+    !message.text ||
+    !message.html ||
+    message.text.includes('undefined') ||
+    message.html.includes('undefined')
+  ) {
     throw new Error(`Template rendering failed for ${message.subject || 'an unnamed message'}.`)
   }
 }
 
-process.stdout.write('Joshua\'s Point enquiry email template test\n')
+process.stdout.write("Joshua's Point enquiry email template test\n")
 process.stdout.write(`Mode: ${sendRequested ? 'SEND' : 'DRY RUN'}\n`)
 process.stdout.write(`Permitted recipient: ${ownerTestAddress}\n`)
 for (const message of renderedMessages) {
   process.stdout.write(
-    `- ${message.subject}: rendered (${message.text.length} plain-text characters), reply-to ${message.replyTo}\n`,
+    `- ${message.subject}: rendered (${message.html?.length ?? 0} HTML / ${message.text.length} plain-text characters), reply-to ${message.replyTo}\n`,
   )
 }
 
@@ -87,7 +93,9 @@ async function sendTestMessages() {
     messages: renderedMessages,
   })
 
-  process.stdout.write('\nResend accepted both test messages. Public enquiry mode was not changed.\n')
+  process.stdout.write(
+    '\nResend accepted both test messages. Public enquiry mode was not changed.\n',
+  )
 }
 
 sendTestMessages().catch((error) => {

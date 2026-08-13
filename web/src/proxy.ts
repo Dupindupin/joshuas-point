@@ -28,6 +28,6 @@ export async function proxy(request: NextRequest) {
 
 export const config = {
   matcher: [
-    '/((?!api/sanity/revalidate|coming-soon|robots\\.txt|sitemap\\.xml|_next/static|_next/image|favicon\\.ico|.*\\.[^/]+$).*)',
+    '/((?!api/sanity/revalidate|api/subscriptions|coming-soon|robots\\.txt|sitemap\\.xml|_next/static|_next/image|favicon\\.ico|.*\\.[^/]+$).*)',
   ],
 }

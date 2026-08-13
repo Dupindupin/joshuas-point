@@ -10,6 +10,7 @@ export class ResendEmailService implements EmailService {
       body: JSON.stringify(
         messages.map((message) => ({
           from: message.from,
+          ...(message.html ? {html: message.html} : {}),
           ...(message.replyTo ? {reply_to: message.replyTo} : {}),
           subject: message.subject,
           text: message.text,

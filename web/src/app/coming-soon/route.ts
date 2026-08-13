@@ -7,6 +7,7 @@ import {
   securelyMatches,
 } from '@/lib/coming-soon'
 import {getSiteUrl} from '@/lib/site-url'
+import {getSubscriptionMode} from '@/lib/subscriptions/config'
 
 const accessDurationSeconds = 60 * 60 * 24
 
@@ -125,6 +126,11 @@ function documentShell(content: string, title: string) {
         margin: 2.5rem auto 0;
         text-align: left;
       }
+      .subscription { margin-top: 2.5rem; }
+      .subscription form { margin-top: 1rem; }
+      .subscription-note { max-width: 31rem; margin: 0 auto; color: var(--muted); font-size: 0.88rem; line-height: 1.6; }
+      .subscription-status { max-width: 31rem; margin: 1.25rem auto 0; color: var(--ocean); font-size: 0.95rem; line-height: 1.6; }
+      .honeypot { position: absolute; left: -10000px; width: 1px; height: 1px; overflow: hidden; }
       label { font-size: 0.85rem; font-weight: 700; letter-spacing: 0.03em; }
       input {
         width: 100%;
@@ -177,7 +183,26 @@ function documentShell(content: string, title: string) {
 </html>`
 }
 
-function comingSoonDocument() {
+function subscriptionMessage(status: string | null) {
+  switch (status) {
+    case 'check-email':
+      return 'Please check your inbox. If the address is valid, a confirmation link is on its way.'
+    case 'confirmed':
+      return 'Thank you. Your email is confirmed, and you are now part of Joshua’s Point updates.'
+    case 'invalid':
+      return 'Please enter a valid email address.'
+    case 'invalid-link':
+      return 'This confirmation link is invalid or has expired. Please subscribe again.'
+    case 'unavailable':
+      return 'Email updates are not available just yet. Please try again another time.'
+    default:
+      return null
+  }
+}
+
+function comingSoonDocument(subscriptionStatus: string | null) {
+  const message = subscriptionMessage(subscriptionStatus)
+  const subscriptionsEnabled = getSubscriptionMode() === 'live'
   return documentShell(
     `<section class="frame" aria-labelledby="coming-soon-title">
       <picture>
@@ -188,6 +213,21 @@ function comingSoonDocument() {
       <h1 id="coming-soon-title">We are preparing our new website.</h1>
       <p class="introduction">Joshua's Point will be back soon. For enquiries, you can still reach us directly.</p>
       <a class="contact" href="mailto:mail@joshuaspoint.com">mail@joshuaspoint.com</a>
+      ${
+        subscriptionsEnabled
+          ? `<section class="subscription" aria-labelledby="subscription-title">
+        <p class="eyebrow" id="subscription-title">News from Joshua's Point</p>
+        <p class="subscription-note">Leave your email if you would like a quiet note when the new website is ready. Please confirm the message we send you.</p>
+        <form action="/api/subscriptions/request" method="post">
+          <label for="subscription-email">Email address</label>
+          <input id="subscription-email" name="email" type="email" required autocomplete="email" maxlength="254" />
+          <div class="honeypot" aria-hidden="true"><label for="subscription-website">Website</label><input id="subscription-website" name="website" type="text" tabindex="-1" autocomplete="off" /></div>
+          <button type="submit">Keep me informed</button>
+        </form>
+        ${message ? `<p class="subscription-status" role="status">${escapeHtml(message)}</p>` : ''}
+      </section>`
+          : ''
+      }
     </section>`,
     "Joshua's Point — Coming Soon",
   )
@@ -218,10 +258,15 @@ export function GET(request: NextRequest) {
   const accessRequested = request.nextUrl.searchParams.get('access') === '1'
   const status = accessRequested ? 200 : 503
 
-  return new NextResponse(accessRequested ? accessDocument() : comingSoonDocument(), {
-    headers: pageHeaders(status),
-    status,
-  })
+  return new NextResponse(
+    accessRequested
+      ? accessDocument()
+      : comingSoonDocument(request.nextUrl.searchParams.get('subscription')),
+    {
+      headers: pageHeaders(status),
+      status,
+    },
+  )
 }
 
 export async function POST(request: NextRequest) {
