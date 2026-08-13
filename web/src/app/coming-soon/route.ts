@@ -6,6 +6,7 @@ import {
   getComingSoonBypassSecret,
   securelyMatches,
 } from '@/lib/coming-soon'
+import {getSiteUrl} from '@/lib/site-url'
 
 const accessDurationSeconds = 60 * 60 * 24
 
@@ -248,7 +249,7 @@ export async function POST(request: NextRequest) {
     })
   }
 
-  const response = NextResponse.redirect(new URL('/', request.url), 303)
+  const response = NextResponse.redirect(getSiteUrl(), 303)
   response.cookies.set(comingSoonAccessCookie, expectedAccessValue, {
     httpOnly: true,
     maxAge: accessDurationSeconds,
