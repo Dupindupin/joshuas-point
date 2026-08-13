@@ -2,7 +2,7 @@ import type {PortableTextBlock} from '@portabletext/react'
 import {cache} from 'react'
 
 import {sanityClient} from '../client'
-import type {SanityEditorialPhotography, SanityImage, SeoData} from '../types'
+import type {SanityEditorialPhotography, SanityGallery, SanityImage, SeoData} from '../types'
 
 const editorialImageProjection = /* groq */ `{
   alt,
@@ -12,6 +12,7 @@ const editorialImageProjection = /* groq */ `{
   creditUrl,
   crop,
   decorative,
+  "dimensions": asset->metadata.dimensions,
   hotspot,
   "lqip": asset->metadata.lqip
 }`
@@ -57,6 +58,7 @@ export type DiveSiteDetailData = FeaturedDiveSite & {
   diveLevel?: 'advanced' | 'beginner' | 'intermediate' | null
   entryType?: 'boat' | 'mixed' | 'shore' | null
   editorialPhotography?: SanityEditorialPhotography | null
+  gallery?: SanityGallery | null
   mapLocation?: {
     coordinates?: {lat: number; lng: number} | null
     directionsUrl?: string | null
@@ -145,6 +147,11 @@ const diveSiteBySlugQuery = /* groq */ `
         "openingImages": openingImages[defined(asset)] ${editorialImageProjection},
         title,
       }
+    },
+    gallery {
+      accessibleLabel,
+      caption,
+      "images": images[defined(asset)] ${editorialImageProjection}
     },
     heroImage ${editorialImageProjection},
     "description": description[_type == "block"],

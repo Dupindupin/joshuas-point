@@ -16,6 +16,11 @@ export type SanityImage = {
     top: number
   } | null
   decorative?: boolean | null
+  dimensions?: {
+    aspectRatio?: number | null
+    height?: number | null
+    width?: number | null
+  } | null
   hotspot?: {
     height: number
     width: number
@@ -23,6 +28,12 @@ export type SanityImage = {
     y: number
   } | null
   lqip?: string | null
+}
+
+export type SanityGallery = {
+  accessibleLabel?: string | null
+  caption?: string | null
+  images?: Array<SanityImage | null> | null
 }
 
 export type SanityInstagramPost = {

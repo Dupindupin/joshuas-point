@@ -4,6 +4,7 @@ import {notFound} from 'next/navigation'
 import {
   EditorialContainer,
   EditorialGrid,
+  MasonryGallery,
   EditorialMedia,
   EditorialPageHero,
   EditorialPhotoStories,
@@ -17,6 +18,7 @@ import {EditorialShare} from '@/components/share'
 import {SiteHeader} from '@/components/site/site-header'
 import {createPageMetadata} from '@/lib/seo/metadata'
 import {getEditorialImage} from '@/sanity/image'
+import {mapSanityGallery} from '@/sanity/gallery'
 import {mapEditorialPhotoStories} from '@/sanity/photography'
 import {
   getDiveSiteBySlug,
@@ -98,6 +100,7 @@ export default async function DiveSitePage({params}: DiveSitePageProps) {
 
   const relationships = await getDiveSiteRelationships(diveSite._id)
   const photoStories = mapEditorialPhotoStories(diveSite.editorialPhotography)
+  const gallery = mapSanityGallery(diveSite.gallery)
   const practicalItems = getPracticalItems(diveSite)
   const mapCoordinates = diveSite.mapLocation?.coordinates
     ? {
@@ -187,6 +190,8 @@ export default async function DiveSitePage({params}: DiveSitePageProps) {
         ) : null}
 
         <EditorialPhotoStories stories={photoStories} />
+
+        {gallery ? <MasonryGallery {...gallery} /> : null}
 
         {practicalItems.length > 0 || diveSite.safetyNotes ? (
           <SectionSpacing aria-labelledby="dive-practical-title" size="generous">
