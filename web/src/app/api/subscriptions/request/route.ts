@@ -7,6 +7,7 @@ import {createSubscriptionConfirmationEmail} from '@/lib/email/subscription-emai
 import {getSiteUrl} from '@/lib/site-url'
 import {getSubscriptionConfiguration, getSubscriptionMode} from '@/lib/subscriptions/config'
 import {checkSubscriptionRateLimit, subscriptionHash} from '@/lib/subscriptions/rate-limit'
+import {prepareResendSubscriptionRequest} from '@/lib/subscriptions/resend-contacts'
 import {createSubscriptionToken} from '@/lib/subscriptions/token'
 import {normalizeSubscriptionEmail} from '@/lib/subscriptions/validation'
 
@@ -29,6 +30,13 @@ export async function POST(request: NextRequest) {
 
   try {
     const configuration = getSubscriptionConfiguration()
+    const status = await prepareResendSubscriptionRequest({
+      apiKey: configuration.contactsApiKey,
+      email,
+      topicId: configuration.topicId,
+    })
+    if (status !== 'send-confirmation') return redirect('check-email')
+
     const brand = await getEmailBrand()
     const token = createSubscriptionToken(email, configuration.confirmationSecret)
     const confirmationUrl = new URL('/api/subscriptions/confirm', getSiteUrl())
