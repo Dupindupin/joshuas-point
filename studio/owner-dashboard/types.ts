@@ -1,5 +1,19 @@
 export type DashboardStatus = 'blocked' | 'complete' | 'needsAttention'
 
+export type DashboardLiveStatus = {
+  analyticsEnabled: boolean
+  checkedAt: string
+  comingSoon: boolean
+  enquiryMode: 'disabled' | 'live' | 'test'
+  newsletterReadiness: 'needsAttention' | 'ready'
+  resendConfigured: boolean
+  senderConfigured: boolean
+  sendingDomainConfigured: boolean
+  sentryEnabled: boolean
+  siteDomainConfigured: boolean
+  subscriptionMode: 'disabled' | 'live'
+}
+
 export type DashboardImage = {
   asset?: {_ref?: string} | null
 }

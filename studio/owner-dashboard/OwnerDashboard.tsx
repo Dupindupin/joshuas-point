@@ -6,6 +6,7 @@ import {ownerDashboardQuery} from './query'
 import {resolvePremiumGuideStatus} from './premiumGuideStatus'
 import type {
   DashboardDocument,
+  DashboardLiveStatus,
   DashboardPhotoStory,
   DashboardSiteSettings,
   DashboardStatus,
@@ -91,7 +92,11 @@ function documentLabel(document: DashboardDocument) {
 }
 
 function StatusBadge({status}: {status: DashboardStatus}) {
-  return <Card padding={2} radius={2} tone={statusTones[status]}>{statusLabels[status]}</Card>
+  return (
+    <Card padding={2} radius={2} tone={statusTones[status]}>
+      {statusLabels[status]}
+    </Card>
+  )
 }
 
 function DashboardSection({
@@ -104,12 +109,17 @@ function DashboardSection({
   title: string
 }) {
   return (
-    <section aria-labelledby={`dashboard-${title.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`} style={styles.section}>
+    <section
+      aria-labelledby={`dashboard-${title.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`}
+      style={styles.section}
+    >
       <div style={{display: 'grid', gap: '0.4rem', marginBottom: '1rem'}}>
         <Heading id={`dashboard-${title.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`} size={2}>
           {title}
         </Heading>
-        <Text muted size={1}>{description}</Text>
+        <Text muted size={1}>
+          {description}
+        </Text>
       </div>
       {children}
     </section>
@@ -129,7 +139,9 @@ function SummaryCard({
     <Card border padding={4} radius={3} style={styles.card}>
       <div style={styles.cardBody}>
         <div style={styles.row}>
-          <Heading as="h3" size={1}>{title}</Heading>
+          <Heading as="h3" size={1}>
+            {title}
+          </Heading>
           <StatusBadge status={status} />
         </div>
         {children}
@@ -141,8 +153,12 @@ function SummaryCard({
 function Value({label, value}: {label: string; value?: React.ReactNode}) {
   return (
     <div style={styles.row}>
-      <Text muted size={1}>{label}</Text>
-      <Text size={1} weight="medium">{value || 'Not added'}</Text>
+      <Text muted size={1}>
+        {label}
+      </Text>
+      <Text size={1} weight="medium">
+        {value || 'Not added'}
+      </Text>
     </div>
   )
 }
@@ -160,7 +176,12 @@ function EditDocumentButton({document}: {document: DashboardDocument}) {
 }
 
 function IssueList({documents}: {documents: DashboardDocument[]}) {
-  if (documents.length === 0) return <Text muted size={1}>Nothing needs attention.</Text>
+  if (documents.length === 0)
+    return (
+      <Text muted size={1}>
+        Nothing needs attention.
+      </Text>
+    )
 
   return (
     <ul style={styles.issueList}>
@@ -183,13 +204,13 @@ function socialStatus(settings: DashboardSiteSettings | null | undefined, platfo
 function requiredWebsiteSettingsComplete(settings: DashboardSiteSettings | null | undefined) {
   return Boolean(
     settings?.siteTitle?.trim() &&
-      settings.siteDescription?.trim() &&
-      settings.siteUrl?.startsWith('https://') &&
-      settings.contactDetails?.email?.trim() &&
-      settings.contactDetails.address?.locality?.trim() &&
-      settings.primaryNavigation?.length &&
-      settings.defaultSeo?.metaTitle?.trim() &&
-      settings.defaultSeo.metaDescription?.trim(),
+    settings.siteDescription?.trim() &&
+    settings.siteUrl?.startsWith('https://') &&
+    settings.contactDetails?.email?.trim() &&
+    settings.contactDetails.address?.locality?.trim() &&
+    settings.primaryNavigation?.length &&
+    settings.defaultSeo?.metaTitle?.trim() &&
+    settings.defaultSeo.metaDescription?.trim(),
   )
 }
 
@@ -200,9 +221,73 @@ function formatAddress(settings: DashboardSiteSettings | null | undefined) {
     .join(', ')
 }
 
-function OwnerDashboardContent({data}: {data: OwnerDashboardData}) {
+function configuredLabel(value: boolean | undefined) {
+  if (value === undefined) return 'Unavailable'
+  return value ? 'Configured' : 'Not configured'
+}
+
+function enabledLabel(value: boolean | undefined) {
+  if (value === undefined) return 'Unavailable'
+  return value ? 'Enabled' : 'Disabled'
+}
+
+function isDashboardLiveStatus(value: unknown): value is DashboardLiveStatus {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return false
+  const status = value as Record<string, unknown>
+  const booleanFields = [
+    'analyticsEnabled',
+    'comingSoon',
+    'resendConfigured',
+    'senderConfigured',
+    'sendingDomainConfigured',
+    'sentryEnabled',
+    'siteDomainConfigured',
+  ]
+
+  return (
+    booleanFields.every((field) => typeof status[field] === 'boolean') &&
+    typeof status.checkedAt === 'string' &&
+    !Number.isNaN(Date.parse(status.checkedAt)) &&
+    ['disabled', 'live', 'test'].includes(String(status.enquiryMode)) &&
+    ['disabled', 'live'].includes(String(status.subscriptionMode)) &&
+    ['needsAttention', 'ready'].includes(String(status.newsletterReadiness))
+  )
+}
+
+function resolveOwnerStatusUrl() {
+  const configuredUrl = studioEnvironment.SANITY_STUDIO_OWNER_STATUS_URL?.trim()
+  const candidate = configuredUrl || 'https://joshuaspoint.com/api/owner/status'
+
+  try {
+    const url = new URL(candidate)
+    const allowedProductionOrigins = new Set([
+      'https://joshuaspoint.com',
+      'https://preview.joshuaspoint.com',
+    ])
+    const local =
+      (url.protocol === 'http:' || url.protocol === 'https:') &&
+      (url.hostname === 'localhost' || url.hostname === '127.0.0.1')
+
+    if (!allowedProductionOrigins.has(url.origin) && !local) return null
+    return new URL('/api/owner/status', url.origin)
+  } catch {
+    return null
+  }
+}
+
+function OwnerDashboardContent({
+  data,
+  liveStatus,
+  liveStatusError,
+}: {
+  data: OwnerDashboardData
+  liveStatus: DashboardLiveStatus | null
+  liveStatusError: string | null
+}) {
   const settings = data.settings
-  const editorialDocuments = data.documents.filter((document) => contentTypes.includes(document._type))
+  const editorialDocuments = data.documents.filter((document) =>
+    contentTypes.includes(document._type),
+  )
   const destinations = editorialDocuments.filter((document) => document._type === 'destination')
   const diveSites = editorialDocuments.filter((document) => document._type === 'diveSite')
   const scenicRoutes = editorialDocuments.filter((document) => document._type === 'scenicRoute')
@@ -217,8 +302,12 @@ function OwnerDashboardContent({data}: {data: OwnerDashboardData}) {
   )
 
   const missingSeoTitles = data.documents.filter((document) => !document.seoTitle?.trim())
-  const missingSeoDescriptions = data.documents.filter((document) => !document.seoDescription?.trim())
-  const missingSocialImages = data.documents.filter((document) => !hasImage(document.seoSocialImage))
+  const missingSeoDescriptions = data.documents.filter(
+    (document) => !document.seoDescription?.trim(),
+  )
+  const missingSocialImages = data.documents.filter(
+    (document) => !hasImage(document.seoSocialImage),
+  )
   const noIndexDocuments = data.documents.filter((document) => document.noIndex)
   const documentsWithoutSlugs = editorialDocuments.filter((document) => !document.slug?.trim())
 
@@ -229,13 +318,13 @@ function OwnerDashboardContent({data}: {data: OwnerDashboardData}) {
     document.slug?.includes('mountain-lake'),
   )
 
-  const resendConfigured = studioEnvironment.SANITY_STUDIO_RESEND_CONFIGURED === 'true'
-  const emailDomainStatus =
-    studioEnvironment.SANITY_STUDIO_EMAIL_DOMAIN_STATUS || 'not configured'
-  const publicSender = studioEnvironment.SANITY_STUDIO_PUBLIC_SENDER_EMAIL
-  const emailReady = resendConfigured && emailDomainStatus === 'verified' && Boolean(publicSender)
-  const mapProviderConfigured =
-    studioEnvironment.SANITY_STUDIO_MAP_PROVIDER_CONFIGURED === 'true'
+  const emailReady = Boolean(
+    liveStatus?.resendConfigured &&
+    liveStatus.sendingDomainConfigured &&
+    liveStatus.senderConfigured &&
+    liveStatus.enquiryMode !== 'disabled',
+  )
+  const mapProviderConfigured = studioEnvironment.SANITY_STUDIO_MAP_PROVIDER_CONFIGURED === 'true'
 
   const legalLabels = (settings?.footer?.legalLinks ?? []).flatMap((link) =>
     link?.label ? [link.label.toLowerCase()] : [],
@@ -247,24 +336,35 @@ function OwnerDashboardContent({data}: {data: OwnerDashboardData}) {
   const premiumGuide = resolvePremiumGuideStatus(data)
 
   const launchItems: Array<{label: string; status: DashboardStatus}> = [
-    {label: 'Website', status: requiredWebsiteSettingsComplete(settings) ? 'complete' : 'needsAttention'},
+    {
+      label: 'Website',
+      status: requiredWebsiteSettingsComplete(settings) ? 'complete' : 'needsAttention',
+    },
     {label: 'Photography', status: incompletePhotography.length ? 'needsAttention' : 'complete'},
     {label: 'Premium Guide', status: premiumGuide.overallStatus},
     {
       label: 'Maps',
-      status: mapProviderConfigured && settings?.propertyLocation?.coordinates ? 'complete' : 'needsAttention',
+      status:
+        mapProviderConfigured && settings?.propertyLocation?.coordinates
+          ? 'complete'
+          : 'needsAttention',
     },
     {
       label: 'SEO',
       status:
-        settings?.defaultSeo?.metaTitle && settings.defaultSeo.metaDescription && !documentsWithoutSlugs.length
+        settings?.defaultSeo?.metaTitle &&
+        settings.defaultSeo.metaDescription &&
+        !documentsWithoutSlugs.length
           ? 'complete'
           : 'needsAttention',
     },
     {label: 'Email', status: emailReady ? 'complete' : 'blocked'},
     {
       label: 'Social',
-      status: socialStatus(settings, 'instagram') && socialStatus(settings, 'facebook') ? 'complete' : 'needsAttention',
+      status:
+        socialStatus(settings, 'instagram') && socialStatus(settings, 'facebook')
+          ? 'complete'
+          : 'needsAttention',
     },
     {label: 'Legal / privacy', status: legalComplete ? 'complete' : 'needsAttention'},
   ]
@@ -290,7 +390,10 @@ function OwnerDashboardContent({data}: {data: OwnerDashboardData}) {
         description="The public identity, contact details, booking links and navigation all come from Site Settings."
       >
         <div style={styles.sectionGrid}>
-          <SummaryCard status={requiredWebsiteSettingsComplete(settings) ? 'complete' : 'needsAttention'} title="Public website">
+          <SummaryCard
+            status={requiredWebsiteSettingsComplete(settings) ? 'complete' : 'needsAttention'}
+            title="Public website"
+          >
             <Value label="Site title" value={settings?.siteTitle} />
             <Value label="Description" value={settings?.siteDescription} />
             <Value label="Canonical URL" value={settings?.siteUrl} />
@@ -300,10 +403,37 @@ function OwnerDashboardContent({data}: {data: OwnerDashboardData}) {
             <Value label="Public location" value={formatAddress(settings)} />
             <Value
               label="Booking"
-              value={settings?.bookingLinks?.enabled ? settings.bookingLinks.primary?.label || 'Enabled' : 'Not enabled'}
+              value={
+                settings?.bookingLinks?.enabled
+                  ? settings.bookingLinks.primary?.label || 'Enabled'
+                  : 'Not enabled'
+              }
             />
             <Value label="Navigation items" value={settings?.primaryNavigation?.length || 0} />
-            <IntentButton intent="edit" params={{id: 'siteSettings', type: 'siteSettings'}} text="Edit Site Settings" />
+            <IntentButton
+              intent="edit"
+              params={{id: 'siteSettings', type: 'siteSettings'}}
+              text="Edit Site Settings"
+            />
+          </SummaryCard>
+          <SummaryCard
+            status={liveStatus?.siteDomainConfigured ? 'complete' : 'needsAttention'}
+            title="Live configuration"
+          >
+            <Value
+              label="Production domain"
+              value={configuredLabel(liveStatus?.siteDomainConfigured)}
+            />
+            <Value label="Coming Soon" value={enabledLabel(liveStatus?.comingSoon)} />
+            <Value
+              label="Checked"
+              value={liveStatus ? new Date(liveStatus.checkedAt).toLocaleString() : 'Unavailable'}
+            />
+            {liveStatusError ? (
+              <Text muted size={1}>
+                {liveStatusError}
+              </Text>
+            ) : null}
           </SummaryCard>
         </div>
       </DashboardSection>
@@ -324,12 +454,30 @@ function OwnerDashboardContent({data}: {data: OwnerDashboardData}) {
             }
             title="Brand assets"
           >
-            <Value label="Primary logo" value={hasImage(settings?.primaryLogo) ? 'Added' : undefined} />
-            <Value label="Compact mark" value={hasImage(settings?.compactLogo) ? 'Added' : undefined} />
-            <Value label="Social profile image" value={hasImage(settings?.squareProfileImage) ? 'Added' : undefined} />
-            <Value label="Default sharing image" value={hasImage(settings?.defaultSocialImage) ? 'Added' : undefined} />
-            <Value label="Favicon reference" value={hasImage(settings?.faviconImage) ? 'Added' : undefined} />
-            <Value label="App icon reference" value={hasImage(settings?.appIconImage) ? 'Added' : undefined} />
+            <Value
+              label="Primary logo"
+              value={hasImage(settings?.primaryLogo) ? 'Added' : undefined}
+            />
+            <Value
+              label="Compact mark"
+              value={hasImage(settings?.compactLogo) ? 'Added' : undefined}
+            />
+            <Value
+              label="Social profile image"
+              value={hasImage(settings?.squareProfileImage) ? 'Added' : undefined}
+            />
+            <Value
+              label="Default sharing image"
+              value={hasImage(settings?.defaultSocialImage) ? 'Added' : undefined}
+            />
+            <Value
+              label="Favicon reference"
+              value={hasImage(settings?.faviconImage) ? 'Added' : undefined}
+            />
+            <Value
+              label="App icon reference"
+              value={hasImage(settings?.appIconImage) ? 'Added' : undefined}
+            />
           </SummaryCard>
           <SummaryCard status="complete" title="Approved design language">
             <Value label="Display type" value="Newsreader" />
@@ -342,10 +490,23 @@ function OwnerDashboardContent({data}: {data: OwnerDashboardData}) {
               ['Charcoal', '#282828'],
             ].map(([name, colour]) => (
               <div key={name} style={styles.row}>
-                <Text muted size={1}>{name}</Text>
+                <Text muted size={1}>
+                  {name}
+                </Text>
                 <div style={{alignItems: 'center', display: 'flex', gap: '0.5rem'}}>
-                  <span aria-hidden="true" style={{background: colour, border: '1px solid currentColor', borderRadius: '50%', height: 20, width: 20}} />
-                  <Text size={1} weight="medium">{colour}</Text>
+                  <span
+                    aria-hidden="true"
+                    style={{
+                      background: colour,
+                      border: '1px solid currentColor',
+                      borderRadius: '50%',
+                      height: 20,
+                      width: 20,
+                    }}
+                  />
+                  <Text size={1} weight="medium">
+                    {colour}
+                  </Text>
                 </div>
               </div>
             ))}
@@ -353,13 +514,24 @@ function OwnerDashboardContent({data}: {data: OwnerDashboardData}) {
         </div>
       </DashboardSection>
 
-      <DashboardSection title="Social" description="Only confirmed HTTPS profiles in Site Settings are shown publicly.">
+      <DashboardSection
+        title="Social"
+        description="Only confirmed HTTPS profiles in Site Settings are shown publicly."
+      >
         <div style={styles.sectionGrid}>
           {['instagram', 'facebook', 'youtube', 'tiktok', 'pinterest'].map((platform) => {
             const connected = socialStatus(settings, platform)
             return (
-              <SummaryCard key={platform} status={connected ? 'complete' : 'needsAttention'} title={platform[0].toUpperCase() + platform.slice(1)}>
-                <Text muted size={1}>{connected ? 'Connected with an approved public URL.' : 'No approved account is connected.'}</Text>
+              <SummaryCard
+                key={platform}
+                status={connected ? 'complete' : 'needsAttention'}
+                title={platform[0].toUpperCase() + platform.slice(1)}
+              >
+                <Text muted size={1}>
+                  {connected
+                    ? 'Connected with an approved public URL.'
+                    : 'No approved account is connected.'}
+                </Text>
               </SummaryCard>
             )
           })}
@@ -373,7 +545,9 @@ function OwnerDashboardContent({data}: {data: OwnerDashboardData}) {
         <div style={styles.sectionGrid}>
           <SummaryCard status={premiumGuide.overallStatus} title={premiumGuide.title}>
             <Card padding={3} radius={2} tone="primary">
-              <Text size={1} weight="medium">Current source: {premiumGuide.source}</Text>
+              <Text size={1} weight="medium">
+                Current source: {premiumGuide.source}
+              </Text>
             </Card>
             <Value label="Manuscript" value={premiumGuide.manuscript} />
             <Value
@@ -394,8 +568,8 @@ function OwnerDashboardContent({data}: {data: OwnerDashboardData}) {
             {premiumGuide.source === 'File-backed Edition 1 production' ? (
               <Card border padding={3} radius={2}>
                 <Text size={1}>
-                  The Premium Guide is currently produced from the approved Edition 1 manuscript
-                  and build system. It has not yet been migrated into Sanity as the authoritative
+                  The Premium Guide is currently produced from the approved Edition 1 manuscript and
+                  build system. It has not yet been migrated into Sanity as the authoritative
                   content source.
                 </Text>
               </Card>
@@ -417,82 +591,204 @@ function OwnerDashboardContent({data}: {data: OwnerDashboardData}) {
             const values = documents as DashboardDocument[]
             const incomplete = values.filter((document) => incompletePhotography.includes(document))
             return (
-              <SummaryCard key={label as string} status={incomplete.length ? 'needsAttention' : 'complete'} title={label as string}>
+              <SummaryCard
+                key={label as string}
+                status={incomplete.length ? 'needsAttention' : 'complete'}
+                title={label as string}
+              >
                 <Value label="Complete" value={values.length - incomplete.length} />
                 <Value label="Incomplete" value={incomplete.length} />
                 <IssueList documents={incomplete} />
               </SummaryCard>
             )
           })}
-          <SummaryCard status={missingHeroes.length ? 'needsAttention' : 'complete'} title="Missing hero images">
+          <SummaryCard
+            status={missingHeroes.length ? 'needsAttention' : 'complete'}
+            title="Missing hero images"
+          >
             <IssueList documents={missingHeroes} />
           </SummaryCard>
-          <SummaryCard status={incompletePhotoStories.length ? 'needsAttention' : 'complete'} title="Incomplete photo stories">
+          <SummaryCard
+            status={incompletePhotoStories.length ? 'needsAttention' : 'complete'}
+            title="Incomplete photo stories"
+          >
             <IssueList documents={incompletePhotoStories} />
           </SummaryCard>
         </div>
       </DashboardSection>
 
-      <DashboardSection title="Maps" description="Only the presence of approved public map data is shown. Coordinates themselves remain hidden here.">
+      <DashboardSection
+        title="Maps"
+        description="Only the presence of approved public map data is shown. Coordinates themselves remain hidden here."
+      >
         <div style={styles.sectionGrid}>
-          <SummaryCard status={mapProviderConfigured ? 'complete' : 'needsAttention'} title="Explorer">
-            <Value label="Interactive provider" value={mapProviderConfigured ? 'Configured' : undefined} />
-            <Value label="Public Joshua’s Point coordinate" value={settings?.propertyLocation?.coordinates ? 'Approved location present' : undefined} />
+          <SummaryCard
+            status={mapProviderConfigured ? 'complete' : 'needsAttention'}
+            title="Explorer"
+          >
+            <Value
+              label="Interactive provider"
+              value={mapProviderConfigured ? 'Configured' : undefined}
+            />
+            <Value
+              label="Public Joshua’s Point coordinate"
+              value={
+                settings?.propertyLocation?.coordinates ? 'Approved location present' : undefined
+              }
+            />
           </SummaryCard>
-          <SummaryCard status={destinationMaps.length === destinations.length ? 'complete' : 'needsAttention'} title="Destination maps">
+          <SummaryCard
+            status={destinationMaps.length === destinations.length ? 'complete' : 'needsAttention'}
+            title="Destination maps"
+          >
             <Value label="Mapped" value={`${destinationMaps.length} of ${destinations.length}`} />
-            <IssueList documents={destinations.filter((document) => !destinationMaps.includes(document))} />
+            <IssueList
+              documents={destinations.filter((document) => !destinationMaps.includes(document))}
+            />
           </SummaryCard>
-          <SummaryCard status={routeMaps.length === scenicRoutes.length ? 'complete' : 'needsAttention'} title="Scenic Routes">
-            <Value label="Routes with geometry" value={`${routeMaps.length} of ${scenicRoutes.length}`} />
-            <IssueList documents={scenicRoutes.filter((document) => !routeMaps.includes(document))} />
+          <SummaryCard
+            status={routeMaps.length === scenicRoutes.length ? 'complete' : 'needsAttention'}
+            title="Scenic Routes"
+          >
+            <Value
+              label="Routes with geometry"
+              value={`${routeMaps.length} of ${scenicRoutes.length}`}
+            />
+            <IssueList
+              documents={scenicRoutes.filter((document) => !routeMaps.includes(document))}
+            />
           </SummaryCard>
-          <SummaryCard status={diveMaps.length === diveSites.length ? 'complete' : 'needsAttention'} title="Dive Areas">
+          <SummaryCard
+            status={diveMaps.length === diveSites.length ? 'complete' : 'needsAttention'}
+            title="Dive Areas"
+          >
             <Value label="Mapped" value={`${diveMaps.length} of ${diveSites.length}`} />
             <IssueList documents={diveSites.filter((document) => !diveMaps.includes(document))} />
           </SummaryCard>
-          <SummaryCard status={mountainLakeRoute ? 'complete' : 'blocked'} title="Mountain & Lake route">
-            <Text muted size={1}>{mountainLakeRoute ? 'An approved route document is available.' : 'No approved route document is available yet.'}</Text>
+          <SummaryCard
+            status={mountainLakeRoute ? 'complete' : 'blocked'}
+            title="Mountain & Lake route"
+          >
+            <Text muted size={1}>
+              {mountainLakeRoute
+                ? 'An approved route document is available.'
+                : 'No approved route document is available yet.'}
+            </Text>
           </SummaryCard>
         </div>
       </DashboardSection>
 
-      <DashboardSection title="SEO" description="Page-specific gaps are shown without overriding the approved site-wide defaults.">
+      <DashboardSection
+        title="SEO"
+        description="Page-specific gaps are shown without overriding the approved site-wide defaults."
+      >
         <div style={styles.sectionGrid}>
-          <SummaryCard status={settings?.defaultSeo?.metaTitle && settings.defaultSeo.metaDescription ? 'complete' : 'needsAttention'} title="Site defaults">
+          <SummaryCard
+            status={
+              settings?.defaultSeo?.metaTitle && settings.defaultSeo.metaDescription
+                ? 'complete'
+                : 'needsAttention'
+            }
+            title="Site defaults"
+          >
             <Value label="Default title" value={settings?.defaultSeo?.metaTitle} />
             <Value label="Default description" value={settings?.defaultSeo?.metaDescription} />
-            <Value label="Default social image" value={hasImage(settings?.defaultSocialImage) ? 'Added' : undefined} />
+            <Value
+              label="Default social image"
+              value={hasImage(settings?.defaultSocialImage) ? 'Added' : undefined}
+            />
           </SummaryCard>
-          <SummaryCard status={missingSeoTitles.length ? 'needsAttention' : 'complete'} title="Missing page titles">
+          <SummaryCard
+            status={missingSeoTitles.length ? 'needsAttention' : 'complete'}
+            title="Missing page titles"
+          >
             <IssueList documents={missingSeoTitles} />
           </SummaryCard>
-          <SummaryCard status={missingSeoDescriptions.length ? 'needsAttention' : 'complete'} title="Missing descriptions">
+          <SummaryCard
+            status={missingSeoDescriptions.length ? 'needsAttention' : 'complete'}
+            title="Missing descriptions"
+          >
             <IssueList documents={missingSeoDescriptions} />
           </SummaryCard>
-          <SummaryCard status={missingSocialImages.length ? 'needsAttention' : 'complete'} title="Using default social image">
-            <Text muted size={1}>These pages do not have a page-specific sharing image.</Text>
+          <SummaryCard
+            status={missingSocialImages.length ? 'needsAttention' : 'complete'}
+            title="Using default social image"
+          >
+            <Text muted size={1}>
+              These pages do not have a page-specific sharing image.
+            </Text>
             <IssueList documents={missingSocialImages} />
           </SummaryCard>
-          <SummaryCard status={documentsWithoutSlugs.length ? 'blocked' : 'complete'} title="Sitemap and canonical readiness">
+          <SummaryCard
+            status={documentsWithoutSlugs.length ? 'blocked' : 'complete'}
+            title="Sitemap and canonical readiness"
+          >
             <Value label="Canonical site URL" value={settings?.siteUrl} />
             <Value label="Pages missing URL slugs" value={documentsWithoutSlugs.length} />
             <IssueList documents={documentsWithoutSlugs} />
           </SummaryCard>
-          <SummaryCard status={noIndexDocuments.length ? 'needsAttention' : 'complete'} title="Hidden from search">
+          <SummaryCard
+            status={noIndexDocuments.length ? 'needsAttention' : 'complete'}
+            title="Hidden from search"
+          >
             <IssueList documents={noIndexDocuments} />
           </SummaryCard>
         </div>
       </DashboardSection>
 
-      <DashboardSection title="Email" description="Only safe configuration status is visible. Credentials remain in hosting environment variables.">
+      <DashboardSection
+        title="Email"
+        description="Only safe configuration status is visible. Credentials remain in hosting environment variables."
+      >
         <div style={styles.sectionGrid}>
           <SummaryCard status={emailReady ? 'complete' : 'blocked'} title="Enquiry email delivery">
-            <Value label="Resend configured" value={resendConfigured ? 'Yes' : 'No'} />
-            <Value label="Email domain" value={emailDomainStatus.replaceAll('_', ' ')} />
-            <Value label="Public sender" value={publicSender} />
+            <Value
+              label="Resend configured"
+              value={liveStatus ? (liveStatus.resendConfigured ? 'Yes' : 'No') : 'Unavailable'}
+            />
+            <Value
+              label="Sending domain"
+              value={configuredLabel(liveStatus?.sendingDomainConfigured)}
+            />
+            <Value label="Public sender" value={configuredLabel(liveStatus?.senderConfigured)} />
+            <Value label="Enquiry mode" value={liveStatus?.enquiryMode ?? 'Unavailable'} />
+            <Value
+              label="Subscription mode"
+              value={liveStatus?.subscriptionMode ?? 'Unavailable'}
+            />
+            <Value
+              label="Newsletter readiness"
+              value={liveStatus?.newsletterReadiness ?? 'Unavailable'}
+            />
             <Value label="Test-email readiness" value={emailReady ? 'Ready' : 'Not ready'} />
-            <Text muted size={1}>API keys, SMTP passwords and provider tokens are never available in Studio.</Text>
+            {liveStatusError ? (
+              <Text muted size={1}>
+                {liveStatusError}
+              </Text>
+            ) : null}
+            <Text muted size={1}>
+              API keys, SMTP passwords and provider tokens are never available in Studio.
+            </Text>
+          </SummaryCard>
+        </div>
+      </DashboardSection>
+
+      <DashboardSection
+        title="Monitoring"
+        description="Live deployment gates are checked on the server. Provider credentials never enter Studio."
+      >
+        <div style={styles.sectionGrid}>
+          <SummaryCard
+            status={liveStatus?.analyticsEnabled ? 'complete' : 'needsAttention'}
+            title="Visitor analytics"
+          >
+            <Value label="Plausible" value={enabledLabel(liveStatus?.analyticsEnabled)} />
+          </SummaryCard>
+          <SummaryCard
+            status={liveStatus?.sentryEnabled ? 'complete' : 'needsAttention'}
+            title="Error monitoring"
+          >
+            <Value label="Sentry" value={enabledLabel(liveStatus?.sentryEnabled)} />
           </SummaryCard>
         </div>
       </DashboardSection>
@@ -504,14 +800,61 @@ export function OwnerDashboard() {
   const client = useClient({apiVersion})
   const [data, setData] = useState<OwnerDashboardData | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [liveStatus, setLiveStatus] = useState<DashboardLiveStatus | null>(null)
+  const [liveStatusError, setLiveStatusError] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
 
   const load = useCallback(async () => {
     setLoading(true)
     setError(null)
+    setLiveStatusError(null)
     try {
-      const result = await client.fetch<OwnerDashboardData>(ownerDashboardQuery, {}, {perspective: 'drafts'})
+      const result = await client.fetch<OwnerDashboardData>(
+        ownerDashboardQuery,
+        {},
+        {perspective: 'drafts'},
+      )
       setData(result)
+
+      const token = client.config().token
+      if (!token) {
+        setLiveStatus(null)
+        setLiveStatusError(
+          'Live deployment status is unavailable because Studio authentication could not be verified.',
+        )
+        return
+      }
+
+      const statusUrl = resolveOwnerStatusUrl()
+      if (!statusUrl) {
+        setLiveStatus(null)
+        setLiveStatusError(
+          'Live deployment status is unavailable because its endpoint is not approved.',
+        )
+        return
+      }
+
+      try {
+        const statusResponse = await fetch(statusUrl, {
+          cache: 'no-store',
+          headers: {Authorization: `Bearer ${token}`},
+        })
+        const payload = (await statusResponse.json()) as {
+          ok?: boolean
+          status?: DashboardLiveStatus
+        }
+
+        if (!statusResponse.ok || !payload.ok || !isDashboardLiveStatus(payload.status)) {
+          throw new Error('The live status service rejected the request.')
+        }
+
+        setLiveStatus(payload.status)
+      } catch {
+        setLiveStatus(null)
+        setLiveStatusError(
+          'Live deployment status could not be verified. No services are assumed ready.',
+        )
+      }
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : 'The dashboard could not be loaded.')
     } finally {
@@ -525,13 +868,27 @@ export function OwnerDashboard() {
 
   const content = useMemo(() => {
     if (loading) {
-      return <div aria-label="Loading owner dashboard" style={{padding: '5rem', textAlign: 'center'}}><Spinner muted /></div>
+      return (
+        <div aria-label="Loading owner dashboard" style={{padding: '5rem', textAlign: 'center'}}>
+          <Spinner muted />
+        </div>
+      )
     }
     if (error) {
-      return <Card padding={4} radius={3} tone="critical"><Text>{error}</Text></Card>
+      return (
+        <Card padding={4} radius={3} tone="critical">
+          <Text>{error}</Text>
+        </Card>
+      )
     }
-    return data ? <OwnerDashboardContent data={data} /> : null
-  }, [data, error, loading])
+    return data ? (
+      <OwnerDashboardContent
+        data={data}
+        liveStatus={liveStatus}
+        liveStatusError={liveStatusError}
+      />
+    ) : null
+  }, [data, error, liveStatus, liveStatusError, loading])
 
   return (
     <main style={styles.page}>
