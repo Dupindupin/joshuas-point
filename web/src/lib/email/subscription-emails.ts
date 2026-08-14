@@ -2,6 +2,7 @@ import {
   emailButton,
   emailFallbackUrl,
   emailHeading,
+  emailKicker,
   emailParagraph,
   renderEmailShell,
 } from './email-shell'
@@ -26,6 +27,7 @@ export function createSubscriptionConfirmationEmail({
     html: renderEmailShell({
       brand,
       content: [
+        emailKicker('Joshua’s Point updates'),
         emailHeading('Confirm your email'),
         emailParagraph(
           'One quiet step before we write: please confirm that you would like to receive occasional news from Joshua’s Point.',
@@ -63,6 +65,7 @@ export function createSubscriptionWelcomeEmail({
     html: renderEmailShell({
       brand,
       content: [
+        emailKicker('Joshua’s Point updates'),
         emailHeading('Welcome to Joshua’s Point'),
         emailParagraph(
           'Thank you for joining us. We will write occasionally with news from the house and the places around Southern Negros that we genuinely enjoy sharing.',

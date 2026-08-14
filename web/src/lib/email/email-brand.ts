@@ -17,7 +17,7 @@ export async function getEmailBrand(): Promise<EmailBrand> {
     contactEmail: settings?.contactDetails?.email ?? defaultEmailBrand.contactEmail,
     location: location || settings?.propertyLocation?.label?.trim() || defaultEmailBrand.location,
     // Keep email rendering on a stable PNG instead of negotiated image formats.
-    logoUrl: new URL('/brand/logo-horizontal.png', siteUrl).toString(),
+    logoUrl: new URL('/brand/logo-light.png', siteUrl).toString(),
     siteName: settings?.siteTitle?.trim() || defaultEmailBrand.siteName,
     siteUrl,
     socialLinks: normalizeSocialProfiles(settings?.socialProfiles).map(({label, href}) => ({

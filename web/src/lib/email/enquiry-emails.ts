@@ -3,10 +3,12 @@ import {stayPolicyLines} from '@/lib/stay/policy'
 
 import type {EmailMessage} from './types'
 import {
-  emailDetails,
   emailHeading,
   emailInformationBlock,
+  emailKicker,
+  emailMessageBlock,
   emailParagraph,
+  emailSummaryCards,
   escapeEmailHtml,
   renderEmailShell,
 } from './email-shell'
@@ -55,9 +57,9 @@ export function createEnquiryEmails({
   const policySummary = ['Current stay information:', ...stayPolicyLines()].join('\n')
   const arrivalDate = formatEmailDate(enquiry.arrivalDate)
   const departureDate = formatEmailDate(enquiry.departureDate)
-  const guestEmailLink = `<a href="mailto:${escapeEmailHtml(enquiry.email)}" style="color:#1f3d3a;text-decoration:underline;text-decoration-color:#c8a26a;overflow-wrap:anywhere;word-break:break-word">${escapeEmailHtml(enquiry.email)}</a>`
+  const guestEmailLink = `<a class="email-link" href="mailto:${escapeEmailHtml(enquiry.email)}" style="color:#1f3d3a;text-decoration:underline;text-decoration-color:#c8a26a;overflow-wrap:anywhere;word-break:break-word">${escapeEmailHtml(enquiry.email)}</a>`
   const phoneLink = enquiry.phone
-    ? `<a href="tel:${escapeEmailHtml(enquiry.phone.replace(/[^+\d]/g, ''))}" style="color:#1f3d3a;text-decoration:underline;text-decoration-color:#c8a26a">${escapeEmailHtml(enquiry.phone)}</a>`
+    ? `<a class="email-link" href="tel:${escapeEmailHtml(enquiry.phone.replace(/[^+\d]/g, ''))}" style="color:#1f3d3a;text-decoration:underline;text-decoration-color:#c8a26a">${escapeEmailHtml(enquiry.phone)}</a>`
     : undefined
 
   return [
@@ -66,19 +68,20 @@ export function createEnquiryEmails({
       html: renderEmailShell({
         brand,
         content: [
+          emailKicker('Owner notification'),
           emailHeading('A new stay enquiry'),
-          emailParagraph('A new enquiry has arrived through the Joshua’s Point website.'),
-          emailDetails([
-            ['Name', enquiry.name],
+          emailParagraph('The essential details are grouped below for a quick reply.'),
+          emailSummaryCards([
+            ['Arrival', arrivalDate],
+            ['Departure', departureDate],
+            ['Guests', String(enquiry.guests)],
+            ['Guest', enquiry.name],
             ['Email', enquiry.email, guestEmailLink],
             phoneLink
               ? ['Phone / WhatsApp', enquiry.phone ?? 'Not provided', phoneLink]
               : ['Phone / WhatsApp', 'Not provided'],
-            ['Arrival', arrivalDate],
-            ['Departure', departureDate],
-            ['Guests', String(enquiry.guests)],
-            ['Message', enquiry.message],
           ]),
+          emailMessageBlock('Guest message', enquiry.message),
           emailParagraph(
             'Reply directly to this email to continue the conversation with the guest.',
           ),
@@ -101,19 +104,17 @@ export function createEnquiryEmails({
       html: renderEmailShell({
         brand,
         content: [
+          emailKicker('Enquiry received'),
           emailHeading(`Thank you for writing, ${enquiry.name}`),
           emailParagraph(
-            'Your enquiry has arrived. We have included the details you shared below for reference.',
+            'Thank you for thinking of Joshua’s Point for your stay. Your message has reached us, and we will read it personally before we reply.',
           ),
-          emailDetails([
-            ['Name', enquiry.name],
-            ['Email', enquiry.email],
-            ['Phone / WhatsApp', enquiry.phone ?? 'Not provided'],
+          emailSummaryCards([
             ['Arrival', arrivalDate],
             ['Departure', departureDate],
             ['Guests', String(enquiry.guests)],
-            ['Message', enquiry.message],
           ]),
+          emailMessageBlock('Your message', enquiry.message),
           emailInformationBlock('Current stay information', stayPolicyLines()),
           emailParagraph(
             'This message confirms receipt of your enquiry only. It does not confirm availability or a booking.',
