@@ -13,7 +13,9 @@
     "studio:deploy": "sanity deploy",
     "studio:deploy-graphql": "sanity graphql deploy",
     "studio:dev": "sanity dev",
-    "studio:start": "sanity start"
+    "studio:start": "sanity start",
+    "operations:build": "npm --prefix operations-studio run build",
+    "operations:dev": "npm --prefix operations-studio run dev"
   },
   "keywords": [
     "sanity"

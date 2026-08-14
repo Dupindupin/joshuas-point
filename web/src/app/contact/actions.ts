@@ -10,6 +10,12 @@ import {validateEnquiryAvailability} from '@/lib/enquiry/availability-validation
 import {checkEnquiryRateLimit, hashEnquiryValue} from '@/lib/enquiry/rate-limit'
 import type {EnquiryFormState} from '@/lib/enquiry/types'
 import {validateEnquiryForm} from '@/lib/enquiry/validation'
+import {
+  buildStayEnquiryRecord,
+  recordAndDeliverEnquiry,
+  type OperationsWarning,
+} from '@/lib/operations/enquiry-recording'
+import {getStayEnquiryRepository} from '@/lib/operations/sanity-stay-enquiry-repository'
 import {getCurrentPublicHouseAvailability} from '@/sanity/queries/house-availability'
 
 function errorState(
@@ -17,6 +23,10 @@ function errorState(
   fieldErrors?: EnquiryFormState['fieldErrors'],
 ): EnquiryFormState {
   return {fieldErrors, message, status: 'error'}
+}
+
+function reportOperationsWarning(warning: OperationsWarning) {
+  console.error('Private enquiry operations warning.', warning)
 }
 
 export async function submitEnquiry(
@@ -78,20 +88,29 @@ export async function submitEnquiry(
     )
   }
 
-  try {
-    const configuration = getEnquiryEmailConfiguration()
-    const brand = await getEmailBrand()
-    const messages = createEnquiryEmails({
-      brand,
-      enquiry: validation.data,
-      from: configuration.from,
-      internalRecipient: configuration.to,
-      replyTo: configuration.replyTo,
-    })
+  const record = buildStayEnquiryRecord({enquiry: validation.data, fingerprint})
 
-    await configuration.service.sendBatch({
-      idempotencyKey: `jp-enquiry-${fingerprint}`,
-      messages,
+  try {
+    await recordAndDeliverEnquiry({
+      deliver: async () => {
+        const configuration = getEnquiryEmailConfiguration()
+        const brand = await getEmailBrand()
+        const messages = createEnquiryEmails({
+          brand,
+          enquiry: validation.data,
+          from: configuration.from,
+          internalRecipient: configuration.to,
+          replyTo: configuration.replyTo,
+        })
+
+        await configuration.service.sendBatch({
+          idempotencyKey: record.idempotencyKey,
+          messages,
+        })
+      },
+      record,
+      repository: getStayEnquiryRepository(),
+      warn: reportOperationsWarning,
     })
 
     return {
@@ -102,13 +121,13 @@ export async function submitEnquiry(
     if (error instanceof EmailConfigurationError) {
       console.error('Enquiry email delivery is not configured correctly.')
       return errorState(
-        'We could not send your enquiry just now. Nothing was stored. Please wait a moment and try again.',
+        'We could not send your enquiry just now. Please wait a moment and try again.',
       )
     }
 
-    console.error('Enquiry email delivery failed without storing the submission.')
+    console.error('Enquiry email delivery failed.')
     return errorState(
-      'We could not send your enquiry just now. Nothing was stored. Please wait a moment and try again.',
+      'We could not send your enquiry just now. Please wait a moment and try again.',
     )
   }
 }

@@ -11,6 +11,8 @@
 
 # Sanity
 /dist
+/operations-studio/dist
+/operations-studio/.sanity
 /.sanity
 
 # Logs
