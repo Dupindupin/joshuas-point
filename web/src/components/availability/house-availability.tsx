@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import {useMemo, useState} from 'react'
 
+import {enquiryHref, selectStayDate, type StayDateSelection} from '@/lib/availability/selection'
 import type {PublicAvailabilityPeriod, PublicHouseAvailability} from '@/lib/availability/types'
 
 const weekdays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] as const
@@ -85,6 +86,11 @@ export function HouseAvailabilityCalendar({availability}: {availability: PublicH
   const firstMonth = startOfMonth(parseDate(todayValue))
   const confirmationMonth = startOfMonth(parseDate(availability.availabilityConfirmedThrough))
   const [visibleMonth, setVisibleMonth] = useState(firstMonth)
+  const [selection, setSelection] = useState<StayDateSelection>({
+    arrivalDate: '',
+    departureDate: '',
+    error: null,
+  })
   const weeks = monthWeeks(visibleMonth)
   const previousDisabled = visibleMonth <= firstMonth
   const nextDisabled = addMonths(visibleMonth, 1) > confirmationMonth
@@ -93,6 +99,10 @@ export function HouseAvailabilityCalendar({availability}: {availability: PublicH
       period.endDate > todayValue && period.startDate <= availability.availabilityConfirmedThrough,
   )
   const horizonExpired = availability.availabilityConfirmedThrough < todayValue
+
+  function handleDateSelection(value: string) {
+    setSelection((current) => selectStayDate(current, value, availability))
+  }
 
   return (
     <section
@@ -171,6 +181,18 @@ export function HouseAvailabilityCalendar({availability}: {availability: PublicH
             </button>
           </div>
 
+          <p
+            aria-live="polite"
+            className="mt-7 font-body text-sm leading-7 text-ink-muted"
+            id="availability-selection-help"
+          >
+            {!selection.arrivalDate
+              ? 'Choose an arrival date, then choose a departure date.'
+              : selection.departureDate
+                ? `Selected stay: ${formatDate(selection.arrivalDate)} to ${formatDate(selection.departureDate)}.`
+                : `Arrival: ${formatDate(selection.arrivalDate)}. Now choose a departure date.`}
+          </p>
+
           <table className="mt-5 w-full table-fixed border-separate border-spacing-1 sm:border-spacing-2">
             <caption className="sr-only">
               Whole-house availability for{' '}
@@ -204,23 +226,46 @@ export function HouseAvailabilityCalendar({availability}: {availability: PublicH
                       value >= todayValue && value <= availability.availabilityConfirmedThrough
                     const unavailable = withinWindow && unavailableOn(value, currentPeriods)
                     const state = unavailable ? 'Unavailable' : withinWindow ? 'Available' : null
+                    const selected =
+                      value === selection.arrivalDate || value === selection.departureDate
+                    const withinSelectedStay =
+                      Boolean(selection.arrivalDate && selection.departureDate) &&
+                      value > selection.arrivalDate &&
+                      value < selection.departureDate
+
+                    const cellClasses = `flex aspect-square min-h-11 w-full items-center justify-center rounded-sm font-body text-sm sm:min-h-12 sm:text-base ${
+                      unavailable
+                        ? 'bg-ink text-canvas'
+                        : selected
+                          ? 'border border-accent bg-accent text-inverse'
+                          : withinSelectedStay
+                            ? 'border border-accent/35 bg-accent/12 text-ink'
+                            : withinWindow
+                              ? 'border border-ink/15 bg-surface-soft text-ink'
+                              : 'text-ink-subtle/45'
+                    }`
 
                     return (
                       <td key={value}>
-                        <div
-                          className={`flex aspect-square min-h-9 items-center justify-center rounded-sm font-body text-sm sm:min-h-12 sm:text-base ${
-                            unavailable
-                              ? 'bg-ink text-canvas'
-                              : withinWindow
-                                ? 'border border-ink/15 bg-surface-soft text-ink'
-                                : 'text-ink-subtle/45'
-                          }`}
-                        >
-                          <time dateTime={value}>{day.getUTCDate()}</time>
-                          <span className="sr-only">
-                            , {state ?? 'outside the confirmed availability window'}
-                          </span>
-                        </div>
+                        {withinWindow && !unavailable ? (
+                          <button
+                            aria-describedby="availability-selection-help"
+                            aria-label={`${formatDate(value)}, available${selected ? ', selected' : ''}`}
+                            aria-pressed={selected}
+                            className={`${cellClasses} cursor-pointer ${selected ? 'hover:brightness-95' : 'hover:border-accent hover:text-accent'} focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus`}
+                            onClick={() => handleDateSelection(value)}
+                            type="button"
+                          >
+                            <time dateTime={value}>{day.getUTCDate()}</time>
+                          </button>
+                        ) : (
+                          <div className={cellClasses}>
+                            <time dateTime={value}>{day.getUTCDate()}</time>
+                            <span className="sr-only">
+                              , {state ?? 'outside the confirmed availability window'}
+                            </span>
+                          </div>
+                        )}
                       </td>
                     )
                   })}
@@ -228,6 +273,32 @@ export function HouseAvailabilityCalendar({availability}: {availability: PublicH
               ))}
             </tbody>
           </table>
+
+          <div className="mt-7 min-h-7" role="status">
+            {selection.error ? (
+              <p className="font-body text-sm leading-7 text-warning">{selection.error}</p>
+            ) : null}
+          </div>
+
+          <div className="mt-5 flex flex-wrap items-center gap-5">
+            {selection.arrivalDate && selection.departureDate ? (
+              <Link
+                className="inline-flex min-h-12 items-center justify-center rounded-full border border-ink bg-inverse-surface px-7 py-3 font-body text-sm font-semibold text-inverse hover:border-accent hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-focus"
+                href={enquiryHref(selection)}
+              >
+                Plan your stay
+              </Link>
+            ) : null}
+            {selection.arrivalDate ? (
+              <button
+                className="inline-flex min-h-11 items-center border-b border-ink/35 font-body text-sm font-semibold text-ink hover:border-accent hover:text-accent focus-visible:rounded-sm focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-focus"
+                onClick={() => setSelection({arrivalDate: '', departureDate: '', error: null})}
+                type="button"
+              >
+                Clear dates
+              </button>
+            ) : null}
+          </div>
         </div>
       )}
 

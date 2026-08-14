@@ -2,6 +2,7 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 
 import {getAvailabilityGuidance} from './guidance'
+import {getSafeStaySelection, selectStayDate} from './selection'
 import type {PublicHouseAvailability} from './types'
 
 const availability: PublicHouseAvailability = {
@@ -30,5 +31,46 @@ test('guides a guest when dates extend beyond the confirmation horizon', () => {
     message:
       'These dates extend beyond the current confirmation window. We will check them personally.',
     tone: 'neutral',
+  })
+})
+
+test('selects an available arrival and departure date', () => {
+  const arrival = selectStayDate(
+    {arrivalDate: '', departureDate: '', error: null},
+    '2026-09-14',
+    availability,
+  )
+  const stay = selectStayDate(arrival, '2026-09-17', availability)
+
+  assert.deepEqual(stay, {
+    arrivalDate: '2026-09-14',
+    departureDate: '2026-09-17',
+    error: null,
+  })
+})
+
+test('rejects a selected stay that crosses unavailable dates', () => {
+  const arrival = selectStayDate(
+    {arrivalDate: '', departureDate: '', error: null},
+    '2026-09-06',
+    availability,
+  )
+  const stay = selectStayDate(arrival, '2026-09-14', availability)
+
+  assert.equal(stay.arrivalDate, '2026-09-06')
+  assert.equal(stay.departureDate, '')
+  assert.match(stay.error ?? '', /crosses dates shown as unavailable/)
+})
+
+test('preserves only safe selected dates for the enquiry form', () => {
+  assert.deepEqual(getSafeStaySelection(availability, '2026-10-02', '2026-10-05'), {
+    arrivalDate: '2026-10-02',
+    departureDate: '2026-10-05',
+    error: null,
+  })
+  assert.deepEqual(getSafeStaySelection(availability, '2026-09-06', '2026-09-14'), {
+    arrivalDate: '',
+    departureDate: '',
+    error: null,
   })
 })

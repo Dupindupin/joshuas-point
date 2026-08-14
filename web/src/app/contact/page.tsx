@@ -11,6 +11,7 @@ import {
 } from '@/components/editorial'
 import {SiteHeader} from '@/components/site/site-header'
 import {SocialProfileLinks} from '@/components/site/social-profile-links'
+import {getSafeStaySelection} from '@/lib/availability/selection'
 import {createPageMetadata} from '@/lib/seo/metadata'
 import {normalizeSocialProfiles} from '@/lib/social-profiles'
 import {getSiteSeoSettings} from '@/sanity/queries/site-settings'
@@ -35,11 +36,25 @@ const enquiryReasons = [
   'Special requests',
 ] as const
 
-export default async function ContactPage() {
-  const [settings, houseAvailability] = await Promise.all([
+type ContactPageProps = {
+  searchParams: Promise<{arrival?: string | string[]; departure?: string | string[]}>
+}
+
+function firstSearchValue(value: string | string[] | undefined) {
+  return Array.isArray(value) ? value[0] : value
+}
+
+export default async function ContactPage({searchParams}: ContactPageProps) {
+  const [settings, houseAvailability, requestedDates] = await Promise.all([
     getSiteSeoSettings(),
     getPublicHouseAvailability(),
+    searchParams,
   ])
+  const initialStay = getSafeStaySelection(
+    houseAvailability,
+    firstSearchValue(requestedDates.arrival),
+    firstSearchValue(requestedDates.departure),
+  )
   const socialProfiles = normalizeSocialProfiles(settings?.socialProfiles)
   const publicContact = settings?.contactDetails
   const email = publicContact?.email ?? 'mail@joshuaspoint.com'
@@ -185,7 +200,12 @@ export default async function ContactPage() {
                 {houseAvailability ? (
                   <HouseAvailabilitySummary availability={houseAvailability} />
                 ) : null}
-                <EnquiryForm action={submitEnquiry} availability={houseAvailability} />
+                <EnquiryForm
+                  action={submitEnquiry}
+                  availability={houseAvailability}
+                  initialArrivalDate={initialStay.arrivalDate}
+                  initialDepartureDate={initialStay.departureDate}
+                />
               </div>
             </EditorialGrid>
           </EditorialContainer>

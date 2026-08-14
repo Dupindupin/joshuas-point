@@ -16,6 +16,8 @@ import {stayPolicyLines} from '@/lib/stay/policy'
 type EnquiryFormProps = {
   action: EnquiryFormAction
   availability?: PublicHouseAvailability | null
+  initialArrivalDate?: string
+  initialDepartureDate?: string
 }
 
 const inputClasses =
@@ -45,10 +47,15 @@ function FieldError({children, id}: {children?: ReactNode; id: string}) {
   )
 }
 
-export function EnquiryForm({action, availability}: EnquiryFormProps) {
+export function EnquiryForm({
+  action,
+  availability,
+  initialArrivalDate = '',
+  initialDepartureDate = '',
+}: EnquiryFormProps) {
   const [state, formAction, pending] = useActionState(action, initialEnquiryFormState)
-  const [arrivalDate, setArrivalDate] = useState('')
-  const [departureDate, setDepartureDate] = useState('')
+  const [arrivalDate, setArrivalDate] = useState(initialArrivalDate)
+  const [departureDate, setDepartureDate] = useState(initialDepartureDate)
   const formRef = useRef<HTMLFormElement>(null)
 
   useEffect(() => {
@@ -194,6 +201,7 @@ export function EnquiryForm({action, availability}: EnquiryFormProps) {
               onChange={(event) => setArrivalDate(event.currentTarget.value)}
               required
               type="date"
+              value={arrivalDate}
             />
             <FieldError id="enquiry-arrival-date-error">{fieldError('arrivalDate')}</FieldError>
           </div>
@@ -220,6 +228,7 @@ export function EnquiryForm({action, availability}: EnquiryFormProps) {
               onInput={(event) => event.currentTarget.setCustomValidity('')}
               required
               type="date"
+              value={departureDate}
             />
             <FieldError id="enquiry-departure-date-error">{fieldError('departureDate')}</FieldError>
           </div>
