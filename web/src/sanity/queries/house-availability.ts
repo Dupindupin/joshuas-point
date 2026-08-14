@@ -4,6 +4,8 @@ import type {PublicAvailabilityPeriod, PublicHouseAvailability} from '@/lib/avai
 
 import {sanityClient} from '../client'
 
+const liveSanityClient = sanityClient.withConfig({useCdn: false})
+
 type SanityHouseAvailability = {
   availabilityConfirmedThrough?: string | null
   periods?: Array<{
@@ -45,6 +47,32 @@ function normalizePeriod(
   return {endDate: period.endDate, startDate: period.startDate}
 }
 
+function normalizeAvailability(
+  result: SanityHouseAvailability | null,
+): PublicHouseAvailability | null {
+  if (!result || !validDate(result.availabilityConfirmedThrough)) return null
+
+  const periods = (result.periods ?? [])
+    .map(normalizePeriod)
+    .filter((period): period is PublicAvailabilityPeriod => Boolean(period))
+    .sort((left, right) => left.startDate.localeCompare(right.startDate))
+
+  return {
+    availabilityConfirmedThrough: result.availabilityConfirmedThrough,
+    periods,
+  }
+}
+
+export async function getCurrentPublicHouseAvailability(): Promise<PublicHouseAvailability | null> {
+  const result = await liveSanityClient.fetch<SanityHouseAvailability | null>(
+    houseAvailabilityQuery,
+    {},
+    {cache: 'no-store'},
+  )
+
+  return normalizeAvailability(result)
+}
+
 export const getPublicHouseAvailability = cache(
   async (): Promise<PublicHouseAvailability | null> => {
     try {
@@ -59,17 +87,7 @@ export const getPublicHouseAvailability = cache(
         },
       )
 
-      if (!result || !validDate(result.availabilityConfirmedThrough)) return null
-
-      const periods = (result.periods ?? [])
-        .map(normalizePeriod)
-        .filter((period): period is PublicAvailabilityPeriod => Boolean(period))
-        .sort((left, right) => left.startDate.localeCompare(right.startDate))
-
-      return {
-        availabilityConfirmedThrough: result.availabilityConfirmedThrough,
-        periods,
-      }
+      return normalizeAvailability(result)
     } catch (error) {
       console.error('Unable to load public house availability from Sanity.', error)
       return null

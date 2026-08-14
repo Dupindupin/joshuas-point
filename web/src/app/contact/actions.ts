@@ -6,9 +6,11 @@ import {createEnquiryEmails} from '@/lib/email/enquiry-emails'
 import {getEnquiryEmailConfiguration, getEnquiryEmailMode} from '@/lib/email/email-service'
 import {getEmailBrand} from '@/lib/email/email-brand'
 import {EmailConfigurationError} from '@/lib/email/types'
+import {validateEnquiryAvailability} from '@/lib/enquiry/availability-validation'
 import {checkEnquiryRateLimit, hashEnquiryValue} from '@/lib/enquiry/rate-limit'
 import type {EnquiryFormState} from '@/lib/enquiry/types'
 import {validateEnquiryForm} from '@/lib/enquiry/validation'
+import {getCurrentPublicHouseAvailability} from '@/sanity/queries/house-availability'
 
 function errorState(
   message: string,
@@ -55,6 +57,24 @@ export async function submitEnquiry(
       rateLimit.reason === 'duplicate'
         ? 'This enquiry was already submitted recently. Please wait before trying again.'
         : 'Too many enquiries were submitted from this connection. Please wait and try again later.',
+    )
+  }
+
+  try {
+    const availability = await getCurrentPublicHouseAvailability()
+    if (availability) {
+      const availabilityValidation = validateEnquiryAvailability(validation.data, availability)
+      if (!availabilityValidation.success) {
+        return errorState(
+          'Please choose dates currently shown as available and try again.',
+          availabilityValidation.fieldErrors,
+        )
+      }
+    }
+  } catch {
+    console.error('Current house availability could not be verified before enquiry delivery.')
+    return errorState(
+      'We could not verify the latest availability just now. No message was sent. Please try again or write to mail@joshuaspoint.com.',
     )
   }
 
