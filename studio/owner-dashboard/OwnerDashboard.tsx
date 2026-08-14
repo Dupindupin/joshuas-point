@@ -92,6 +92,14 @@ const statusTones = {
   unknown: 'default',
 } as const
 
+type LaunchControlStatus = Extract<DashboardStatus, 'complete' | 'needsAttention' | 'unknown'>
+
+const launchControlLabels: Record<LaunchControlStatus, string> = {
+  complete: 'Ready',
+  needsAttention: 'Needs attention',
+  unknown: 'Unknown',
+}
+
 function hasImage(image: {asset?: {_ref?: string} | null} | null | undefined) {
   return Boolean(image?.asset?._ref)
 }
@@ -381,13 +389,6 @@ function OwnerDashboardContent({
   const photographyDocuments = currentDocuments.filter((document) =>
     photographyContentTypes.includes(document._type),
   )
-  const photographyReadiness = photographyDocuments.map((document) => ({
-    document,
-    readiness: getContentReadiness(document, settings ?? null),
-  }))
-  const incompletePhotography = photographyReadiness.filter(
-    ({readiness}) => readiness.photographyStatus === 'needsAttention',
-  )
   const missingHeroes = photographyDocuments.filter((document) => !hasImage(document.heroImage))
 
   const publicSeoDocuments = currentDocuments.filter((document) => document._type !== 'room')
@@ -464,73 +465,164 @@ function OwnerDashboardContent({
   )
   const mapProviderConfigured = studioEnvironment.SANITY_STUDIO_MAP_PROVIDER_CONFIGURED === 'true'
 
-  const legalLabels = (settings?.footer?.legalLinks ?? []).flatMap((link) =>
-    link?.label ? [link.label.toLowerCase()] : [],
-  )
-  const legalComplete =
-    legalLabels.some((label) => label.includes('privacy')) &&
-    legalLabels.some((label) => label.includes('terms'))
-
   const premiumGuide = resolvePremiumGuideStatus(data)
   const emailPreviewUrl = resolveOwnerPageUrl('/internal/email-preview')
 
-  const launchItems: Array<{label: string; status: DashboardStatus}> = [
+  const websiteLaunchStatus: LaunchControlStatus = !liveStatus
+    ? 'unknown'
+    : requiredWebsiteSettingsComplete(settings) &&
+        liveStatus.siteDomainConfigured &&
+        !liveStatus.comingSoon
+      ? 'complete'
+      : 'needsAttention'
+  const emailLaunchStatus: LaunchControlStatus = !liveStatus
+    ? 'unknown'
+    : emailReady
+      ? 'complete'
+      : 'needsAttention'
+  const newsletterLaunchStatus: LaunchControlStatus = !liveStatus
+    ? 'unknown'
+    : liveStatus.newsletterReadiness === 'ready' && liveStatus.subscriptionMode === 'live'
+      ? 'complete'
+      : 'needsAttention'
+  const analyticsLaunchStatus: LaunchControlStatus = !liveStatus
+    ? 'unknown'
+    : liveStatus.analyticsEnabled
+      ? 'complete'
+      : 'needsAttention'
+  const contentLaunchStatus: LaunchControlStatus = contentGroups.some(
+    ({status}) => status === 'needsAttention' || status === 'blocked',
+  )
+    ? 'needsAttention'
+    : contentGroups.every(({status}) => status === 'complete')
+      ? 'complete'
+      : 'unknown'
+
+  const launchControlItems: Array<{
+    detail: string
+    label: string
+    status: LaunchControlStatus
+  }> = [
     {
-      label: 'Website',
-      status: requiredWebsiteSettingsComplete(settings) ? 'complete' : 'needsAttention',
+      detail:
+        websiteLaunchStatus === 'complete'
+          ? 'The public domain and required website settings are ready, and Coming Soon is off.'
+          : websiteLaunchStatus === 'unknown'
+            ? 'Live domain and Coming Soon status could not be verified.'
+            : 'Review the domain, required Site Settings and Coming Soon state below.',
+      label: 'Website status',
+      status: websiteLaunchStatus,
     },
     {
-      label: 'Photography',
-      status: photographyDocuments.length
-        ? incompletePhotography.length
-          ? 'needsAttention'
-          : 'complete'
-        : 'unknown',
-    },
-    {label: 'Premium Guide', status: premiumGuide.overallStatus},
-    {
-      label: 'Maps',
-      status:
-        mapProviderConfigured && settings?.propertyLocation?.coordinates
-          ? 'complete'
-          : 'needsAttention',
+      detail:
+        emailLaunchStatus === 'complete'
+          ? 'Transactional delivery configuration and enquiry sending mode are ready.'
+          : emailLaunchStatus === 'unknown'
+            ? 'Live transactional email status could not be verified.'
+            : 'Transactional email delivery is incomplete or remains disabled.',
+      label: 'Email readiness',
+      status: emailLaunchStatus,
     },
     {
-      label: 'SEO',
-      status: seoReadiness.length
-        ? seoReadiness.every(({readiness}) => readiness.seoStatus === 'complete')
-          ? 'complete'
-          : 'needsAttention'
-        : 'unknown',
+      detail:
+        newsletterLaunchStatus === 'complete'
+          ? 'Subscriber configuration is ready and subscription delivery is live.'
+          : newsletterLaunchStatus === 'unknown'
+            ? 'Live newsletter configuration could not be verified.'
+            : 'Subscriber configuration needs attention or subscription delivery remains disabled.',
+      label: 'Newsletter readiness',
+      status: newsletterLaunchStatus,
     },
-    {label: 'Email', status: emailReady ? 'complete' : 'blocked'},
     {
-      label: 'Social',
-      status:
-        socialStatus(settings, 'instagram') && socialStatus(settings, 'facebook')
-          ? 'complete'
-          : 'needsAttention',
+      detail:
+        analyticsLaunchStatus === 'complete'
+          ? 'Privacy-conscious production analytics is enabled.'
+          : analyticsLaunchStatus === 'unknown'
+            ? 'Live analytics status could not be verified.'
+            : 'Production analytics is not enabled.',
+      label: 'Analytics readiness',
+      status: analyticsLaunchStatus,
     },
-    {label: 'Legal / privacy', status: legalComplete ? 'complete' : 'needsAttention'},
+    {
+      detail:
+        contentLaunchStatus === 'complete'
+          ? 'All launch content groups pass the existing publication, review, photography and SEO checks.'
+          : contentLaunchStatus === 'unknown'
+            ? 'There is not enough current content information to assess launch readiness.'
+            : 'One or more launch content groups still needs attention.',
+      label: 'Content readiness',
+      status: contentLaunchStatus,
+    },
   ]
+
+  const remainingLaunchBlockers = [
+    ...(!requiredWebsiteSettingsComplete(settings)
+      ? ['Required Site Settings are incomplete.']
+      : []),
+    ...(liveStatus && !liveStatus.siteDomainConfigured
+      ? ['The production site domain is not configured.']
+      : []),
+    ...(liveStatus?.comingSoon ? ['Coming Soon is still active.'] : []),
+    ...(emailLaunchStatus === 'needsAttention'
+      ? ['Transactional enquiry email is not launch-ready.']
+      : []),
+    ...(newsletterLaunchStatus === 'needsAttention'
+      ? ['Newsletter signup is not launch-ready.']
+      : []),
+    ...(analyticsLaunchStatus === 'needsAttention' ? ['Production analytics is not enabled.'] : []),
+    ...contentGroups
+      .filter(({status}) => status === 'needsAttention' || status === 'blocked')
+      .map(({label}) => `${label} content needs attention.`),
+  ]
+  const launchChecksUnknown = launchControlItems.some(({status}) => status === 'unknown')
+  const remainingBlockersStatus: LaunchControlStatus = remainingLaunchBlockers.length
+    ? 'needsAttention'
+    : launchChecksUnknown
+      ? 'unknown'
+      : 'complete'
 
   return (
     <>
-      <div style={styles.sectionGrid}>
-        {launchItems.map((item) => (
-          <SummaryCard key={item.label} status={item.status} title={item.label}>
-            <Text muted size={1}>
-              {item.status === 'complete'
-                ? 'Ready based on current published information.'
-                : item.status === 'blocked'
-                  ? 'A required external or content decision is still missing.'
-                  : item.status === 'unknown'
-                    ? 'There is not enough content information to assess this yet.'
-                    : 'Open the sections below to see what needs attention.'}
-            </Text>
+      <DashboardSection
+        title="Launch Control"
+        description="One truthful overview of what is ready for launch and what still needs attention. No services can be enabled from this dashboard."
+      >
+        <div style={styles.sectionGrid}>
+          {launchControlItems.map((item) => (
+            <SummaryCard
+              key={item.label}
+              status={item.status}
+              statusLabel={launchControlLabels[item.status]}
+              title={item.label}
+            >
+              <Text muted size={1}>
+                {item.detail}
+              </Text>
+            </SummaryCard>
+          ))}
+          <SummaryCard
+            status={remainingBlockersStatus}
+            statusLabel={launchControlLabels[remainingBlockersStatus]}
+            title="Remaining blockers"
+          >
+            {remainingLaunchBlockers.length ? (
+              <ul style={styles.issueList}>
+                {remainingLaunchBlockers.map((blocker) => (
+                  <li key={blocker} style={{listStyle: 'none'}}>
+                    <Text size={1}>{blocker}</Text>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <Text muted size={1}>
+                {launchChecksUnknown
+                  ? 'No confirmed blocker is visible, but one or more live checks is unavailable.'
+                  : 'No launch blocker is reported by the current readiness checks.'}
+              </Text>
+            )}
           </SummaryCard>
-        ))}
-      </div>
+        </div>
+      </DashboardSection>
 
       <DashboardSection
         title="Website Center"
