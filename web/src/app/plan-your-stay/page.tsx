@@ -2,6 +2,7 @@ import type {Metadata} from 'next'
 import Link from 'next/link'
 
 import {EditorialAmenityList} from '@/components/amenities'
+import {HouseAvailabilityCalendar} from '@/components/availability'
 import {
   EditorialContainer,
   EditorialGrid,
@@ -15,6 +16,7 @@ import {createPageMetadata} from '@/lib/seo/metadata'
 import {StayInformationList, type StayInformationItem} from '@/components/stay'
 import {stayPolicy} from '@/lib/stay/policy'
 import {getPublicAmenities} from '@/sanity/queries/amenities'
+import {getPublicHouseAvailability} from '@/sanity/queries/house-availability'
 
 export function generateMetadata(): Promise<Metadata> {
   return createPageMetadata({
@@ -51,7 +53,10 @@ const quietLinkClasses =
   'inline-flex border-b border-ink/35 pb-1 font-body text-sm font-semibold text-ink hover:border-accent hover:text-accent focus-visible:rounded-sm focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-focus'
 
 export default async function PlanYourStayPage() {
-  const publicAmenities = await getPublicAmenities()
+  const [publicAmenities, houseAvailability] = await Promise.all([
+    getPublicAmenities(),
+    getPublicHouseAvailability(),
+  ])
   const practicalAmenities = selectApprovedAmenities(publicAmenities, [
     approvedAmenityKeys.exclusiveUse,
     approvedAmenityKeys.airConditioning,
@@ -97,6 +102,14 @@ export default async function PlanYourStayPage() {
             </EditorialGrid>
           </EditorialContainer>
         </SectionSpacing>
+
+        {houseAvailability ? (
+          <SectionSpacing size="generous">
+            <EditorialContainer>
+              <HouseAvailabilityCalendar availability={houseAvailability} />
+            </EditorialContainer>
+          </SectionSpacing>
+        ) : null}
 
         <SectionSpacing
           aria-labelledby="stay-details-title"

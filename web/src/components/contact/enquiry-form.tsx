@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import {useActionState, useEffect, useRef} from 'react'
+import {useActionState, useEffect, useRef, useState} from 'react'
 import type {FormEvent, ReactNode} from 'react'
 
 import {
@@ -9,10 +9,13 @@ import {
   type EnquiryField,
   type EnquiryFormAction,
 } from '@/lib/enquiry/types'
+import {getAvailabilityGuidance} from '@/lib/availability/guidance'
+import type {PublicHouseAvailability} from '@/lib/availability/types'
 import {stayPolicyLines} from '@/lib/stay/policy'
 
 type EnquiryFormProps = {
   action: EnquiryFormAction
+  availability?: PublicHouseAvailability | null
 }
 
 const inputClasses =
@@ -42,8 +45,10 @@ function FieldError({children, id}: {children?: ReactNode; id: string}) {
   )
 }
 
-export function EnquiryForm({action}: EnquiryFormProps) {
+export function EnquiryForm({action, availability}: EnquiryFormProps) {
   const [state, formAction, pending] = useActionState(action, initialEnquiryFormState)
+  const [arrivalDate, setArrivalDate] = useState('')
+  const [departureDate, setDepartureDate] = useState('')
   const formRef = useRef<HTMLFormElement>(null)
 
   useEffect(() => {
@@ -72,12 +77,18 @@ export function EnquiryForm({action}: EnquiryFormProps) {
     departureInput?.setCustomValidity('')
   }
 
+  const dateGuidance = getAvailabilityGuidance(availability, arrivalDate, departureDate)
+
   return (
     <form
       action={formAction}
       aria-describedby="enquiry-form-delivery-note enquiry-form-privacy-note"
       aria-label="Stay enquiry"
       className="w-full"
+      onReset={() => {
+        setArrivalDate('')
+        setDepartureDate('')
+      }}
       onSubmit={handleSubmit}
       ref={formRef}
     >
@@ -168,12 +179,19 @@ export function EnquiryForm({action}: EnquiryFormProps) {
             </label>
             <input
               aria-describedby={
-                fieldError('arrivalDate') ? 'enquiry-arrival-date-error' : undefined
+                [
+                  availability ? 'enquiry-house-availability' : null,
+                  dateGuidance ? 'enquiry-date-guidance' : null,
+                  fieldError('arrivalDate') ? 'enquiry-arrival-date-error' : null,
+                ]
+                  .filter(Boolean)
+                  .join(' ') || undefined
               }
               aria-invalid={fieldError('arrivalDate') ? true : undefined}
               className={inputClasses}
               id="enquiry-arrival-date"
               name="arrivalDate"
+              onChange={(event) => setArrivalDate(event.currentTarget.value)}
               required
               type="date"
             />
@@ -186,18 +204,37 @@ export function EnquiryForm({action}: EnquiryFormProps) {
             </label>
             <input
               aria-describedby={
-                fieldError('departureDate') ? 'enquiry-departure-date-error' : undefined
+                [
+                  availability ? 'enquiry-house-availability' : null,
+                  dateGuidance ? 'enquiry-date-guidance' : null,
+                  fieldError('departureDate') ? 'enquiry-departure-date-error' : null,
+                ]
+                  .filter(Boolean)
+                  .join(' ') || undefined
               }
               aria-invalid={fieldError('departureDate') ? true : undefined}
               className={inputClasses}
               id="enquiry-departure-date"
               name="departureDate"
+              onChange={(event) => setDepartureDate(event.currentTarget.value)}
               onInput={(event) => event.currentTarget.setCustomValidity('')}
               required
               type="date"
             />
             <FieldError id="enquiry-departure-date-error">{fieldError('departureDate')}</FieldError>
           </div>
+
+          {dateGuidance ? (
+            <p
+              aria-live="polite"
+              className={`sm:col-span-2 font-body text-sm leading-7 ${
+                dateGuidance.tone === 'warning' ? 'text-warning' : 'text-ink-muted'
+              }`}
+              id="enquiry-date-guidance"
+            >
+              {dateGuidance.message}
+            </p>
+          ) : null}
 
           <div>
             <label className={labelClasses} htmlFor="enquiry-guests">

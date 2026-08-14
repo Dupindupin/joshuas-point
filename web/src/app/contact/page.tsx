@@ -1,6 +1,7 @@
 import type {Metadata} from 'next'
 
 import {ContactMethods, EnquiryForm, type ContactMethod} from '@/components/contact'
+import {HouseAvailabilitySummary} from '@/components/availability'
 import {
   EditorialContainer,
   EditorialGrid,
@@ -13,6 +14,7 @@ import {SocialProfileLinks} from '@/components/site/social-profile-links'
 import {createPageMetadata} from '@/lib/seo/metadata'
 import {normalizeSocialProfiles} from '@/lib/social-profiles'
 import {getSiteSeoSettings} from '@/sanity/queries/site-settings'
+import {getPublicHouseAvailability} from '@/sanity/queries/house-availability'
 
 import {submitEnquiry} from './actions'
 
@@ -34,7 +36,10 @@ const enquiryReasons = [
 ] as const
 
 export default async function ContactPage() {
-  const settings = await getSiteSeoSettings()
+  const [settings, houseAvailability] = await Promise.all([
+    getSiteSeoSettings(),
+    getPublicHouseAvailability(),
+  ])
   const socialProfiles = normalizeSocialProfiles(settings?.socialProfiles)
   const publicContact = settings?.contactDetails
   const email = publicContact?.email ?? 'mail@joshuaspoint.com'
@@ -177,7 +182,10 @@ export default async function ContactPage() {
               </div>
 
               <div className="lg:col-span-7 lg:col-start-6">
-                <EnquiryForm action={submitEnquiry} />
+                {houseAvailability ? (
+                  <HouseAvailabilitySummary availability={houseAvailability} />
+                ) : null}
+                <EnquiryForm action={submitEnquiry} availability={houseAvailability} />
               </div>
             </EditorialGrid>
           </EditorialContainer>

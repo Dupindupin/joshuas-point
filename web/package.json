@@ -8,6 +8,7 @@
     "email:test": "tsx scripts/test-enquiry-emails.ts",
     "email:test:subscription-duplicates": "tsx scripts/test-subscription-duplicates.ts",
     "email:test:subscriptions": "tsx scripts/test-subscription-foundation.ts",
+    "test:availability": "tsx --test src/lib/availability/guidance.test.ts",
     "start": "next start",
     "lint": "eslint"
   },
