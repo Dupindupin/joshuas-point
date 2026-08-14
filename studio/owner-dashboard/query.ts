@@ -25,6 +25,34 @@ export const ownerDashboardQuery = /* groq */ `{
       legalLinks[] {label}
     }
   },
+  "houseAvailability": {
+    "published": *[_type == "houseAvailability" && _id == "houseAvailability"][0] {
+      _id,
+      _rev,
+      publicDisplayEnabled,
+      availabilityConfirmedThrough,
+      lastReviewedAt,
+      periods[] {
+        _key,
+        startDate,
+        endDate,
+        status
+      }
+    },
+    "draft": *[_type == "houseAvailability" && _id == "drafts.houseAvailability"][0] {
+      _id,
+      _rev,
+      publicDisplayEnabled,
+      availabilityConfirmedThrough,
+      lastReviewedAt,
+      periods[] {
+        _key,
+        startDate,
+        endDate,
+        status
+      }
+    }
+  },
   "documents": *[
     _type in [
       "homePage", "housePage", "roomsPage", "destinationsPage", "diveSitesPage",

@@ -87,6 +87,11 @@ const studioSections: StudioSection[] = [
     ],
   },
   {
+    id: 'booking-center',
+    title: 'Booking Center',
+    documents: [{type: 'houseAvailability', title: 'House Availability', singleton: true}],
+  },
+  {
     id: 'accommodation',
     title: 'Accommodation',
     documents: [

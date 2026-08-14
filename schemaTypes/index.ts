@@ -4,6 +4,7 @@ import {destinationsPage} from './documents/destinationsPage'
 import {diveSite} from './documents/diveSite'
 import {diveSitesPage} from './documents/diveSitesPage'
 import {homePage} from './documents/homePage'
+import {houseAvailability} from './documents/houseAvailability'
 import {housePage} from './documents/housePage'
 import {room} from './documents/room'
 import {roomsPage} from './documents/roomsPage'
@@ -11,6 +12,7 @@ import {scenicRoute} from './documents/scenicRoute'
 import {scenicRoutesPage} from './documents/scenicRoutesPage'
 import {siteSettings} from './documents/siteSettings'
 import {bedConfiguration} from './objects/bedConfiguration'
+import {availabilityPeriod} from './objects/availabilityPeriod'
 import {bookingLinks} from './objects/bookingLinks'
 import {capacity} from './objects/capacity'
 import {contactDetails} from './objects/contactDetails'
@@ -70,6 +72,7 @@ import {visibilityRange} from './objects/visibilityRange'
 export const schemaTypes = [
   siteSettings,
   homePage,
+  houseAvailability,
   housePage,
   amenity,
   room,
@@ -83,6 +86,7 @@ export const schemaTypes = [
   editorialImage,
   editorialPhotography,
   editorialPhotoStory,
+  availabilityPeriod,
   seo,
   link,
   postalAddress,

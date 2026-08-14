@@ -13,6 +13,7 @@ import {
   publishedDocumentIds,
 } from './contentReadiness'
 import type {
+  DashboardAvailabilityPeriod,
   DashboardDocument,
   DashboardLiveStatus,
   DashboardSiteSettings,
@@ -98,6 +99,62 @@ const launchControlLabels: Record<LaunchControlStatus, string> = {
   complete: 'Ready',
   needsAttention: 'Needs attention',
   unknown: 'Unknown',
+}
+
+const availabilityStatusLabels: Record<
+  NonNullable<DashboardAvailabilityPeriod['status']>,
+  string
+> = {
+  closed: 'Closed',
+  maintenance: 'Maintenance',
+  ownerStay: 'Owner stay',
+  reserved: 'Reserved',
+}
+
+function localDateValue(date = new Date()) {
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+
+function formatDashboardDate(value: string | null | undefined) {
+  if (!value) return 'Not added'
+  const parsed = new Date(`${value}T00:00:00`)
+  if (Number.isNaN(parsed.getTime())) return 'Invalid date'
+  return parsed.toLocaleDateString(undefined, {day: 'numeric', month: 'short', year: 'numeric'})
+}
+
+function formatDashboardDateTime(value: string | null | undefined) {
+  if (!value) return 'Not added'
+  const parsed = new Date(value)
+  if (Number.isNaN(parsed.getTime())) return 'Invalid date'
+  return parsed.toLocaleString(undefined, {
+    day: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+    month: 'short',
+    year: 'numeric',
+  })
+}
+
+function completeAvailabilityPeriods(periods: DashboardAvailabilityPeriod[] | null | undefined) {
+  return (periods ?? [])
+    .filter(
+      (
+        period,
+      ): period is DashboardAvailabilityPeriod & {
+        endDate: string
+        startDate: string
+        status: NonNullable<DashboardAvailabilityPeriod['status']>
+      } => Boolean(period.startDate && period.endDate && period.status),
+    )
+    .sort((left, right) => left.startDate.localeCompare(right.startDate))
+}
+
+function formatAvailabilityPeriod(period: DashboardAvailabilityPeriod) {
+  const status = period.status ? availabilityStatusLabels[period.status] : 'Status missing'
+  return `${formatDashboardDate(period.startDate)} – ${formatDashboardDate(period.endDate)} · ${status}`
 }
 
 function hasImage(image: {asset?: {_ref?: string} | null} | null | undefined) {
@@ -376,6 +433,40 @@ function OwnerDashboardContent({
   liveStatusError: string | null
 }) {
   const settings = data.settings
+  const availabilityDraft = data.houseAvailability?.draft
+  const availabilityPublished = data.houseAvailability?.published
+  const availability = availabilityDraft ?? availabilityPublished
+  const today = localDateValue()
+  const validAvailabilityPeriods = completeAvailabilityPeriods(availability?.periods)
+  const currentUnavailablePeriod = validAvailabilityPeriods.find(
+    (period) => period.startDate <= today && period.endDate > today,
+  )
+  const upcomingUnavailablePeriods = validAvailabilityPeriods.filter(
+    (period) => period.endDate > today,
+  )
+  const confirmationHorizonExpired = Boolean(
+    availability?.availabilityConfirmedThrough && availability.availabilityConfirmedThrough < today,
+  )
+  const availabilityState = currentUnavailablePeriod
+    ? 'Unavailable'
+    : availability?.availabilityConfirmedThrough && !confirmationHorizonExpired
+      ? 'Available'
+      : 'Unknown'
+  const availabilityWarnings = [
+    ...(!availability ? ['House Availability has not been created yet.'] : []),
+    ...(availability && availability.publicDisplayEnabled !== true
+      ? ['Public availability display is disabled.']
+      : []),
+    ...(availability && !availability.availabilityConfirmedThrough
+      ? ['The confirmation horizon is missing.']
+      : []),
+    ...(availability && !availability.lastReviewedAt ? ['The last reviewed date is missing.'] : []),
+    ...(confirmationHorizonExpired ? ['The confirmation horizon has expired.'] : []),
+    ...((availability?.periods ?? []).length !== validAvailabilityPeriods.length
+      ? ['One or more unavailable periods has incomplete data.']
+      : []),
+    ...(availabilityDraft ? ['Unpublished availability changes exist.'] : []),
+  ]
   const currentDocuments = preferredDocuments(data.documents)
   const editorialDocuments = currentDocuments.filter((document) =>
     contentTypes.includes(document._type),
@@ -676,6 +767,88 @@ function OwnerDashboardContent({
                 {liveStatusError}
               </Text>
             ) : null}
+          </SummaryCard>
+        </div>
+      </DashboardSection>
+
+      <DashboardSection
+        title="Booking Center"
+        description="Whole-house availability only. Internal notes are never loaded or displayed here."
+      >
+        <div style={styles.sectionGrid}>
+          <SummaryCard
+            status={
+              availabilityState === 'Available'
+                ? 'complete'
+                : availabilityState === 'Unavailable'
+                  ? 'needsAttention'
+                  : 'unknown'
+            }
+            statusLabel={availabilityState}
+            title="House Availability"
+          >
+            <Value label="Current state" value={availabilityState} />
+            <Value
+              label="Next unavailable period"
+              value={
+                upcomingUnavailablePeriods[0]
+                  ? formatAvailabilityPeriod(upcomingUnavailablePeriods[0])
+                  : 'None recorded'
+              }
+            />
+            <Value
+              label="Confirmed through"
+              value={formatDashboardDate(availability?.availabilityConfirmedThrough)}
+            />
+            <Value
+              label="Last reviewed"
+              value={formatDashboardDateTime(availability?.lastReviewedAt)}
+            />
+
+            <div style={{display: 'grid', gap: '0.5rem'}}>
+              <Text muted size={1}>
+                Upcoming unavailable periods
+              </Text>
+              {upcomingUnavailablePeriods.length ? (
+                <ul style={styles.issueList}>
+                  {upcomingUnavailablePeriods.slice(0, 5).map((period, index) => (
+                    <li
+                      key={period._key ?? `${period.startDate}-${index}`}
+                      style={{listStyle: 'none'}}
+                    >
+                      <Text size={1}>{formatAvailabilityPeriod(period)}</Text>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <Text size={1}>None recorded</Text>
+              )}
+              {upcomingUnavailablePeriods.length > 5 ? (
+                <Text muted size={1}>
+                  {upcomingUnavailablePeriods.length - 5} more period(s) are available in the
+                  calendar.
+                </Text>
+              ) : null}
+            </div>
+
+            {availabilityWarnings.length ? (
+              <Card padding={3} radius={2} tone="caution">
+                <div style={{display: 'grid', gap: '0.4rem'}}>
+                  {availabilityWarnings.map((warning) => (
+                    <Text key={warning} size={1}>
+                      {warning}
+                    </Text>
+                  ))}
+                </div>
+              </Card>
+            ) : null}
+
+            <IntentButton
+              intent="edit"
+              params={{id: 'houseAvailability', type: 'houseAvailability'}}
+              text="Manage House Availability"
+              tone="primary"
+            />
           </SummaryCard>
         </div>
       </DashboardSection>

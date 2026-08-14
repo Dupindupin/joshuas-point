@@ -18,6 +18,27 @@ export type DashboardImage = {
   asset?: {_ref?: string} | null
 }
 
+export type DashboardAvailabilityPeriod = {
+  _key?: string
+  endDate?: string | null
+  startDate?: string | null
+  status?: 'closed' | 'maintenance' | 'ownerStay' | 'reserved' | null
+}
+
+export type DashboardHouseAvailabilityDocument = {
+  _id: string
+  _rev?: string | null
+  availabilityConfirmedThrough?: string | null
+  lastReviewedAt?: string | null
+  periods?: DashboardAvailabilityPeriod[] | null
+  publicDisplayEnabled?: boolean | null
+}
+
+export type DashboardHouseAvailability = {
+  draft?: DashboardHouseAvailabilityDocument | null
+  published?: DashboardHouseAvailabilityDocument | null
+}
+
 export type DashboardPhotoStory = {
   closingImages?: DashboardImage[] | null
   detailImages?: DashboardImage[] | null
@@ -114,5 +135,6 @@ export type OwnerDashboardData = {
   guideChapters: DashboardDocument[]
   guideEdition?: DashboardGuideEdition | null
   guideJourneys: DashboardDocument[]
+  houseAvailability?: DashboardHouseAvailability | null
   settings?: DashboardSiteSettings | null
 }
