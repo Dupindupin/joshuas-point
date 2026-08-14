@@ -29,13 +29,29 @@ export const ownerDashboardQuery = /* groq */ `{
     _type in [
       "homePage", "housePage", "roomsPage", "destinationsPage", "diveSitesPage",
       "scenicRoutesPage", "room", "destination", "diveSite", "scenicRoute"
-    ] && !(_id in path("drafts.**"))
+    ]
   ] | order(_type asc, title asc) {
     _id,
     _type,
+    _updatedAt,
     "title": coalesce(title, name, hero.title, internalTitle),
     "slug": slug.current,
+    workflowStatus,
+    lastReviewedAt,
+    "summaryDescription": coalesce(excerpt, hero.introduction, siteDescription),
     "heroImage": coalesce(heroImage, previewImage, hero.image) {asset},
+    "roomImages": featuredRooms[]->previewImage {asset},
+    "viewImage": view.image {asset},
+    "sharedHeartImageCount": count(sharedHeart.images[defined(asset)]),
+    "indoorOutdoorImageCount": count(indoorOutdoorStory.images[defined(image.asset)]),
+    "morningPresent": defined(dailyRhythms.morning),
+    "morningImage": dailyRhythms.morning.image {asset},
+    "rainPresent": defined(dailyRhythms.rain),
+    "rainImage": dailyRhythms.rain.image {asset},
+    "eveningPresent": defined(dailyRhythms.evening),
+    "eveningImage": dailyRhythms.evening.image {asset},
+    "materialCount": count(materialsAndArchitecture.materials),
+    "materialImageCount": count(materialsAndArchitecture.materials[defined(image.asset)]),
     "stories": editorialPhotography.stories[] {
       title,
       heroImage {asset},

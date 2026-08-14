@@ -1,4 +1,4 @@
-export type DashboardStatus = 'blocked' | 'complete' | 'needsAttention'
+export type DashboardStatus = 'blocked' | 'complete' | 'needsAttention' | 'unknown'
 
 export type DashboardLiveStatus = {
   analyticsEnabled: boolean
@@ -30,18 +30,34 @@ export type DashboardPhotoStory = {
 export type DashboardDocument = {
   _id: string
   _type: string
+  _updatedAt?: string | null
   canonicalUrl?: string | null
+  eveningImage?: DashboardImage | null
+  eveningPresent?: boolean | null
   heroImage?: DashboardImage | null
+  indoorOutdoorImageCount?: number | null
+  lastReviewedAt?: string | null
   mapLocation?: {coordinates?: unknown} | null
+  materialCount?: number | null
+  materialImageCount?: number | null
+  morningImage?: DashboardImage | null
+  morningPresent?: boolean | null
   name?: string | null
   noIndex?: boolean | null
+  rainImage?: DashboardImage | null
+  rainPresent?: boolean | null
+  roomImages?: DashboardImage[] | null
   routePathCount?: number
   seoDescription?: string | null
   seoSocialImage?: DashboardImage | null
   seoTitle?: string | null
+  sharedHeartImageCount?: number | null
   slug?: string | null
   stories?: DashboardPhotoStory[] | null
+  summaryDescription?: string | null
   title?: string | null
+  viewImage?: DashboardImage | null
+  workflowStatus?: 'approved' | 'draft' | 'inReview' | null
 }
 
 export type DashboardSiteSettings = {

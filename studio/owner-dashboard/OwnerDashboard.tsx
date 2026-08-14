@@ -4,10 +4,17 @@ import {IntentButton, useClient} from 'sanity'
 
 import {ownerDashboardQuery} from './query'
 import {resolvePremiumGuideStatus} from './premiumGuideStatus'
+import {
+  baseDocumentId,
+  getContentReadiness,
+  isDraftDocument,
+  launchContentStatus,
+  preferredDocuments,
+  publishedDocumentIds,
+} from './contentReadiness'
 import type {
   DashboardDocument,
   DashboardLiveStatus,
-  DashboardPhotoStory,
   DashboardSiteSettings,
   DashboardStatus,
   OwnerDashboardData,
@@ -15,6 +22,7 @@ import type {
 
 const apiVersion = '2026-08-12'
 const contentTypes = ['destination', 'diveSite', 'scenicRoute']
+const photographyContentTypes = ['destination', 'diveSite', 'scenicRoute', 'room', 'housePage']
 
 const studioEnvironment =
   (import.meta as unknown as {env?: Record<string, string | undefined>}).env ?? {}
@@ -61,30 +69,18 @@ const statusLabels: Record<DashboardStatus, string> = {
   blocked: 'Blocked',
   complete: 'Complete',
   needsAttention: 'Needs attention',
+  unknown: 'Unknown',
 }
 
 const statusTones = {
   blocked: 'critical',
   complete: 'positive',
   needsAttention: 'caution',
+  unknown: 'default',
 } as const
 
 function hasImage(image: {asset?: {_ref?: string} | null} | null | undefined) {
   return Boolean(image?.asset?._ref)
-}
-
-function imageCount(images: Array<{asset?: {_ref?: string} | null}> | null | undefined) {
-  return (images ?? []).filter(hasImage).length
-}
-
-function photoStoryIsComplete(story: DashboardPhotoStory) {
-  return (
-    hasImage(story.heroImage) &&
-    imageCount(story.openingImages) >= 1 &&
-    imageCount(story.journeyImages) >= 3 &&
-    imageCount(story.detailImages) >= 2 &&
-    imageCount(story.closingImages) >= 1
-  )
 }
 
 function documentLabel(document: DashboardDocument) {
@@ -195,6 +191,35 @@ function IssueList({documents}: {documents: DashboardDocument[]}) {
   )
 }
 
+function DetailedIssueList({
+  issues,
+}: {
+  issues: Array<{detail: string; document: DashboardDocument}>
+}) {
+  if (issues.length === 0)
+    return (
+      <Text muted size={1}>
+        Nothing needs attention.
+      </Text>
+    )
+
+  return (
+    <ul style={styles.issueList}>
+      {issues.map(({detail, document}) => (
+        <li key={`${document._type}-${document._id}-${detail}`} style={styles.issue}>
+          <div style={{display: 'grid', gap: '0.2rem'}}>
+            <Text size={1}>{documentLabel(document)}</Text>
+            <Text muted size={1}>
+              {detail}
+            </Text>
+          </div>
+          <EditDocumentButton document={document} />
+        </li>
+      ))}
+    </ul>
+  )
+}
+
 function socialStatus(settings: DashboardSiteSettings | null | undefined, platform: string) {
   return settings?.footer?.socialLinks?.some(
     (profile) => profile?.platform === platform && profile.url?.startsWith('https://'),
@@ -285,31 +310,81 @@ function OwnerDashboardContent({
   liveStatusError: string | null
 }) {
   const settings = data.settings
-  const editorialDocuments = data.documents.filter((document) =>
+  const currentDocuments = preferredDocuments(data.documents)
+  const editorialDocuments = currentDocuments.filter((document) =>
     contentTypes.includes(document._type),
   )
   const destinations = editorialDocuments.filter((document) => document._type === 'destination')
   const diveSites = editorialDocuments.filter((document) => document._type === 'diveSite')
   const scenicRoutes = editorialDocuments.filter((document) => document._type === 'scenicRoute')
+  const rooms = currentDocuments.filter((document) => document._type === 'room')
+  const houseDocuments = currentDocuments.filter((document) => document._type === 'housePage')
 
-  const missingHeroes = editorialDocuments.filter((document) => !hasImage(document.heroImage))
-  const incompletePhotoStories = editorialDocuments.filter(
-    (document) =>
-      !document.stories?.length || document.stories.some((story) => !photoStoryIsComplete(story)),
+  const photographyDocuments = currentDocuments.filter((document) =>
+    photographyContentTypes.includes(document._type),
   )
-  const incompletePhotography = editorialDocuments.filter(
-    (document) => missingHeroes.includes(document) || incompletePhotoStories.includes(document),
+  const photographyReadiness = photographyDocuments.map((document) => ({
+    document,
+    readiness: getContentReadiness(document, settings ?? null),
+  }))
+  const incompletePhotography = photographyReadiness.filter(
+    ({readiness}) => readiness.photographyStatus === 'needsAttention',
   )
+  const missingHeroes = photographyDocuments.filter((document) => !hasImage(document.heroImage))
 
-  const missingSeoTitles = data.documents.filter((document) => !document.seoTitle?.trim())
-  const missingSeoDescriptions = data.documents.filter(
-    (document) => !document.seoDescription?.trim(),
+  const publicSeoDocuments = currentDocuments.filter((document) => document._type !== 'room')
+  const seoReadiness = publicSeoDocuments.map((document) => ({
+    document,
+    readiness: getContentReadiness(document, settings ?? null),
+  }))
+  const missingEffectiveTitles = seoReadiness.filter(({readiness}) => !readiness.effectiveTitle)
+  const missingEffectiveDescriptions = seoReadiness.filter(
+    ({readiness}) => !readiness.effectiveDescription,
   )
-  const missingSocialImages = data.documents.filter(
-    (document) => !hasImage(document.seoSocialImage),
+  const missingSocialImageFallback = seoReadiness.filter(
+    ({readiness}) => readiness.socialImageSource === 'unknown',
   )
-  const noIndexDocuments = data.documents.filter((document) => document.noIndex)
+  const usingDefaultSocialImage = seoReadiness.filter(
+    ({readiness}) => readiness.socialImageSource === 'default',
+  )
+  const canonicalIssues = seoReadiness.filter(({readiness}) => !readiness.canonicalReady)
+  const noIndexDocuments = publicSeoDocuments.filter((document) => document.noIndex)
   const documentsWithoutSlugs = editorialDocuments.filter((document) => !document.slug?.trim())
+
+  const draftDocuments = data.documents.filter(isDraftDocument)
+  const draftsAwaitingReview = draftDocuments.filter(
+    (document) => document.workflowStatus === 'inReview',
+  )
+  const approvedDocuments = currentDocuments.filter(
+    (document) => document.workflowStatus === 'approved',
+  )
+  const publishedIds = publishedDocumentIds(data.documents)
+  const reviewDocuments = currentDocuments.filter((document) =>
+    photographyContentTypes.includes(document._type),
+  )
+  const reviewReadiness = reviewDocuments.map((document) => ({
+    document,
+    status: getContentReadiness(document, settings ?? null).reviewStatus,
+  }))
+  const missingReviews = reviewReadiness.filter(({status}) => status === 'missing')
+  const staleReviews = reviewReadiness.filter(({status}) => status === 'stale')
+  const currentReviews = reviewReadiness.filter(({status}) => status === 'current')
+
+  const contentGroups = [
+    {documents: destinations, label: 'Destinations'},
+    {documents: diveSites, label: 'Dive Sites'},
+    {documents: scenicRoutes, label: 'Scenic Routes'},
+    {
+      documents: currentDocuments.filter((document) =>
+        ['room', 'roomsPage'].includes(document._type),
+      ),
+      label: 'Rooms',
+    },
+    {documents: houseDocuments, label: 'The House'},
+  ].map((group) => ({
+    ...group,
+    status: launchContentStatus(group.documents, data.documents, settings ?? null),
+  }))
 
   const destinationMaps = destinations.filter((document) => document.mapLocation?.coordinates)
   const diveMaps = diveSites.filter((document) => document.mapLocation?.coordinates)
@@ -340,7 +415,14 @@ function OwnerDashboardContent({
       label: 'Website',
       status: requiredWebsiteSettingsComplete(settings) ? 'complete' : 'needsAttention',
     },
-    {label: 'Photography', status: incompletePhotography.length ? 'needsAttention' : 'complete'},
+    {
+      label: 'Photography',
+      status: photographyDocuments.length
+        ? incompletePhotography.length
+          ? 'needsAttention'
+          : 'complete'
+        : 'unknown',
+    },
     {label: 'Premium Guide', status: premiumGuide.overallStatus},
     {
       label: 'Maps',
@@ -351,12 +433,11 @@ function OwnerDashboardContent({
     },
     {
       label: 'SEO',
-      status:
-        settings?.defaultSeo?.metaTitle &&
-        settings.defaultSeo.metaDescription &&
-        !documentsWithoutSlugs.length
+      status: seoReadiness.length
+        ? seoReadiness.every(({readiness}) => readiness.seoStatus === 'complete')
           ? 'complete'
-          : 'needsAttention',
+          : 'needsAttention'
+        : 'unknown',
     },
     {label: 'Email', status: emailReady ? 'complete' : 'blocked'},
     {
@@ -379,7 +460,9 @@ function OwnerDashboardContent({
                 ? 'Ready based on current published information.'
                 : item.status === 'blocked'
                   ? 'A required external or content decision is still missing.'
-                  : 'Open the sections below to see what needs attention.'}
+                  : item.status === 'unknown'
+                    ? 'There is not enough content information to assess this yet.'
+                    : 'Open the sections below to see what needs attention.'}
             </Text>
           </SummaryCard>
         ))}
@@ -579,17 +662,104 @@ function OwnerDashboardContent({
       </DashboardSection>
 
       <DashboardSection
+        title="Content workflow"
+        description="Draft, approval, publication and factual-review status come directly from Sanity. Publishing remains a separate action."
+      >
+        <div style={styles.sectionGrid}>
+          <SummaryCard
+            status={draftsAwaitingReview.length ? 'needsAttention' : 'complete'}
+            title="Drafts awaiting review"
+          >
+            <Value label="All draft documents" value={draftDocuments.length} />
+            <Value label="Marked In Review" value={draftsAwaitingReview.length} />
+            <IssueList documents={draftsAwaitingReview} />
+          </SummaryCard>
+          <SummaryCard
+            status={approvedDocuments.length ? 'complete' : 'unknown'}
+            title="Approved content"
+          >
+            <Value label="Approved documents" value={approvedDocuments.length} />
+            <Text muted size={1}>
+              Approval is an editorial workflow state and does not publish a document.
+            </Text>
+          </SummaryCard>
+          <SummaryCard
+            status={publishedIds.size ? 'complete' : 'unknown'}
+            title="Published content"
+          >
+            <Value label="Published documents" value={publishedIds.size} />
+            <Text muted size={1}>
+              Draft changes are assessed separately from their published versions.
+            </Text>
+          </SummaryCard>
+          <SummaryCard
+            status={missingReviews.length || staleReviews.length ? 'needsAttention' : 'complete'}
+            title="Factual review dates"
+          >
+            <Value label="Current" value={currentReviews.length} />
+            <Value label="Missing" value={missingReviews.length} />
+            <Value label="Stale" value={staleReviews.length} />
+            <DetailedIssueList
+              issues={[
+                ...missingReviews.map(({document}) => ({
+                  detail: 'Review date is missing',
+                  document,
+                })),
+                ...staleReviews.map(({document}) => ({
+                  detail: 'Review date is older than this content type allows',
+                  document,
+                })),
+              ]}
+            />
+          </SummaryCard>
+        </div>
+      </DashboardSection>
+
+      <DashboardSection
+        title="Launch content summary"
+        description="A content type is complete only when its current documents are approved, published, reviewed, visually ready and covered by effective SEO."
+      >
+        <div style={styles.sectionGrid}>
+          {contentGroups.map(({documents, label, status}) => (
+            <SummaryCard key={label} status={status} title={label}>
+              <Value label="Documents" value={documents.length} />
+              <Value
+                label="Published"
+                value={
+                  documents.filter((document) => publishedIds.has(baseDocumentId(document._id)))
+                    .length
+                }
+              />
+              <Value
+                label="Approved"
+                value={
+                  documents.filter((document) => document.workflowStatus === 'approved').length
+                }
+              />
+            </SummaryCard>
+          ))}
+        </div>
+      </DashboardSection>
+
+      <DashboardSection
         title="Photography"
-        description="A complete story has a hero, opening, journey, details and closing sequence. Every item below opens directly in Studio."
+        description="Required visual roles are assessed by content type. Optional editorial photo stories do not reduce readiness."
       >
         <div style={styles.sectionGrid}>
           {[
             ['Destinations', destinations],
             ['Dive Sites', diveSites],
             ['Scenic Routes', scenicRoutes],
+            ['Rooms', rooms],
+            ['The House', houseDocuments],
           ].map(([label, documents]) => {
             const values = documents as DashboardDocument[]
-            const incomplete = values.filter((document) => incompletePhotography.includes(document))
+            const incomplete = values.flatMap((document) => {
+              const readiness = getContentReadiness(document, settings ?? null)
+              return readiness.photographyStatus === 'needsAttention'
+                ? [{detail: readiness.photographyIssues.join(', '), document}]
+                : []
+            })
             return (
               <SummaryCard
                 key={label as string}
@@ -598,7 +768,7 @@ function OwnerDashboardContent({
               >
                 <Value label="Complete" value={values.length - incomplete.length} />
                 <Value label="Incomplete" value={incomplete.length} />
-                <IssueList documents={incomplete} />
+                <DetailedIssueList issues={incomplete} />
               </SummaryCard>
             )
           })}
@@ -608,11 +778,11 @@ function OwnerDashboardContent({
           >
             <IssueList documents={missingHeroes} />
           </SummaryCard>
-          <SummaryCard
-            status={incompletePhotoStories.length ? 'needsAttention' : 'complete'}
-            title="Incomplete photo stories"
-          >
-            <IssueList documents={incompletePhotoStories} />
+          <SummaryCard status="complete" title="Optional photo stories">
+            <Text muted size={1}>
+              Photo stories add editorial depth when available. Empty or partial optional stories do
+              not make a page incomplete.
+            </Text>
           </SummaryCard>
         </div>
       </DashboardSection>
@@ -680,7 +850,7 @@ function OwnerDashboardContent({
 
       <DashboardSection
         title="SEO"
-        description="Page-specific gaps are shown without overriding the approved site-wide defaults."
+        description="Effective metadata follows the same page, content and Site Settings fallbacks used by the website."
       >
         <div style={styles.sectionGrid}>
           <SummaryCard
@@ -699,33 +869,61 @@ function OwnerDashboardContent({
             />
           </SummaryCard>
           <SummaryCard
-            status={missingSeoTitles.length ? 'needsAttention' : 'complete'}
-            title="Missing page titles"
+            status={missingEffectiveTitles.length ? 'needsAttention' : 'complete'}
+            title="Effective titles"
           >
-            <IssueList documents={missingSeoTitles} />
+            <Value
+              label="Ready"
+              value={publicSeoDocuments.length - missingEffectiveTitles.length}
+            />
+            <DetailedIssueList
+              issues={missingEffectiveTitles.map(({document}) => ({
+                detail: 'No page title or usable content title',
+                document,
+              }))}
+            />
           </SummaryCard>
           <SummaryCard
-            status={missingSeoDescriptions.length ? 'needsAttention' : 'complete'}
-            title="Missing descriptions"
+            status={missingEffectiveDescriptions.length ? 'needsAttention' : 'complete'}
+            title="Effective descriptions"
           >
-            <IssueList documents={missingSeoDescriptions} />
+            <Value
+              label="Ready"
+              value={publicSeoDocuments.length - missingEffectiveDescriptions.length}
+            />
+            <DetailedIssueList
+              issues={missingEffectiveDescriptions.map(({document}) => ({
+                detail: 'No page, content or site-default description',
+                document,
+              }))}
+            />
           </SummaryCard>
           <SummaryCard
-            status={missingSocialImages.length ? 'needsAttention' : 'complete'}
-            title="Using default social image"
+            status={missingSocialImageFallback.length ? 'needsAttention' : 'complete'}
+            title="Social sharing images"
           >
-            <Text muted size={1}>
-              These pages do not have a page-specific sharing image.
-            </Text>
-            <IssueList documents={missingSocialImages} />
+            <Value label="Using Site Settings fallback" value={usingDefaultSocialImage.length} />
+            <Value label="Missing every fallback" value={missingSocialImageFallback.length} />
+            <DetailedIssueList
+              issues={missingSocialImageFallback.map(({document}) => ({
+                detail: 'No page, hero or default social image',
+                document,
+              }))}
+            />
           </SummaryCard>
           <SummaryCard
-            status={documentsWithoutSlugs.length ? 'blocked' : 'complete'}
+            status={canonicalIssues.length ? 'needsAttention' : 'complete'}
             title="Sitemap and canonical readiness"
           >
             <Value label="Canonical site URL" value={settings?.siteUrl} />
             <Value label="Pages missing URL slugs" value={documentsWithoutSlugs.length} />
-            <IssueList documents={documentsWithoutSlugs} />
+            <Value label="Canonical issues" value={canonicalIssues.length} />
+            <DetailedIssueList
+              issues={canonicalIssues.map(({document}) => ({
+                detail: 'No valid canonical route can be resolved',
+                document,
+              }))}
+            />
           </SummaryCard>
           <SummaryCard
             status={noIndexDocuments.length ? 'needsAttention' : 'complete'}
@@ -812,7 +1010,7 @@ export function OwnerDashboard() {
       const result = await client.fetch<OwnerDashboardData>(
         ownerDashboardQuery,
         {},
-        {perspective: 'drafts'},
+        {perspective: 'raw'},
       )
       setData(result)
 
