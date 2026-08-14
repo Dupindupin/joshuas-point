@@ -49,6 +49,12 @@ const styles = {
   section: {marginTop: '2rem'},
   card: {height: '100%'},
   cardBody: {display: 'grid', gap: '0.8rem'},
+  actions: {
+    display: 'flex',
+    flexWrap: 'wrap' as const,
+    gap: '0.75rem',
+    marginTop: '0.25rem',
+  },
   row: {
     alignItems: 'center',
     display: 'flex',
@@ -63,6 +69,13 @@ const styles = {
     justifyContent: 'space-between',
     listStyle: 'none',
   },
+  subsection: {marginTop: '1.5rem'},
+} as const
+
+const resendManagementLinks = {
+  audience: 'https://resend.com/audiences',
+  broadcasts: 'https://resend.com/broadcasts',
+  emails: 'https://resend.com/emails',
 } as const
 
 const statusLabels: Record<DashboardStatus, string> = {
@@ -87,10 +100,10 @@ function documentLabel(document: DashboardDocument) {
   return document.title?.trim() || document.name?.trim() || 'Untitled page'
 }
 
-function StatusBadge({status}: {status: DashboardStatus}) {
+function StatusBadge({label, status}: {label?: string; status: DashboardStatus}) {
   return (
     <Card padding={2} radius={2} tone={statusTones[status]}>
-      {statusLabels[status]}
+      {label ?? statusLabels[status]}
     </Card>
   )
 }
@@ -122,13 +135,39 @@ function DashboardSection({
   )
 }
 
+function DashboardSubsection({
+  children,
+  description,
+  title,
+}: {
+  children: React.ReactNode
+  description: string
+  title: string
+}) {
+  return (
+    <section style={styles.subsection}>
+      <div style={{display: 'grid', gap: '0.35rem', marginBottom: '1rem'}}>
+        <Heading as="h3" size={1}>
+          {title}
+        </Heading>
+        <Text muted size={1}>
+          {description}
+        </Text>
+      </div>
+      {children}
+    </section>
+  )
+}
+
 function SummaryCard({
   children,
   status,
+  statusLabel,
   title,
 }: {
   children: React.ReactNode
   status: DashboardStatus
+  statusLabel?: string
   title: string
 }) {
   return (
@@ -138,7 +177,7 @@ function SummaryCard({
           <Heading as="h3" size={1}>
             {title}
           </Heading>
-          <StatusBadge status={status} />
+          <StatusBadge label={statusLabel} status={status} />
         </div>
         {children}
       </div>
@@ -156,6 +195,20 @@ function Value({label, value}: {label: string; value?: React.ReactNode}) {
         {value || 'Not added'}
       </Text>
     </div>
+  )
+}
+
+function ExternalButton({href, text}: {href: string; text: string}) {
+  return (
+    <Button
+      as="a"
+      href={href}
+      mode="ghost"
+      rel="noreferrer"
+      target="_blank"
+      text={text}
+      tone="primary"
+    />
   )
 }
 
@@ -300,6 +353,11 @@ function resolveOwnerStatusUrl() {
   }
 }
 
+function resolveOwnerPageUrl(pathname: string) {
+  const statusUrl = resolveOwnerStatusUrl()
+  return statusUrl ? new URL(pathname, statusUrl.origin).toString() : null
+}
+
 function OwnerDashboardContent({
   data,
   liveStatus,
@@ -359,6 +417,11 @@ function OwnerDashboardContent({
     (document) => document.workflowStatus === 'approved',
   )
   const publishedIds = publishedDocumentIds(data.documents)
+  const remainingReviewCount = Math.max(0, currentDocuments.length - approvedDocuments.length)
+  const publishedCurrentCount = currentDocuments.filter((document) =>
+    publishedIds.has(baseDocumentId(document._id)),
+  ).length
+  const unpublishedCurrentCount = Math.max(0, currentDocuments.length - publishedCurrentCount)
   const reviewDocuments = currentDocuments.filter((document) =>
     photographyContentTypes.includes(document._type),
   )
@@ -409,6 +472,7 @@ function OwnerDashboardContent({
     legalLabels.some((label) => label.includes('terms'))
 
   const premiumGuide = resolvePremiumGuideStatus(data)
+  const emailPreviewUrl = resolveOwnerPageUrl('/internal/email-preview')
 
   const launchItems: Array<{label: string; status: DashboardStatus}> = [
     {
@@ -469,8 +533,8 @@ function OwnerDashboardContent({
       </div>
 
       <DashboardSection
-        title="Website"
-        description="The public identity, contact details, booking links and navigation all come from Site Settings."
+        title="Website Center"
+        description="Public website settings and safe live production status in one place."
       >
         <div style={styles.sectionGrid}>
           <SummaryCard
@@ -501,13 +565,16 @@ function OwnerDashboardContent({
           </SummaryCard>
           <SummaryCard
             status={liveStatus?.siteDomainConfigured ? 'complete' : 'needsAttention'}
-            title="Live configuration"
+            title="Production status"
           >
+            <Value label="Domain" value={settings?.siteUrl} />
             <Value
-              label="Production domain"
+              label="Domain configuration"
               value={configuredLabel(liveStatus?.siteDomainConfigured)}
             />
             <Value label="Coming Soon" value={enabledLabel(liveStatus?.comingSoon)} />
+            <Value label="Plausible analytics" value={enabledLabel(liveStatus?.analyticsEnabled)} />
+            <Value label="Sentry monitoring" value={enabledLabel(liveStatus?.sentryEnabled)} />
             <Value
               label="Checked"
               value={liveStatus ? new Date(liveStatus.checkedAt).toLocaleString() : 'Unavailable'}
@@ -602,18 +669,27 @@ function OwnerDashboardContent({
         description="Only confirmed HTTPS profiles in Site Settings are shown publicly."
       >
         <div style={styles.sectionGrid}>
-          {['instagram', 'facebook', 'youtube', 'tiktok', 'pinterest'].map((platform) => {
+          {[
+            {platform: 'instagram', required: true},
+            {platform: 'facebook', required: true},
+            {platform: 'youtube', required: false},
+            {platform: 'tiktok', required: false},
+            {platform: 'pinterest', required: false},
+          ].map(({platform, required}) => {
             const connected = socialStatus(settings, platform)
             return (
               <SummaryCard
                 key={platform}
-                status={connected ? 'complete' : 'needsAttention'}
+                status={connected ? 'complete' : required ? 'needsAttention' : 'unknown'}
+                statusLabel={connected ? 'Connected' : required ? 'Required' : 'Optional'}
                 title={platform[0].toUpperCase() + platform.slice(1)}
               >
                 <Text muted size={1}>
                   {connected
                     ? 'Connected with an approved public URL.'
-                    : 'No approved account is connected.'}
+                    : required
+                      ? 'A confirmed public profile has not been connected yet.'
+                      : 'No optional profile is connected.'}
                 </Text>
               </SummaryCard>
             )
@@ -662,281 +738,307 @@ function OwnerDashboardContent({
       </DashboardSection>
 
       <DashboardSection
-        title="Content workflow"
-        description="Draft, approval, publication and factual-review status come directly from Sanity. Publishing remains a separate action."
+        title="Content Center"
+        description="Editorial workflow, photography, maps and SEO readiness from the existing Phase 2 content checks."
       >
-        <div style={styles.sectionGrid}>
-          <SummaryCard
-            status={draftsAwaitingReview.length ? 'needsAttention' : 'complete'}
-            title="Drafts awaiting review"
-          >
-            <Value label="All draft documents" value={draftDocuments.length} />
-            <Value label="Marked In Review" value={draftsAwaitingReview.length} />
-            <IssueList documents={draftsAwaitingReview} />
-          </SummaryCard>
-          <SummaryCard
-            status={approvedDocuments.length ? 'complete' : 'unknown'}
-            title="Approved content"
-          >
-            <Value label="Approved documents" value={approvedDocuments.length} />
-            <Text muted size={1}>
-              Approval is an editorial workflow state and does not publish a document.
-            </Text>
-          </SummaryCard>
-          <SummaryCard
-            status={publishedIds.size ? 'complete' : 'unknown'}
-            title="Published content"
-          >
-            <Value label="Published documents" value={publishedIds.size} />
-            <Text muted size={1}>
-              Draft changes are assessed separately from their published versions.
-            </Text>
-          </SummaryCard>
-          <SummaryCard
-            status={missingReviews.length || staleReviews.length ? 'needsAttention' : 'complete'}
-            title="Factual review dates"
-          >
-            <Value label="Current" value={currentReviews.length} />
-            <Value label="Missing" value={missingReviews.length} />
-            <Value label="Stale" value={staleReviews.length} />
-            <DetailedIssueList
-              issues={[
-                ...missingReviews.map(({document}) => ({
-                  detail: 'Review date is missing',
-                  document,
-                })),
-                ...staleReviews.map(({document}) => ({
-                  detail: 'Review date is older than this content type allows',
-                  document,
-                })),
-              ]}
-            />
-          </SummaryCard>
-        </div>
-      </DashboardSection>
+        <DashboardSubsection
+          title="Workflow"
+          description="Draft, approval, publication and factual-review status come directly from Sanity. Publishing remains a separate action."
+        >
+          <div style={styles.sectionGrid}>
+            <SummaryCard
+              status={draftsAwaitingReview.length ? 'needsAttention' : 'complete'}
+              title="Drafts awaiting review"
+            >
+              <Value label="All draft documents" value={draftDocuments.length} />
+              <Value label="Marked In Review" value={draftsAwaitingReview.length} />
+              <IssueList documents={draftsAwaitingReview} />
+            </SummaryCard>
+            <SummaryCard
+              status={
+                remainingReviewCount === 0 && currentDocuments.length ? 'complete' : 'unknown'
+              }
+              statusLabel={
+                remainingReviewCount === 0 && currentDocuments.length
+                  ? 'All approved'
+                  : 'In progress'
+              }
+              title="Approved content"
+            >
+              <Value label="Approved documents" value={approvedDocuments.length} />
+              <Value label="Remaining review" value={remainingReviewCount} />
+              <Text muted size={1}>
+                Approval is an editorial workflow state and does not publish a document.
+              </Text>
+            </SummaryCard>
+            <SummaryCard
+              status={
+                unpublishedCurrentCount === 0 && currentDocuments.length ? 'complete' : 'unknown'
+              }
+              statusLabel={
+                unpublishedCurrentCount === 0 && currentDocuments.length
+                  ? draftDocuments.length
+                    ? 'Published with drafts'
+                    : 'All published'
+                  : 'Mixed state'
+              }
+              title="Published content"
+            >
+              <Value label="Published documents" value={publishedCurrentCount} />
+              <Value label="Not yet published" value={unpublishedCurrentCount} />
+              <Value label="Draft documents" value={draftDocuments.length} />
+              <Text muted size={1}>
+                Draft changes are assessed separately from their published versions.
+              </Text>
+            </SummaryCard>
+            <SummaryCard
+              status={missingReviews.length || staleReviews.length ? 'needsAttention' : 'complete'}
+              title="Factual review dates"
+            >
+              <Value label="Current" value={currentReviews.length} />
+              <Value label="Missing" value={missingReviews.length} />
+              <Value label="Stale" value={staleReviews.length} />
+              <DetailedIssueList
+                issues={[
+                  ...missingReviews.map(({document}) => ({
+                    detail: 'Review date is missing',
+                    document,
+                  })),
+                  ...staleReviews.map(({document}) => ({
+                    detail: 'Review date is older than this content type allows',
+                    document,
+                  })),
+                ]}
+              />
+            </SummaryCard>
+          </div>
+        </DashboardSubsection>
 
-      <DashboardSection
-        title="Launch content summary"
-        description="A content type is complete only when its current documents are approved, published, reviewed, visually ready and covered by effective SEO."
-      >
-        <div style={styles.sectionGrid}>
-          {contentGroups.map(({documents, label, status}) => (
-            <SummaryCard key={label} status={status} title={label}>
-              <Value label="Documents" value={documents.length} />
+        <DashboardSubsection
+          title="Launch content summary"
+          description="A content type is complete only when its current documents are approved, published, reviewed, visually ready and covered by effective SEO."
+        >
+          <div style={styles.sectionGrid}>
+            {contentGroups.map(({documents, label, status}) => (
+              <SummaryCard key={label} status={status} title={label}>
+                <Value label="Documents" value={documents.length} />
+                <Value
+                  label="Published"
+                  value={
+                    documents.filter((document) => publishedIds.has(baseDocumentId(document._id)))
+                      .length
+                  }
+                />
+                <Value
+                  label="Approved"
+                  value={
+                    documents.filter((document) => document.workflowStatus === 'approved').length
+                  }
+                />
+              </SummaryCard>
+            ))}
+          </div>
+        </DashboardSubsection>
+
+        <DashboardSubsection
+          title="Photography"
+          description="Required visual roles are assessed by content type. Optional editorial photo stories do not reduce readiness."
+        >
+          <div style={styles.sectionGrid}>
+            {[
+              ['Destinations', destinations],
+              ['Dive Sites', diveSites],
+              ['Scenic Routes', scenicRoutes],
+              ['Rooms', rooms],
+              ['The House', houseDocuments],
+            ].map(([label, documents]) => {
+              const values = documents as DashboardDocument[]
+              const incomplete = values.flatMap((document) => {
+                const readiness = getContentReadiness(document, settings ?? null)
+                return readiness.photographyStatus === 'needsAttention'
+                  ? [{detail: readiness.photographyIssues.join(', '), document}]
+                  : []
+              })
+              return (
+                <SummaryCard
+                  key={label as string}
+                  status={incomplete.length ? 'needsAttention' : 'complete'}
+                  title={label as string}
+                >
+                  <Value label="Complete" value={values.length - incomplete.length} />
+                  <Value label="Incomplete" value={incomplete.length} />
+                  <DetailedIssueList issues={incomplete} />
+                </SummaryCard>
+              )
+            })}
+            <SummaryCard
+              status={missingHeroes.length ? 'needsAttention' : 'complete'}
+              title="Missing hero images"
+            >
+              <IssueList documents={missingHeroes} />
+            </SummaryCard>
+            <SummaryCard status="complete" title="Optional photo stories">
+              <Text muted size={1}>
+                Photo stories add editorial depth when available. Empty or partial optional stories
+                do not make a page incomplete.
+              </Text>
+            </SummaryCard>
+          </div>
+        </DashboardSubsection>
+
+        <DashboardSubsection
+          title="Maps"
+          description="Only the presence of approved public map data is shown. Coordinates themselves remain hidden here."
+        >
+          <div style={styles.sectionGrid}>
+            <SummaryCard
+              status={mapProviderConfigured ? 'complete' : 'needsAttention'}
+              title="Explorer"
+            >
               <Value
-                label="Published"
-                value={
-                  documents.filter((document) => publishedIds.has(baseDocumentId(document._id)))
-                    .length
-                }
+                label="Interactive provider"
+                value={mapProviderConfigured ? 'Configured' : undefined}
               />
               <Value
-                label="Approved"
+                label="Public Joshua’s Point coordinate"
                 value={
-                  documents.filter((document) => document.workflowStatus === 'approved').length
+                  settings?.propertyLocation?.coordinates ? 'Approved location present' : undefined
                 }
               />
             </SummaryCard>
-          ))}
-        </div>
-      </DashboardSection>
-
-      <DashboardSection
-        title="Photography"
-        description="Required visual roles are assessed by content type. Optional editorial photo stories do not reduce readiness."
-      >
-        <div style={styles.sectionGrid}>
-          {[
-            ['Destinations', destinations],
-            ['Dive Sites', diveSites],
-            ['Scenic Routes', scenicRoutes],
-            ['Rooms', rooms],
-            ['The House', houseDocuments],
-          ].map(([label, documents]) => {
-            const values = documents as DashboardDocument[]
-            const incomplete = values.flatMap((document) => {
-              const readiness = getContentReadiness(document, settings ?? null)
-              return readiness.photographyStatus === 'needsAttention'
-                ? [{detail: readiness.photographyIssues.join(', '), document}]
-                : []
-            })
-            return (
-              <SummaryCard
-                key={label as string}
-                status={incomplete.length ? 'needsAttention' : 'complete'}
-                title={label as string}
-              >
-                <Value label="Complete" value={values.length - incomplete.length} />
-                <Value label="Incomplete" value={incomplete.length} />
-                <DetailedIssueList issues={incomplete} />
-              </SummaryCard>
-            )
-          })}
-          <SummaryCard
-            status={missingHeroes.length ? 'needsAttention' : 'complete'}
-            title="Missing hero images"
-          >
-            <IssueList documents={missingHeroes} />
-          </SummaryCard>
-          <SummaryCard status="complete" title="Optional photo stories">
-            <Text muted size={1}>
-              Photo stories add editorial depth when available. Empty or partial optional stories do
-              not make a page incomplete.
-            </Text>
-          </SummaryCard>
-        </div>
-      </DashboardSection>
-
-      <DashboardSection
-        title="Maps"
-        description="Only the presence of approved public map data is shown. Coordinates themselves remain hidden here."
-      >
-        <div style={styles.sectionGrid}>
-          <SummaryCard
-            status={mapProviderConfigured ? 'complete' : 'needsAttention'}
-            title="Explorer"
-          >
-            <Value
-              label="Interactive provider"
-              value={mapProviderConfigured ? 'Configured' : undefined}
-            />
-            <Value
-              label="Public Joshua’s Point coordinate"
-              value={
-                settings?.propertyLocation?.coordinates ? 'Approved location present' : undefined
+            <SummaryCard
+              status={
+                destinationMaps.length === destinations.length ? 'complete' : 'needsAttention'
               }
-            />
-          </SummaryCard>
-          <SummaryCard
-            status={destinationMaps.length === destinations.length ? 'complete' : 'needsAttention'}
-            title="Destination maps"
-          >
-            <Value label="Mapped" value={`${destinationMaps.length} of ${destinations.length}`} />
-            <IssueList
-              documents={destinations.filter((document) => !destinationMaps.includes(document))}
-            />
-          </SummaryCard>
-          <SummaryCard
-            status={routeMaps.length === scenicRoutes.length ? 'complete' : 'needsAttention'}
-            title="Scenic Routes"
-          >
-            <Value
-              label="Routes with geometry"
-              value={`${routeMaps.length} of ${scenicRoutes.length}`}
-            />
-            <IssueList
-              documents={scenicRoutes.filter((document) => !routeMaps.includes(document))}
-            />
-          </SummaryCard>
-          <SummaryCard
-            status={diveMaps.length === diveSites.length ? 'complete' : 'needsAttention'}
-            title="Dive Areas"
-          >
-            <Value label="Mapped" value={`${diveMaps.length} of ${diveSites.length}`} />
-            <IssueList documents={diveSites.filter((document) => !diveMaps.includes(document))} />
-          </SummaryCard>
-          <SummaryCard
-            status={mountainLakeRoute ? 'complete' : 'blocked'}
-            title="Mountain & Lake route"
-          >
-            <Text muted size={1}>
-              {mountainLakeRoute
-                ? 'An approved route document is available.'
-                : 'No approved route document is available yet.'}
-            </Text>
-          </SummaryCard>
-        </div>
+              title="Destination maps"
+            >
+              <Value label="Mapped" value={`${destinationMaps.length} of ${destinations.length}`} />
+              <IssueList
+                documents={destinations.filter((document) => !destinationMaps.includes(document))}
+              />
+            </SummaryCard>
+            <SummaryCard
+              status={routeMaps.length === scenicRoutes.length ? 'complete' : 'needsAttention'}
+              title="Scenic Routes"
+            >
+              <Value
+                label="Routes with geometry"
+                value={`${routeMaps.length} of ${scenicRoutes.length}`}
+              />
+              <IssueList
+                documents={scenicRoutes.filter((document) => !routeMaps.includes(document))}
+              />
+            </SummaryCard>
+            <SummaryCard
+              status={diveMaps.length === diveSites.length ? 'complete' : 'needsAttention'}
+              title="Dive Areas"
+            >
+              <Value label="Mapped" value={`${diveMaps.length} of ${diveSites.length}`} />
+              <IssueList documents={diveSites.filter((document) => !diveMaps.includes(document))} />
+            </SummaryCard>
+            <SummaryCard
+              status={mountainLakeRoute ? 'complete' : 'blocked'}
+              title="Mountain & Lake route"
+            >
+              <Text muted size={1}>
+                {mountainLakeRoute
+                  ? 'An approved route document is available.'
+                  : 'No approved route document is available yet.'}
+              </Text>
+            </SummaryCard>
+          </div>
+        </DashboardSubsection>
+
+        <DashboardSubsection
+          title="SEO"
+          description="Effective metadata follows the same page, content and Site Settings fallbacks used by the website."
+        >
+          <div style={styles.sectionGrid}>
+            <SummaryCard
+              status={
+                settings?.defaultSeo?.metaTitle && settings.defaultSeo.metaDescription
+                  ? 'complete'
+                  : 'needsAttention'
+              }
+              title="Site defaults"
+            >
+              <Value label="Default title" value={settings?.defaultSeo?.metaTitle} />
+              <Value label="Default description" value={settings?.defaultSeo?.metaDescription} />
+              <Value
+                label="Default social image"
+                value={hasImage(settings?.defaultSocialImage) ? 'Added' : undefined}
+              />
+            </SummaryCard>
+            <SummaryCard
+              status={missingEffectiveTitles.length ? 'needsAttention' : 'complete'}
+              title="Effective titles"
+            >
+              <Value
+                label="Ready"
+                value={publicSeoDocuments.length - missingEffectiveTitles.length}
+              />
+              <DetailedIssueList
+                issues={missingEffectiveTitles.map(({document}) => ({
+                  detail: 'No page title or usable content title',
+                  document,
+                }))}
+              />
+            </SummaryCard>
+            <SummaryCard
+              status={missingEffectiveDescriptions.length ? 'needsAttention' : 'complete'}
+              title="Effective descriptions"
+            >
+              <Value
+                label="Ready"
+                value={publicSeoDocuments.length - missingEffectiveDescriptions.length}
+              />
+              <DetailedIssueList
+                issues={missingEffectiveDescriptions.map(({document}) => ({
+                  detail: 'No page, content or site-default description',
+                  document,
+                }))}
+              />
+            </SummaryCard>
+            <SummaryCard
+              status={missingSocialImageFallback.length ? 'needsAttention' : 'complete'}
+              title="Social sharing images"
+            >
+              <Value label="Using Site Settings fallback" value={usingDefaultSocialImage.length} />
+              <Value label="Missing every fallback" value={missingSocialImageFallback.length} />
+              <DetailedIssueList
+                issues={missingSocialImageFallback.map(({document}) => ({
+                  detail: 'No page, hero or default social image',
+                  document,
+                }))}
+              />
+            </SummaryCard>
+            <SummaryCard
+              status={canonicalIssues.length ? 'needsAttention' : 'complete'}
+              title="Sitemap and canonical readiness"
+            >
+              <Value label="Canonical site URL" value={settings?.siteUrl} />
+              <Value label="Pages missing URL slugs" value={documentsWithoutSlugs.length} />
+              <Value label="Canonical issues" value={canonicalIssues.length} />
+              <DetailedIssueList
+                issues={canonicalIssues.map(({document}) => ({
+                  detail: 'No valid canonical route can be resolved',
+                  document,
+                }))}
+              />
+            </SummaryCard>
+            <SummaryCard
+              status={noIndexDocuments.length ? 'needsAttention' : 'complete'}
+              title="Hidden from search"
+            >
+              <IssueList documents={noIndexDocuments} />
+            </SummaryCard>
+          </div>
+        </DashboardSubsection>
       </DashboardSection>
 
       <DashboardSection
-        title="SEO"
-        description="Effective metadata follows the same page, content and Site Settings fallbacks used by the website."
-      >
-        <div style={styles.sectionGrid}>
-          <SummaryCard
-            status={
-              settings?.defaultSeo?.metaTitle && settings.defaultSeo.metaDescription
-                ? 'complete'
-                : 'needsAttention'
-            }
-            title="Site defaults"
-          >
-            <Value label="Default title" value={settings?.defaultSeo?.metaTitle} />
-            <Value label="Default description" value={settings?.defaultSeo?.metaDescription} />
-            <Value
-              label="Default social image"
-              value={hasImage(settings?.defaultSocialImage) ? 'Added' : undefined}
-            />
-          </SummaryCard>
-          <SummaryCard
-            status={missingEffectiveTitles.length ? 'needsAttention' : 'complete'}
-            title="Effective titles"
-          >
-            <Value
-              label="Ready"
-              value={publicSeoDocuments.length - missingEffectiveTitles.length}
-            />
-            <DetailedIssueList
-              issues={missingEffectiveTitles.map(({document}) => ({
-                detail: 'No page title or usable content title',
-                document,
-              }))}
-            />
-          </SummaryCard>
-          <SummaryCard
-            status={missingEffectiveDescriptions.length ? 'needsAttention' : 'complete'}
-            title="Effective descriptions"
-          >
-            <Value
-              label="Ready"
-              value={publicSeoDocuments.length - missingEffectiveDescriptions.length}
-            />
-            <DetailedIssueList
-              issues={missingEffectiveDescriptions.map(({document}) => ({
-                detail: 'No page, content or site-default description',
-                document,
-              }))}
-            />
-          </SummaryCard>
-          <SummaryCard
-            status={missingSocialImageFallback.length ? 'needsAttention' : 'complete'}
-            title="Social sharing images"
-          >
-            <Value label="Using Site Settings fallback" value={usingDefaultSocialImage.length} />
-            <Value label="Missing every fallback" value={missingSocialImageFallback.length} />
-            <DetailedIssueList
-              issues={missingSocialImageFallback.map(({document}) => ({
-                detail: 'No page, hero or default social image',
-                document,
-              }))}
-            />
-          </SummaryCard>
-          <SummaryCard
-            status={canonicalIssues.length ? 'needsAttention' : 'complete'}
-            title="Sitemap and canonical readiness"
-          >
-            <Value label="Canonical site URL" value={settings?.siteUrl} />
-            <Value label="Pages missing URL slugs" value={documentsWithoutSlugs.length} />
-            <Value label="Canonical issues" value={canonicalIssues.length} />
-            <DetailedIssueList
-              issues={canonicalIssues.map(({document}) => ({
-                detail: 'No valid canonical route can be resolved',
-                document,
-              }))}
-            />
-          </SummaryCard>
-          <SummaryCard
-            status={noIndexDocuments.length ? 'needsAttention' : 'complete'}
-            title="Hidden from search"
-          >
-            <IssueList documents={noIndexDocuments} />
-          </SummaryCard>
-        </div>
-      </DashboardSection>
-
-      <DashboardSection
-        title="Email"
-        description="Only safe configuration status is visible. Credentials remain in hosting environment variables."
+        title="Email Center"
+        description="Review the real email presentation and see delivery readiness without sending from Studio."
       >
         <div style={styles.sectionGrid}>
           <SummaryCard status={emailReady ? 'complete' : 'blocked'} title="Enquiry email delivery">
@@ -954,11 +1056,12 @@ function OwnerDashboardContent({
               label="Subscription mode"
               value={liveStatus?.subscriptionMode ?? 'Unavailable'}
             />
-            <Value
-              label="Newsletter readiness"
-              value={liveStatus?.newsletterReadiness ?? 'Unavailable'}
-            />
             <Value label="Test-email readiness" value={emailReady ? 'Ready' : 'Not ready'} />
+            {liveStatus?.enquiryMode === 'disabled' ? (
+              <Card padding={3} radius={2} tone="caution">
+                <Text size={1}>Enquiry delivery is disabled. Studio cannot send email.</Text>
+              </Card>
+            ) : null}
             {liveStatusError ? (
               <Text muted size={1}>
                 {liveStatusError}
@@ -968,25 +1071,70 @@ function OwnerDashboardContent({
               API keys, SMTP passwords and provider tokens are never available in Studio.
             </Text>
           </SummaryCard>
+          <SummaryCard status={emailPreviewUrl ? 'complete' : 'blocked'} title="Email previews">
+            <Text muted size={1}>
+              Preview the real branded HTML shell with safe sample information. Opening a preview
+              never sends an email.
+            </Text>
+            {emailPreviewUrl ? (
+              <div style={styles.actions}>
+                <ExternalButton
+                  href={`${emailPreviewUrl}#guest-confirmation`}
+                  text="Transactional previews"
+                />
+                <ExternalButton
+                  href={`${emailPreviewUrl}#subscription-confirmation`}
+                  text="Subscription previews"
+                />
+              </div>
+            ) : (
+              <Text muted size={1}>
+                The approved owner preview URL is unavailable.
+              </Text>
+            )}
+            <Text muted size={1}>
+              The website’s internal-review access cookie is required.
+            </Text>
+          </SummaryCard>
         </div>
       </DashboardSection>
 
       <DashboardSection
-        title="Monitoring"
-        description="Live deployment gates are checked on the server. Provider credentials never enter Studio."
+        title="Newsletter Center"
+        description="Resend remains the source of truth for contacts, preferences, broadcasts and delivery."
       >
         <div style={styles.sectionGrid}>
           <SummaryCard
-            status={liveStatus?.analyticsEnabled ? 'complete' : 'needsAttention'}
-            title="Visitor analytics"
+            status={liveStatus?.newsletterReadiness === 'ready' ? 'complete' : 'needsAttention'}
+            title="Newsletter readiness"
           >
-            <Value label="Plausible" value={enabledLabel(liveStatus?.analyticsEnabled)} />
+            <Value label="Configuration" value={liveStatus?.newsletterReadiness ?? 'Unavailable'} />
+            <Value
+              label="Subscription mode"
+              value={liveStatus?.subscriptionMode ?? 'Unavailable'}
+            />
+            {liveStatus?.subscriptionMode === 'disabled' ? (
+              <Card padding={3} radius={2} tone="caution">
+                <Text size={1}>
+                  Public subscription delivery is disabled. Manage preparation in Resend without
+                  sending from Studio.
+                </Text>
+              </Card>
+            ) : null}
+            <Text muted size={1}>
+              Subscriber addresses and unsubscribe preferences are never stored in Sanity.
+            </Text>
           </SummaryCard>
-          <SummaryCard
-            status={liveStatus?.sentryEnabled ? 'complete' : 'needsAttention'}
-            title="Error monitoring"
-          >
-            <Value label="Sentry" value={enabledLabel(liveStatus?.sentryEnabled)} />
+          <SummaryCard status="complete" statusLabel="Managed in Resend" title="Newsletter work">
+            <Text muted size={1}>
+              Review contacts and preferences, prepare a broadcast, preview it and run any approved
+              test inside Resend. Campaigns are not created or duplicated in Sanity.
+            </Text>
+            <div style={styles.actions}>
+              <ExternalButton href={resendManagementLinks.audience} text="Contacts and audience" />
+              <ExternalButton href={resendManagementLinks.broadcasts} text="Broadcasts" />
+              <ExternalButton href={resendManagementLinks.emails} text="Delivery activity" />
+            </div>
           </SummaryCard>
         </div>
       </DashboardSection>
