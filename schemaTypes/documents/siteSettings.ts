@@ -15,6 +15,7 @@ export const siteSettings = defineType({
     {name: 'identity', title: 'Identity', default: true},
     {name: 'seo', title: 'SEO'},
     {name: 'contact', title: 'Contact'},
+    {name: 'email', title: 'Email Content'},
     {name: 'location', title: 'Location'},
     {name: 'navigation', title: 'Navigation'},
     {name: 'footer', title: 'Footer'},
@@ -146,6 +147,80 @@ export const siteSettings = defineType({
       group: 'contact',
       description: 'Public contact details shared across the website.',
       validation: (rule) => rule.required(),
+    }),
+    defineField({
+      name: 'emailContent',
+      title: 'Email Content',
+      type: 'object',
+      group: 'email',
+      description:
+        'Short, approved wording reused by Joshua’s Point emails. Contact details, social links, logos, and identity continue to come from their existing Site Settings fields.',
+      fields: [
+        defineField({
+          name: 'subscriptionWelcomeText',
+          title: 'Subscription Welcome Text',
+          type: 'text',
+          rows: 4,
+          description:
+            'A short welcome paragraph for people who have confirmed Joshua’s Point updates. Plain text only; do not add HTML, links, or placeholders.',
+          validation: (rule) =>
+            rule
+              .max(600)
+              .custom((value) =>
+                !value || !/[<>]/.test(value)
+                  ? true
+                  : 'Use plain text without HTML or angle brackets.',
+              ),
+        }),
+        defineField({
+          name: 'transactionalFooterText',
+          title: 'Transactional Footer Text',
+          type: 'text',
+          rows: 3,
+          description:
+            'A short closing line for enquiry and other transactional emails. Plain text only; contact details remain managed separately.',
+          validation: (rule) =>
+            rule
+              .max(240)
+              .custom((value) =>
+                !value || !/[<>]/.test(value)
+                  ? true
+                  : 'Use plain text without HTML or angle brackets.',
+              ),
+        }),
+        defineField({
+          name: 'updatesFooterText',
+          title: 'Updates Footer Text',
+          type: 'text',
+          rows: 3,
+          description:
+            'An optional closing line for subscription and update emails. This does not replace Resend unsubscribe handling.',
+          validation: (rule) =>
+            rule
+              .max(240)
+              .custom((value) =>
+                !value || !/[<>]/.test(value)
+                  ? true
+                  : 'Use plain text without HTML or angle brackets.',
+              ),
+        }),
+        defineField({
+          name: 'responseTimeText',
+          title: 'Response-Time Text',
+          type: 'text',
+          rows: 3,
+          description:
+            'Owner-approved wording about when guests can normally expect a reply. Leave empty until the timing is confirmed.',
+          validation: (rule) =>
+            rule
+              .max(240)
+              .custom((value) =>
+                !value || !/[<>]/.test(value)
+                  ? true
+                  : 'Use plain text without HTML or angle brackets.',
+              ),
+        }),
+      ],
     }),
     defineField({
       name: 'propertyLocation',
