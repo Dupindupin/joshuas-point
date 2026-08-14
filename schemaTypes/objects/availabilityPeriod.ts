@@ -59,6 +59,16 @@ export const availabilityPeriod = defineType({
         'Studio-only operational notes. These are not projected to the public website. Do not include guest contact, payment, or other sensitive information.',
       validation: (rule) => rule.max(500),
     }),
+    defineField({
+      name: 'operationsStayId',
+      title: 'Operations Stay ID',
+      type: 'string',
+      description:
+        'Private synchronization identifier. It contains no guest identity and is never projected to the public website.',
+      hidden: true,
+      readOnly: true,
+      validation: (rule) => rule.max(180),
+    }),
   ],
   preview: {
     select: {

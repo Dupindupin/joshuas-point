@@ -7,20 +7,20 @@ export const operationsStructure: StructureResolver = (structureBuilder) =>
     .items([
       structureBuilder
         .documentTypeListItem('stayEnquiry')
-        .title('Stay Enquiries')
+        .title('Enquiry Center')
         .child(
           structureBuilder
             .documentTypeList('stayEnquiry')
-            .title('Stay Enquiries')
+            .title('Enquiry Center')
             .defaultOrdering([{field: 'receivedAt', direction: 'desc'}]),
         ),
       structureBuilder
         .documentTypeListItem('wholeHouseStay')
-        .title('Whole-house Stays')
+        .title('Stay Center')
         .child(
           structureBuilder
             .documentTypeList('wholeHouseStay')
-            .title('Whole-house Stays')
+            .title('Stay Center')
             .defaultOrdering([{field: 'dates.arrival', direction: 'asc'}]),
         ),
     ])
