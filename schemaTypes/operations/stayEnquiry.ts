@@ -1,5 +1,7 @@
 import {defineField, defineType} from 'sanity'
 
+import {MAXIMUM_WHOLE_HOUSE_GUESTS, wholeHouseOccupancyDescription} from './occupancy'
+
 const enquiryStatusOptions = [
   {title: 'New', value: 'new'},
   {title: 'Replied', value: 'replied'},
@@ -128,7 +130,8 @@ export const stayEnquiry = defineType({
           name: 'guestCount',
           title: 'Guest Count',
           type: 'number',
-          validation: (rule) => rule.required().integer().min(1),
+          description: wholeHouseOccupancyDescription,
+          validation: (rule) => rule.required().integer().min(1).max(MAXIMUM_WHOLE_HOUSE_GUESTS),
         }),
       ],
     }),

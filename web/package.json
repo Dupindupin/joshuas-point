@@ -9,6 +9,7 @@
     "email:test:subscription-duplicates": "tsx scripts/test-subscription-duplicates.ts",
     "email:test:subscriptions": "tsx scripts/test-subscription-foundation.ts",
     "test:availability": "tsx --test src/lib/availability/guidance.test.ts",
+    "test:operations": "tsx --test src/lib/operations/enquiry-recording.test.ts",
     "start": "next start",
     "lint": "eslint"
   },
@@ -17,6 +18,7 @@
     "@sanity/client": "^7.26.2",
     "@sanity/image-url": "^2.1.1",
     "@sanity/webhook": "^4.0.4",
+    "@sentry/nextjs": "^10.70.0",
     "maplibre-gl": "^6.3.0",
     "next": "16.3.0",
     "react": "19.2.8",

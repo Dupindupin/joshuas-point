@@ -8,7 +8,10 @@ import {
 } from '@/lib/coming-soon'
 import {getEmailBrand} from '@/lib/email/email-brand'
 import {createEnquiryEmails} from '@/lib/email/enquiry-emails'
-import {createSubscriptionConfirmationEmail, createSubscriptionWelcomeEmail} from '@/lib/email/subscription-emails'
+import {
+  createSubscriptionConfirmationEmail,
+  createSubscriptionWelcomeEmail,
+} from '@/lib/email/subscription-emails'
 import type {EmailMessage} from '@/lib/email/types'
 import type {EnquirySubmission} from '@/lib/enquiry/types'
 
@@ -26,7 +29,7 @@ const sampleEnquiry: EnquirySubmission = {
   arrivalDate: '2026-11-12',
   departureDate: '2026-11-16',
   email: 'alex@example.com',
-  guests: 2,
+  guests: 4,
   message:
     'We are planning a quiet stay and would love to spend time around the house, the coast and Southern Negros. Please let us know whether these dates may be available.',
   name: 'Alex Morgan',

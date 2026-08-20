@@ -19,7 +19,7 @@ const sampleEnquiry = {
   arrivalDate: '2026-11-12',
   departureDate: '2026-11-16',
   email: ownerTestAddress,
-  guests: 2,
+  guests: 4,
   message:
     'We are planning a quiet stay and would love to spend time around the house, the coast and nearby nature. Could you let us know whether these dates may be available?',
   name: 'Tobias Test Guest',

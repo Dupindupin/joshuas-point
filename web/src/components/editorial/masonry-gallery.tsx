@@ -96,11 +96,20 @@ function GalleryCaption({item}: {item: MasonryGalleryImage}) {
   )
 }
 
-export function MasonryGallery({accessibleLabel, caption, heading, images}: MasonryGalleryProps) {
+export function MasonryGallery({
+  accessibleLabel,
+  caption,
+  heading,
+  images,
+  pace = 'standard',
+}: MasonryGalleryProps & {pace?: 'compact' | 'standard'}) {
   if (images.length < 2) return null
 
   return (
-    <SectionSpacing aria-label={accessibleLabel} size="immersive">
+    <SectionSpacing
+      aria-label={accessibleLabel}
+      size={pace === 'compact' ? 'generous' : 'immersive'}
+    >
       <EditorialContainer>
         {heading ? (
           <EditorialText as="h2" className="mb-12 sm:mb-16" headingSize="small" variant="heading">
@@ -109,7 +118,13 @@ export function MasonryGallery({accessibleLabel, caption, heading, images}: Maso
         ) : (
           <h2 className="sr-only">Photography</h2>
         )}
-        <div className="grid grid-cols-1 gap-x-8 gap-y-20 md:grid-cols-6 md:gap-y-24 lg:grid-cols-12 lg:gap-x-10 lg:gap-y-36">
+        <div
+          className={`grid grid-cols-1 gap-x-8 md:grid-cols-6 lg:grid-cols-12 lg:gap-x-10 ${
+            pace === 'compact'
+              ? 'gap-y-16 md:gap-y-20 lg:gap-y-24'
+              : 'gap-y-20 md:gap-y-24 lg:gap-y-36'
+          }`}
+        >
           {images.map((item, index) => {
             const presentation = itemPresentations[index % itemPresentations.length]
 

@@ -1,4 +1,5 @@
 import type {EnquirySubmission} from '@/lib/enquiry/types'
+import {stayPolicy} from '@/lib/stay/policy'
 
 import type {EmailMessage} from './types'
 import {
@@ -38,7 +39,7 @@ function enquirySummary(enquiry: EnquirySubmission) {
     `Phone / WhatsApp: ${enquiry.phone ?? 'Not provided'}`,
     `Arrival: ${enquiry.arrivalDate}`,
     `Departure: ${enquiry.departureDate}`,
-    `Guests: ${enquiry.guests}`,
+    `Guests: ${enquiry.guests} (maximum ${stayPolicy.maximumGuests} for the whole-house stay)`,
     '',
     'Message:',
     enquiry.message,
@@ -75,7 +76,7 @@ export function createEnquiryEmails({
           emailSummaryCards([
             ['Arrival', arrivalDate],
             ['Departure', departureDate],
-            ['Guests', String(enquiry.guests)],
+            [`Guests (maximum ${stayPolicy.maximumGuests})`, String(enquiry.guests)],
             ['Guest', enquiry.name],
             ['Email', enquiry.email, guestEmailLink],
             phoneLink
@@ -113,7 +114,7 @@ export function createEnquiryEmails({
           emailSummaryCards([
             ['Arrival', arrivalDate],
             ['Departure', departureDate],
-            ['Guests', String(enquiry.guests)],
+            [`Guests (maximum ${stayPolicy.maximumGuests})`, String(enquiry.guests)],
           ]),
           emailMessageBlock('Your message', enquiry.message),
           emailParagraph(

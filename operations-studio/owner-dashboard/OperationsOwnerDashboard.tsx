@@ -2,6 +2,11 @@ import {Button, Card, Heading, Spinner, Text} from '@sanity/ui'
 import {useCallback, useEffect, useMemo, useState} from 'react'
 import {IntentButton, useClient} from 'sanity'
 
+import {
+  MAXIMUM_WHOLE_HOUSE_GUESTS,
+  wholeHouseOccupancyDescription,
+} from '../../schemaTypes/operations/occupancy'
+
 const apiVersion = '2026-08-14'
 
 const enquiryStatuses = [
@@ -523,6 +528,12 @@ export function OperationsOwnerDashboard() {
         setError('This enquiry needs complete dates and a guest count before conversion.')
         return
       }
+      if (guestCount < 1 || guestCount > MAXIMUM_WHOLE_HOUSE_GUESTS) {
+        setError(
+          `This enquiry must contain between 1 and ${MAXIMUM_WHOLE_HOUSE_GUESTS} guests before conversion.`,
+        )
+        return
+      }
 
       setBusyId(enquiry._id)
       setError(null)
@@ -636,6 +647,9 @@ export function OperationsOwnerDashboard() {
           <Heading size={4}>Owner Operations</Heading>
           <Text muted size={1}>
             Private guest enquiries and whole-house stays. Nothing here is exposed publicly.
+          </Text>
+          <Text muted size={1}>
+            {wholeHouseOccupancyDescription}
           </Text>
         </div>
         <Button disabled={loading} mode="ghost" onClick={() => void refresh()} text="Refresh" />

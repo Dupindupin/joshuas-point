@@ -67,14 +67,15 @@ export default async function TheHousePage() {
           eyebrow={hero.eyebrow}
           introduction={hero.introduction}
           motion
+          size="compact"
           title={hero.title}
         />
 
-        <SectionSpacing as="div" axis="bottom" size="generous">
+        <SectionSpacing as="div" axis="bottom" size="compact">
           <EditorialFigure media={hero.media} />
         </SectionSpacing>
 
-        <SectionSpacing aria-labelledby="house-opening-reflection-title" size="generous">
+        <SectionSpacing aria-labelledby="house-opening-reflection-title" size="compact">
           <EditorialContainer size="reading">
             <MotionReveal>
               <EditorialText variant="eyebrow">{openingReflection.eyebrow}</EditorialText>
@@ -90,13 +91,20 @@ export default async function TheHousePage() {
         </SectionSpacing>
 
         <EditorialMediaStory
-          body={<EditorialText variant="body">{sharedLiving.body}</EditorialText>}
+          body={
+            <>
+              <EditorialText variant="body">{sharedLiving.body}</EditorialText>
+              <div className="mt-8">
+                <EditorialLink href="/rooms" label="See the rooms" />
+              </div>
+            </>
+          }
           className="bg-surface-soft"
           eyebrow={sharedLiving.eyebrow}
           heading={sharedLiving.heading}
           headingId="house-shared-living-title"
           media={sharedLiving.media}
-          spacing="immersive"
+          spacing="compact"
         />
 
         <section aria-labelledby="house-view-title">
@@ -106,7 +114,7 @@ export default async function TheHousePage() {
             captionContainer="wide"
             media={view.media}
           />
-          <SectionSpacing as="div" size="generous">
+          <SectionSpacing as="div" size="compact">
             <EditorialContainer>
               <EditorialGrid gap="generous">
                 <EditorialText className="lg:col-span-2" variant="eyebrow">
@@ -132,7 +140,7 @@ export default async function TheHousePage() {
         <SectionSpacing
           aria-labelledby="house-indoor-outdoor-title"
           className="bg-surface-soft"
-          size="immersive"
+          size="compact"
         >
           <EditorialContainer>
             <EditorialGrid gap="generous">
@@ -159,7 +167,7 @@ export default async function TheHousePage() {
             </EditorialGrid>
 
             <EditorialPhotoEssay
-              className="mt-24 sm:mt-32"
+              className="mt-16 sm:mt-24"
               items={indoorOutdoor.items}
               layout="staggered"
             />
@@ -170,7 +178,7 @@ export default async function TheHousePage() {
           <SectionSpacing
             aria-labelledby="house-daily-rhythms-title"
             className="bg-inverse-surface"
-            size="immersive"
+            size="generous"
           >
             <EditorialContainer>
               <EditorialGrid gap="generous">
@@ -198,7 +206,7 @@ export default async function TheHousePage() {
               </EditorialGrid>
 
               <EditorialPhotoEssay
-                className="mt-24 sm:mt-32"
+                className="mt-16 sm:mt-24"
                 items={dailyRhythms.items}
                 layout="sequence"
               />
@@ -207,7 +215,7 @@ export default async function TheHousePage() {
         ) : null}
 
         {houseSystems.length > 0 ? (
-          <SectionSpacing aria-labelledby="house-systems-title" size="generous">
+          <SectionSpacing aria-labelledby="house-systems-title" size="compact">
             <EditorialContainer>
               <EditorialGrid gap="generous">
                 <EditorialText className="lg:col-span-2" variant="eyebrow">
@@ -225,7 +233,7 @@ export default async function TheHousePage() {
         ) : null}
 
         {materials ? (
-          <SectionSpacing aria-labelledby="house-materials-title" size="immersive">
+          <SectionSpacing aria-labelledby="house-materials-title" size="generous">
             <EditorialContainer>
               <EditorialGrid gap="generous">
                 <EditorialText className="lg:col-span-2" variant="eyebrow">
@@ -254,20 +262,17 @@ export default async function TheHousePage() {
 
               <HouseMaterialsList
                 aria-label="Verified material stories"
-                className="mt-24 sm:mt-32 lg:ml-[16.666667%]"
+                className="mt-16 sm:mt-24 lg:ml-[16.666667%]"
                 items={materials.items}
               />
             </EditorialContainer>
           </SectionSpacing>
         ) : null}
 
-        <SectionSpacing aria-label="Final reflection" className="bg-surface-soft" size="immersive">
+        <SectionSpacing aria-label="Final reflection" className="bg-surface-soft" size="compact">
           <EditorialContainer size="reading">
             <MotionReveal>
               <EditorialText variant="lead">{finalReflection.body}</EditorialText>
-              <div className="mt-10">
-                <EditorialLink href="/rooms" label="See the rooms" />
-              </div>
             </MotionReveal>
           </EditorialContainer>
         </SectionSpacing>

@@ -92,10 +92,13 @@ export default async function DiveSitesPage() {
                         diveSite={{
                           href: `/dive-sites/${encodeURIComponent(diveSite.slug)}`,
                           id: diveSite._id,
-                          image: getEditorialImage(diveSite.heroImage, {
-                            height: 1000,
-                            width: 1500,
-                          }),
+                          image:
+                            diveSite.heroImage?.asset?._ref === page.hero.image?.asset?._ref
+                              ? undefined
+                              : getEditorialImage(diveSite.heroImage, {
+                                  height: 1000,
+                                  width: 1500,
+                                }),
                           introduction: diveSite.excerpt,
                           title: diveSite.name,
                         }}

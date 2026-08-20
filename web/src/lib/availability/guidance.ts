@@ -2,6 +2,10 @@ import {
   stayOverlapsUnavailablePeriod,
   type PublicHouseAvailability,
 } from './types'
+import {
+  beyondAvailabilityHorizonMessage,
+  unavailableStayMessage,
+} from './messages'
 
 export type AvailabilityGuidance = {
   message: string
@@ -19,17 +23,15 @@ export function getAvailabilityGuidance(
 
   if (stayOverlapsUnavailablePeriod(arrivalDate, departureDate, availability.periods)) {
     return {
-      message:
-        'These dates overlap dates currently shown as unavailable. You may still enquire if your dates are flexible.',
+      message: unavailableStayMessage,
       tone: 'warning',
     }
   }
 
   if (departureDate > availability.availabilityConfirmedThrough) {
     return {
-      message:
-        'These dates extend beyond the current confirmation window. We will check them personally.',
-      tone: 'neutral',
+      message: beyondAvailabilityHorizonMessage,
+      tone: 'warning',
     }
   }
 

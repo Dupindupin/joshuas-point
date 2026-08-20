@@ -5,6 +5,7 @@ export const stayPolicy = {
   checkOut: '12:00 noon',
   deposit: '20% deposit required',
   minimumStay: '2 nights',
+  maximumGuests: 4,
 } as const
 
 export function stayPolicyLines() {
@@ -12,6 +13,7 @@ export function stayPolicyLines() {
     `Check-in: ${stayPolicy.checkIn}`,
     `Check-out: ${stayPolicy.checkOut}`,
     `Minimum stay: ${stayPolicy.minimumStay}`,
+    `Maximum occupancy: ${stayPolicy.maximumGuests} guests`,
     `Deposit: ${stayPolicy.deposit}`,
     `Cancellation: ${stayPolicy.cancellation}`,
   ] as const

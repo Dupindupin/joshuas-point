@@ -1,4 +1,5 @@
 import type {EnquirySubmission} from '@/lib/enquiry/types'
+import {stayPolicy} from '@/lib/stay/policy'
 
 export type EnquiryDeliveryStatus =
   'disabled' | 'failed' | 'notAttempted' | 'partiallySent' | 'pending' | 'sent'
@@ -84,6 +85,14 @@ export function buildStayEnquiryRecord({
   fingerprint: string
   receivedAt?: string
 }): StayEnquiryRecord {
+  if (
+    !Number.isInteger(enquiry.guests) ||
+    enquiry.guests < 1 ||
+    enquiry.guests > stayPolicy.maximumGuests
+  ) {
+    throw new Error(`A stay enquiry must contain between 1 and ${stayPolicy.maximumGuests} guests.`)
+  }
+
   const idempotencyKey = `jp-enquiry-${fingerprint}`
   const referenceDate = receivedAt.slice(0, 10).replaceAll('-', '')
   const referenceSuffix = fingerprint.slice(0, 8).toUpperCase()

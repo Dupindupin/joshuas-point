@@ -22,6 +22,7 @@ class MemoryRepository implements StayAvailabilitySyncRepository {
       stay ?? {
         _id: 'wholeHouseStay.test',
         dates: {arrival: '2026-09-10', departure: '2026-09-12'},
+        guestCount: 4,
         status: 'proposed',
       },
     )
@@ -129,6 +130,25 @@ test('successful confirmation adds a linked reserved period and confirms the sta
   )
 })
 
+test('confirmation refuses a stay above whole-house occupancy', async () => {
+  const repository = new MemoryRepository({
+    documents: [publishedAvailability()],
+    stay: {
+      _id: 'wholeHouseStay.test',
+      dates: {arrival: '2026-09-10', departure: '2026-09-12'},
+      guestCount: 5,
+      status: 'proposed',
+    },
+  })
+
+  await assert.rejects(
+    confirmStayAndReserveAvailability({repository, stayId: repository.stay._id}),
+    /between 1 and 4 guests/,
+  )
+  assert.equal(repository.stay.status, 'proposed')
+  assert.deepEqual(repository.documents[0]?.periods, [])
+})
+
 test('cancellation removes only the period linked to the stay', async () => {
   const manualPeriod = {
     _key: 'manual',
@@ -148,6 +168,7 @@ test('cancellation removes only the period linked to the stay', async () => {
     stay: {
       _id: 'wholeHouseStay.test',
       dates: {arrival: '2026-09-10', departure: '2026-09-12'},
+      guestCount: 4,
       status: 'confirmed',
     },
   })

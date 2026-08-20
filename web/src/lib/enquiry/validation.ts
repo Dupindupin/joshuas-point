@@ -1,4 +1,5 @@
 import type {EnquiryField, EnquirySubmission} from './types'
+import {stayPolicy} from '@/lib/stay/policy'
 
 type ValidationResult =
   | {data: EnquirySubmission; success: true}
@@ -9,7 +10,6 @@ const phonePattern = /^[+\d][\d\s().-]*$/
 const datePattern = /^\d{4}-\d{2}-\d{2}$/
 
 const MAX_FORM_CHARACTERS = 3_000
-const MAX_GUESTS = 50
 const MAX_STAY_DAYS = 365
 const MAX_ADVANCE_DAYS = 1_095
 
@@ -79,8 +79,8 @@ export function validateEnquiryForm(formData: FormData): ValidationResult {
   }
 
   const guests = Number(guestsValue)
-  if (!Number.isInteger(guests) || guests < 1 || guests > MAX_GUESTS) {
-    fieldErrors.guests = `Enter a whole number between 1 and ${MAX_GUESTS}.`
+  if (!Number.isInteger(guests) || guests < 1 || guests > stayPolicy.maximumGuests) {
+    fieldErrors.guests = `Enter a whole number between 1 and ${stayPolicy.maximumGuests}.`
   }
 
   if (message.length < 10 || message.length > 2_000) {

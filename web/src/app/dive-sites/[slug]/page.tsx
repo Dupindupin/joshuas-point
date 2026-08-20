@@ -10,6 +10,8 @@ import {
   EditorialPhotoStories,
   EditorialPortableText,
   EditorialText,
+  type EditorialPhotoStoryData,
+  type MasonryGalleryData,
   SectionSpacing,
 } from '@/components/editorial'
 import {DiveSiteMap} from '@/components/maps'
@@ -70,6 +72,41 @@ function getPracticalItems(diveSite: DiveSiteDetailData) {
   ].filter((item): item is {description?: string; label: string; value: string} => Boolean(item))
 }
 
+function imageIdentity(src: EditorialPhotoStoryData['frames'][number]['image']['src']) {
+  const value = typeof src === 'string' ? src : 'src' in src ? src.src : ''
+  return value.split('?')[0]
+}
+
+function refineDauinPhotography(
+  stories: EditorialPhotoStoryData[],
+  gallery: MasonryGalleryData | null,
+) {
+  const refinedStories = stories.map((story) => {
+    if (story.frames.length <= 10) return story
+
+    const closingFrame = story.frames.findLast((frame) => frame.phase === 'closing')
+    const firstFrames = story.frames.filter((frame) => frame !== closingFrame).slice(0, 9)
+    return {
+      ...story,
+      frames: closingFrame ? [...firstFrames, closingFrame] : firstFrames.slice(0, 10),
+    }
+  })
+  const storyImages = new Set(
+    refinedStories.flatMap((story) => story.frames.map((frame) => imageIdentity(frame.image.src))),
+  )
+  const galleryImages = gallery?.images
+    .filter((item) => !storyImages.has(imageIdentity(item.image.src)))
+    .slice(0, 8)
+
+  return {
+    gallery:
+      gallery && galleryImages && galleryImages.length >= 2
+        ? {...gallery, images: galleryImages}
+        : null,
+    stories: refinedStories,
+  }
+}
+
 export async function generateStaticParams() {
   const slugs = await getDiveSiteSlugs()
   return slugs.map((slug) => ({slug}))
@@ -99,8 +136,12 @@ export default async function DiveSitePage({params}: DiveSitePageProps) {
   if (!diveSite) notFound()
 
   const relationships = await getDiveSiteRelationships(diveSite._id)
-  const photoStories = mapEditorialPhotoStories(diveSite.editorialPhotography)
-  const gallery = mapSanityGallery(diveSite.gallery)
+  const isDauin = diveSite.slug === 'dauin'
+  const mappedPhotoStories = mapEditorialPhotoStories(diveSite.editorialPhotography)
+  const mappedGallery = mapSanityGallery(diveSite.gallery)
+  const {gallery, stories: photoStories} = isDauin
+    ? refineDauinPhotography(mappedPhotoStories, mappedGallery)
+    : {gallery: mappedGallery, stories: mappedPhotoStories}
   const practicalItems = getPracticalItems(diveSite)
   const mapCoordinates = diveSite.mapLocation?.coordinates
     ? {
@@ -189,9 +230,15 @@ export default async function DiveSitePage({params}: DiveSitePageProps) {
           </SectionSpacing>
         ) : null}
 
-        <EditorialPhotoStories stories={photoStories} />
+        <EditorialPhotoStories pace={isDauin ? 'compact' : 'standard'} stories={photoStories} />
 
-        {gallery ? <MasonryGallery {...gallery} heading="More from the underwater world" /> : null}
+        {gallery ? (
+          <MasonryGallery
+            {...gallery}
+            heading="More from the underwater world"
+            pace={isDauin ? 'compact' : 'standard'}
+          />
+        ) : null}
 
         {practicalItems.length > 0 || diveSite.safetyNotes ? (
           <SectionSpacing aria-labelledby="dive-practical-title" size="generous">
@@ -246,7 +293,7 @@ export default async function DiveSitePage({params}: DiveSitePageProps) {
         />
 
         <NearbyDiveSites items={relationships.all} limit={3} />
-        <RelatedPlaces items={relationships.all} limit={3} />
+        {!isDauin ? <RelatedPlaces items={relationships.all} limit={3} /> : null}
       </main>
     </>
   )

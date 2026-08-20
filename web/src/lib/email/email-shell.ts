@@ -18,8 +18,16 @@ export function escapeEmailHtml(value: string) {
     .replaceAll("'", '&#039;')
 }
 
-function link(url: string, label: string, className = '') {
-  return `<a class="email-link ${className}" href="${escapeEmailHtml(url)}" style="color:#1f3d3a;text-decoration:underline;text-decoration-color:#c8a26a;text-underline-offset:3px;overflow-wrap:anywhere;word-break:break-word">${escapeEmailHtml(label)}</a>`
+function link(
+  url: string,
+  label: string,
+  {className = '', footer = false}: {className?: string; footer?: boolean} = {},
+) {
+  const color = footer ? '#f3ede6' : '#1f3d3a'
+  const priority = footer ? '!important' : ''
+  const weight = footer ? 'font-weight:600;' : ''
+
+  return `<a class="email-link ${className}" href="${escapeEmailHtml(url)}" style="color:${color}${priority};${weight}text-decoration:underline;text-decoration-color:#c8a26a;text-decoration-thickness:1px;text-underline-offset:3px;overflow-wrap:anywhere;word-break:break-word">${escapeEmailHtml(label)}</a>`
 }
 
 export function emailButton(url: string, label: string) {
@@ -109,7 +117,9 @@ export function renderEmailShell({
           ['Visit Joshua’s Point', '/'],
           ['Contact', '/contact'],
         ] as const)
-  const social = brand.socialLinks.map(({label, url}) => link(url, label)).join(' &nbsp;·&nbsp; ')
+  const social = brand.socialLinks
+    .map(({label, url}) => link(url, label, {className: 'footer-link', footer: true}))
+    .join(' &nbsp;·&nbsp; ')
 
   return `<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="x-apple-disable-message-reformatting"><meta name="color-scheme" content="light dark"><meta name="supported-color-schemes" content="light dark"><title>${escapeEmailHtml(brand.siteName)}</title><style>
@@ -126,8 +136,8 @@ html,body,table,td,p,a{-webkit-text-size-adjust:100%;-ms-text-size-adjust:100%}t
 <tr><td class="email-content" style="padding:32px 34px 28px;color:#282828">${content}</td></tr>
 <tr><td class="email-footer" bgcolor="#14211f" style="padding:22px 28px;background:#14211f;color:#d8cec0;font-family:Arial,Helvetica,sans-serif;font-size:12px;line-height:1.6;text-align:center">
 <p style="margin:0 0 9px;color:#f3ede6;font-weight:700">${purpose === 'subscription' ? 'Joshua’s Point updates' : 'Joshua’s Point'}</p>
-<p style="margin:0 0 9px">${footerNavigation.map(([label, path]) => link(`${baseUrl}${path}`, label, 'footer-link')).join(' &nbsp;·&nbsp; ')}</p>
+<p style="margin:0 0 9px">${footerNavigation.map(([label, path]) => link(`${baseUrl}${path}`, label, {className: 'footer-link', footer: true})).join(' &nbsp;·&nbsp; ')}</p>
 ${social ? `<p style="margin:0 0 9px">${social}</p>` : ''}
-<p style="margin:0">${escapeEmailHtml(brand.location)}<br>${link(`mailto:${brand.contactEmail}`, brand.contactEmail)}</p>
+<p style="margin:0">${escapeEmailHtml(brand.location)}<br>${link(`mailto:${brand.contactEmail}`, brand.contactEmail, {className: 'footer-link', footer: true})}</p>
 </td></tr></table></td></tr></table></body></html>`
 }

@@ -2,6 +2,10 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 
 import type {PublicHouseAvailability} from '@/lib/availability/types'
+import {
+  beyondAvailabilityHorizonMessage,
+  unavailableStayMessage,
+} from '@/lib/availability/messages'
 
 import {validateEnquiryAvailability} from './availability-validation'
 
@@ -27,7 +31,7 @@ test('rejects a stay that overlaps a newly unavailable period', () => {
   )
 
   assert.equal(result.success, false)
-  if (!result.success) assert.match(result.fieldErrors.departureDate ?? '', /no longer available/)
+  if (!result.success) assert.equal(result.fieldErrors.departureDate, unavailableStayMessage)
 })
 
 test('rejects a stay beyond the current confirmation horizon', () => {
@@ -38,6 +42,6 @@ test('rejects a stay beyond the current confirmation horizon', () => {
 
   assert.equal(result.success, false)
   if (!result.success) {
-    assert.match(result.fieldErrors.departureDate ?? '', /confirmed availability window/)
+    assert.equal(result.fieldErrors.departureDate, beyondAvailabilityHorizonMessage)
   }
 })

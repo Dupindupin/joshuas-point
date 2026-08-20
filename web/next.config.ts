@@ -1,4 +1,5 @@
 import path from 'node:path'
+import {withSentryConfig} from '@sentry/nextjs'
 import type {NextConfig} from 'next'
 
 import {sanityConfig} from './src/sanity/config'
@@ -167,4 +168,29 @@ const nextConfig: NextConfig = {
   },
 }
 
-export default nextConfig
+const sentrySourceMapsConfigured = Boolean(
+  process.env.NEXT_PUBLIC_DEPLOYMENT_ENVIRONMENT === 'production' &&
+  process.env.NEXT_PUBLIC_SENTRY_ENABLED?.trim().toLowerCase() === 'true' &&
+  process.env.SENTRY_AUTH_TOKEN &&
+  process.env.SENTRY_ORG &&
+  process.env.SENTRY_PROJECT,
+)
+
+export default withSentryConfig(nextConfig, {
+  authToken: process.env.SENTRY_AUTH_TOKEN,
+  org: process.env.SENTRY_ORG,
+  project: process.env.SENTRY_PROJECT,
+  silent: true,
+  sourcemaps: {
+    deleteSourcemapsAfterUpload: true,
+    disable: !sentrySourceMapsConfigured,
+  },
+  webpack: {
+    treeshake: {
+      excludeReplayIframe: true,
+      excludeReplayShadowDOM: true,
+      removeDebugLogging: true,
+    },
+  },
+  widenClientFileUpload: sentrySourceMapsConfigured,
+})

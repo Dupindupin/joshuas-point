@@ -5,6 +5,7 @@ import {useMemo, useState} from 'react'
 
 import {enquiryHref, selectStayDate, type StayDateSelection} from '@/lib/availability/selection'
 import type {PublicAvailabilityPeriod, PublicHouseAvailability} from '@/lib/availability/types'
+import {stayPolicy} from '@/lib/stay/policy'
 
 const weekdays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] as const
 
@@ -32,6 +33,18 @@ function addDays(date: Date, amount: number) {
   const result = new Date(date)
   result.setUTCDate(result.getUTCDate() + amount)
   return result
+}
+
+function monthValue(date: Date) {
+  return dateValue(date).slice(0, 7)
+}
+
+function monthsBetween(firstMonth: Date, finalMonth: Date) {
+  const months: Date[] = []
+  for (let month = firstMonth; month <= finalMonth; month = addMonths(month, 1)) {
+    months.push(month)
+  }
+  return months
 }
 
 function propertyTodayValue() {
@@ -91,6 +104,7 @@ export function HouseAvailabilityCalendar({availability}: {availability: PublicH
     departureDate: '',
     error: null,
   })
+  const selectableMonths = monthsBetween(firstMonth, confirmationMonth)
   const weeks = monthWeeks(visibleMonth)
   const previousDisabled = visibleMonth <= firstMonth
   const nextDisabled = addMonths(visibleMonth, 1) > confirmationMonth
@@ -125,7 +139,8 @@ export function HouseAvailabilityCalendar({availability}: {availability: PublicH
             <strong className="font-semibold text-ink">
               {formatDate(availability.availabilityConfirmedThrough)}
             </strong>
-            . A stay is confirmed only after we reply.
+            . It covers one private whole-house stay for a maximum of {stayPolicy.maximumGuests}{' '}
+            guests. A stay is confirmed only after we reply.
           </p>
         </div>
         <div
@@ -140,7 +155,10 @@ export function HouseAvailabilityCalendar({availability}: {availability: PublicH
             Available
           </span>
           <span className="inline-flex items-center gap-2">
-            <span aria-hidden="true" className="h-4 w-4 rounded-full bg-ink" />
+            <span
+              aria-hidden="true"
+              className="relative h-4 w-4 rounded-full border border-ink/30 bg-ink/8 after:absolute after:top-1/2 after:left-0.5 after:h-px after:w-3 after:-rotate-45 after:bg-ink/55"
+            />
             Unavailable
           </span>
         </div>
@@ -180,6 +198,35 @@ export function HouseAvailabilityCalendar({availability}: {availability: PublicH
               Next
             </button>
           </div>
+
+          {selectableMonths.length > 1 ? (
+            <div className="mt-5 flex justify-end">
+              <label className="flex min-h-11 items-center gap-3 font-body text-sm text-ink-muted">
+                <span>Jump to month</span>
+                <select
+                  className="min-h-11 rounded-sm border border-ink/25 bg-canvas px-3 py-2 font-body text-sm text-ink focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-focus"
+                  onChange={(event) => {
+                    const [year, month] = event.currentTarget.value.split('-').map(Number)
+                    setVisibleMonth(new Date(Date.UTC(year, month - 1, 1)))
+                  }}
+                  value={monthValue(visibleMonth)}
+                >
+                  {selectableMonths.map((month) => {
+                    const value = monthValue(month)
+                    return (
+                      <option key={value} value={value}>
+                        {month.toLocaleDateString('en-US', {
+                          month: 'long',
+                          timeZone: 'UTC',
+                          year: 'numeric',
+                        })}
+                      </option>
+                    )
+                  })}
+                </select>
+              </label>
+            </div>
+          ) : null}
 
           <p
             aria-live="polite"
@@ -233,13 +280,13 @@ export function HouseAvailabilityCalendar({availability}: {availability: PublicH
                       value > selection.arrivalDate &&
                       value < selection.departureDate
 
-                    const cellClasses = `flex aspect-square min-h-11 w-full items-center justify-center rounded-sm font-body text-sm sm:min-h-12 sm:text-base ${
+                    const cellClasses = `relative flex aspect-square min-h-11 w-full items-center justify-center rounded-sm font-body text-sm sm:min-h-12 sm:text-base ${
                       unavailable
-                        ? 'bg-ink text-canvas'
+                        ? 'border border-ink/15 bg-ink/7 text-ink-muted line-through decoration-ink/35'
                         : selected
-                          ? 'border border-accent bg-accent text-inverse'
+                          ? 'border border-accent bg-accent text-inverse ring-2 ring-accent ring-offset-2 ring-offset-canvas'
                           : withinSelectedStay
-                            ? 'border border-accent/35 bg-accent/12 text-ink'
+                            ? 'border-2 border-accent/55 bg-accent/16 font-semibold text-ink'
                             : withinWindow
                               ? 'border border-ink/15 bg-surface-soft text-ink'
                               : 'text-ink-subtle/45'
@@ -250,7 +297,13 @@ export function HouseAvailabilityCalendar({availability}: {availability: PublicH
                         {withinWindow && !unavailable ? (
                           <button
                             aria-describedby="availability-selection-help"
-                            aria-label={`${formatDate(value)}, available${selected ? ', selected' : ''}`}
+                            aria-label={`${formatDate(value)}, available${
+                              selected
+                                ? ', selected'
+                                : withinSelectedStay
+                                  ? ', within selected stay'
+                                  : ''
+                            }`}
                             aria-pressed={selected}
                             className={`${cellClasses} cursor-pointer ${selected ? 'hover:brightness-95' : 'hover:border-accent hover:text-accent'} focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus`}
                             onClick={() => handleDateSelection(value)}

@@ -59,7 +59,7 @@ function getDesktopNavigation(
     },
     {
       id: 'explore',
-      links: selectLinks(['/explorer', '/destinations', '/scenic-routes', '/guide', '/dive-sites']),
+      links: selectLinks(['/explorer', '/scenic-routes', '/guide', '/dive-sites']),
       title: 'Explore',
     },
     {

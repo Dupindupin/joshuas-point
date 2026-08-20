@@ -2,6 +2,11 @@ import {Button, Card, Heading, Spinner, Text} from '@sanity/ui'
 import {useCallback, useEffect, useMemo, useState} from 'react'
 import {IntentButton, useClient} from 'sanity'
 
+import {
+  MAXIMUM_WHOLE_HOUSE_GUESTS,
+  wholeHouseOccupancyDescription,
+} from '../../schemaTypes/operations/occupancy'
+
 import {ownerDashboardQuery} from './query'
 import {resolvePremiumGuideStatus} from './premiumGuideStatus'
 import {
@@ -787,6 +792,12 @@ function OwnerDashboardContent({
       status: contentLaunchStatus,
     },
     {
+      category: 'Owner decision resolved',
+      detail: wholeHouseOccupancyDescription,
+      label: 'Whole-house occupancy',
+      status: 'complete',
+    },
+    {
       category: photographyNeededLabels.length ? 'Photography needed' : 'Photography readiness',
       detail: photographyNeededLabels.length
         ? `${photographyNeededLabels.length} text-led pages still need owner-approved, place-specific photography. Their content is not treated as broken.`
@@ -814,12 +825,9 @@ function OwnerDashboardContent({
       ? ['Newsletter signup is not launch-ready.']
       : []),
   ]
-  const ownerDecisions = [
-    'Confirm the authoritative maximum whole-house occupancy.',
-    ...ownerDecisionInformationPages
-      .filter(({id}) => !publishedIds.has(id))
-      .map(({label}) => `${label} — owner review and publication decision.`),
-  ]
+  const ownerDecisions = ownerDecisionInformationPages
+    .filter(({id}) => !publishedIds.has(id))
+    .map(({label}) => `${label} — owner review and publication decision.`)
   const contentIssues = contentGroups
     .filter(({status}) => status === 'needsAttention' || status === 'blocked')
     .map(({label}) => `${label} has a publication, review or SEO issue.`)
@@ -1270,14 +1278,14 @@ function OwnerDashboardContent({
             />
           </SummaryCard>
           <SummaryCard
-            status="unknown"
-            statusLabel="Owner confirmation required"
+            status="complete"
+            statusLabel="Owner confirmed"
             title="Whole-house occupancy"
           >
-            <Value label="Maximum occupancy" value="Owner confirmation required" />
+            <Value label="Maximum occupancy" value={`${MAXIMUM_WHOLE_HOUSE_GUESTS} guests`} />
             <Text muted size={1}>
-              The Ocean Suite and Garden Suite capacities are room facts. They are not added
-              together or treated as the authoritative whole-house maximum.
+              The Ocean Suite and Garden Suite are always offered together as one private
+              whole-house stay. Their individual capacities remain room facts.
             </Text>
           </SummaryCard>
           <SummaryCard status="complete" statusLabel="Private Operations" title="Enquiries & Stays">

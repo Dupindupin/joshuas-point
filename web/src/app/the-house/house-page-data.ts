@@ -46,7 +46,7 @@ export const housePageData: HousePageData = {
   hero: {
     eyebrow: 'The House',
     introduction:
-      'A home shaped by shared space, changing weather, and a close relationship with the landscape.',
+      'A home shaped by shared spaces, changing weather, and the landscape around it.',
     media: {
       image: houseDevelopmentPhotography.hero,
       preload: true,
@@ -57,7 +57,7 @@ export const housePageData: HousePageData = {
     title: 'The House',
   },
   openingReflection: {
-    body: 'The deck, view, and infinity pool are what people notice first. Beyond that first reaction, the house settles into the landscape and the quiet around it.',
+    body: 'The deck, view, and infinity pool are what people notice first. Then the house settles into the quiet around it.',
     eyebrow: 'Opening reflection',
     heading: 'A place that feels like home.',
   },
@@ -84,7 +84,7 @@ export const housePageData: HousePageData = {
     },
   },
   indoorOutdoor: {
-    body: 'The three-meter covered deck creates a semi-outdoor living space beside the connected rooms. Sliding doors, the roof, deck, and pool keep daily life in relationship with the landscape and view.',
+    body: 'The three-meter covered deck creates a semi-outdoor living space beside the connected rooms. Sliding doors keep daily life open to the pool, weather, and view.',
     eyebrow: 'Between inside and outside',
     heading: 'The threshold is part of daily life.',
     items: [

@@ -13,7 +13,7 @@ const availability: PublicHouseAvailability = {
 test('guides a guest when dates overlap an unavailable period', () => {
   assert.deepEqual(getAvailabilityGuidance(availability, '2026-09-09', '2026-09-12'), {
     message:
-      'These dates overlap dates currently shown as unavailable. You may still enquire if your dates are flexible.',
+      'These dates are unavailable and cannot be submitted. Choose a different arrival and departure, or contact us directly if your dates are flexible.',
     tone: 'warning',
   })
 })
@@ -29,8 +29,8 @@ test('guides a guest when dates are shown as available', () => {
 test('guides a guest when dates extend beyond the confirmation horizon', () => {
   assert.deepEqual(getAvailabilityGuidance(availability, '2026-12-02', '2026-12-05'), {
     message:
-      'These dates extend beyond the current confirmation window. We will check them personally.',
-    tone: 'neutral',
+      'These dates are outside the currently confirmed availability window and cannot be submitted. Choose dates shown in the calendar or contact us directly.',
+    tone: 'warning',
   })
 })
 

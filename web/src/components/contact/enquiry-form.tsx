@@ -4,6 +4,8 @@ import Link from 'next/link'
 import {useActionState, useEffect, useRef, useState} from 'react'
 import type {FormEvent, ReactNode} from 'react'
 
+import {analyticsEvents, trackAnalyticsEvent} from '@/lib/analytics/events'
+import {stayPolicy} from '@/lib/stay/policy'
 import {
   initialEnquiryFormState,
   type EnquiryField,
@@ -56,17 +58,28 @@ export function EnquiryForm({
   const [arrivalDate, setArrivalDate] = useState(initialArrivalDate)
   const [departureDate, setDepartureDate] = useState(initialDepartureDate)
   const formRef = useRef<HTMLFormElement>(null)
+  const eligibleForTracking = useRef(false)
+  const trackedSuccess = useRef(false)
+
   useEffect(() => {
-    if (state.status === 'success') formRef.current?.reset()
-  }, [state.status])
+    if (state.status !== 'success') return
+    formRef.current?.reset()
+    if (eligibleForTracking.current && !trackedSuccess.current) {
+      trackedSuccess.current = true
+      trackAnalyticsEvent(analyticsEvents.enquirySubmitted)
+    }
+    eligibleForTracking.current = false
+  }, [state])
 
   function fieldError(field: EnquiryField) {
     return state.fieldErrors?.[field]
   }
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    trackedSuccess.current = false
     const form = event.currentTarget
     const formData = new FormData(form)
+    eligibleForTracking.current = !String(formData.get('website') ?? '').trim()
     const arrivalDate = String(formData.get('arrivalDate') ?? '')
     const departureDate = String(formData.get('departureDate') ?? '')
     const departureInput = form.elements.namedItem('departureDate') as HTMLInputElement | null
@@ -75,6 +88,7 @@ export function EnquiryForm({
       departureInput?.setCustomValidity('Departure must be after arrival.')
       departureInput?.reportValidity()
       departureInput?.focus()
+      eligibleForTracking.current = false
       event.preventDefault()
       return
     }
@@ -249,18 +263,28 @@ export function EnquiryForm({
               <RequiredLabel>Number of guests</RequiredLabel>
             </label>
             <input
-              aria-describedby={fieldError('guests') ? 'enquiry-guests-error' : undefined}
+              aria-describedby={
+                fieldError('guests')
+                  ? 'enquiry-guests-guidance enquiry-guests-error'
+                  : 'enquiry-guests-guidance'
+              }
               aria-invalid={fieldError('guests') ? true : undefined}
               className={inputClasses}
               id="enquiry-guests"
               inputMode="numeric"
-              max={50}
+              max={stayPolicy.maximumGuests}
               min={1}
               name="guests"
               required
               step={1}
               type="number"
             />
+            <p
+              className="mt-2 font-body text-sm leading-6 text-ink-muted"
+              id="enquiry-guests-guidance"
+            >
+              Maximum {stayPolicy.maximumGuests} guests for the private whole-house stay.
+            </p>
             <FieldError id="enquiry-guests-error">{fieldError('guests')}</FieldError>
           </div>
 

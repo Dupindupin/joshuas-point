@@ -1,6 +1,7 @@
 import type {Metadata} from 'next'
 import {Geist_Mono} from 'next/font/google'
 
+import {PlausibleAnalytics} from '@/components/analytics'
 import {SiteFooter} from '@/components/site/site-footer'
 import {SiteIdentityStructuredData} from '@/components/site/site-identity-structured-data'
 import {createPageMetadata} from '@/lib/seo/metadata'
@@ -59,6 +60,7 @@ export default function RootLayout({children}: LayoutProps<'/'>) {
         <SiteIdentityStructuredData />
         {children}
         <SiteFooter />
+        <PlausibleAnalytics />
       </body>
     </html>
   )

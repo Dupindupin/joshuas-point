@@ -15,6 +15,7 @@ import {RoomPreview} from '@/components/rooms/room-preview'
 import {SiteHeader} from '@/components/site/site-header'
 import {approvedAmenityKeys, selectApprovedAmenities} from '@/lib/amenities'
 import {createPageMetadata} from '@/lib/seo/metadata'
+import {stayPolicy} from '@/lib/stay/policy'
 import {mapSanityRoomsPage} from '@/sanity/mappers/rooms-page'
 import {getPublicAmenities} from '@/sanity/queries/amenities'
 import {getRoomsPage} from '@/sanity/queries/rooms-page'
@@ -63,7 +64,7 @@ export default async function RoomsPage() {
       <main className="bg-canvas">
         <EditorialPageHero
           eyebrow={hero.eyebrow}
-          introduction="Joshua’s Point is always offered as one private whole-house stay. The Ocean Suite and Garden Suite are yours together."
+          introduction={`Joshua’s Point is always offered as one private whole-house stay. The Ocean Suite and Garden Suite are yours together, accommodating a maximum of ${stayPolicy.maximumGuests} guests.`}
           title={hero.title}
         />
 

@@ -67,6 +67,18 @@ test('builds a private record containing only validated enquiry and workflow dat
   assert.equal('userAgent' in result, false)
 })
 
+test('refuses to create an Operations record above whole-house occupancy', () => {
+  assert.throws(
+    () =>
+      buildStayEnquiryRecord({
+        enquiry: {...enquiry, guests: 5},
+        fingerprint: 'b'.repeat(64),
+        receivedAt: '2026-08-14T08:30:00.000Z',
+      }),
+    /between 1 and 4 guests/,
+  )
+})
+
 test('records one enquiry and marks a successful delivery as sent', async () => {
   const repository = new MemoryRepository()
   let deliveries = 0

@@ -137,15 +137,39 @@ export function EditorialPhotoStory({story}: {story: EditorialPhotoStoryData}) {
   )
 }
 
-export function EditorialPhotoStories({stories}: {stories: EditorialPhotoStoryData[]}) {
+export function EditorialPhotoStories({
+  pace = 'standard',
+  stories,
+}: {
+  pace?: 'compact' | 'standard'
+  stories: EditorialPhotoStoryData[]
+}) {
   const visibleStories = stories.filter((story) => story.frames.length >= 2)
   if (visibleStories.length === 0) return null
 
   return (
-    <SectionSpacing aria-label="Editorial photo stories" size="immersive">
-      <div className="space-y-32 sm:space-y-44 lg:space-y-56">
+    <SectionSpacing
+      aria-label="Editorial photo stories"
+      size={pace === 'compact' ? 'generous' : 'immersive'}
+    >
+      <div
+        className={
+          pace === 'compact'
+            ? 'space-y-24 sm:space-y-32 lg:space-y-40'
+            : 'space-y-32 sm:space-y-44 lg:space-y-56'
+        }
+      >
         {visibleStories.map((story) => (
-          <EditorialPhotoStory key={story.id} story={story} />
+          <div
+            className={
+              pace === 'compact'
+                ? '[&_section>div:last-child]:!mt-14 [&_section>div:last-child]:!space-y-20 sm:[&_section>div:last-child]:!mt-20 sm:[&_section>div:last-child]:!space-y-24 lg:[&_section>div:last-child]:!space-y-32'
+                : undefined
+            }
+            key={story.id}
+          >
+            <EditorialPhotoStory story={story} />
+          </div>
         ))}
       </div>
     </SectionSpacing>

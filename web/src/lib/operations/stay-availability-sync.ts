@@ -1,11 +1,14 @@
 import {createHash} from 'node:crypto'
 
+import {stayPolicy} from '@/lib/stay/policy'
+
 export type StaySyncAction = 'cancel' | 'confirm'
 export type AvailabilitySyncStatus = 'conflict' | 'failed' | 'notStarted' | 'pending' | 'synced'
 
 export type OperationsStay = {
   _id: string
   dates?: {arrival?: string; departure?: string}
+  guestCount?: number
   status?: 'cancelled' | 'completed' | 'confirmed' | 'proposed'
 }
 
@@ -124,6 +127,19 @@ function assertStayDates(stay: OperationsStay) {
   return {arrival, departure}
 }
 
+function assertStayOccupancy(stay: OperationsStay) {
+  if (
+    !Number.isInteger(stay.guestCount) ||
+    !stay.guestCount ||
+    stay.guestCount < 1 ||
+    stay.guestCount > stayPolicy.maximumGuests
+  ) {
+    throw new Error(
+      `The stay must contain between 1 and ${stayPolicy.maximumGuests} guests before synchronization.`,
+    )
+  }
+}
+
 async function markFailedSafely(
   repository: StayAvailabilitySyncRepository,
   stayId: string,
@@ -147,6 +163,7 @@ export async function confirmStayAndReserveAvailability({
     throw new Error('A cancelled or completed stay cannot be confirmed.')
   }
 
+  assertStayOccupancy(stay)
   const {arrival, departure} = assertStayDates(stay)
   await repository.setSyncStatus(stayId, 'pending', attemptedAt)
 

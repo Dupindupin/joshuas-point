@@ -58,7 +58,7 @@ export class SanityStayAvailabilitySyncRepository implements StayAvailabilitySyn
 
   async getStay(stayId: string) {
     return this.operationsClient.fetch<OperationsStay | null>(
-      `*[_type == "wholeHouseStay" && _id == $stayId][0]{_id, status, dates{arrival, departure}}`,
+      `*[_type == "wholeHouseStay" && _id == $stayId][0]{_id, status, dates{arrival, departure}, guestCount}`,
       {stayId},
       {cache: 'no-store'},
     )

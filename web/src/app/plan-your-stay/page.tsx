@@ -2,6 +2,7 @@ import type {PortableTextBlock} from '@portabletext/react'
 import type {Metadata} from 'next'
 import Link from 'next/link'
 
+import {AnalyticsPageEvent} from '@/components/analytics'
 import {EditorialAmenityList} from '@/components/amenities'
 import {HouseAvailabilityCalendar} from '@/components/availability'
 import {
@@ -15,6 +16,7 @@ import {
 import {SiteHeader} from '@/components/site/site-header'
 import {StayInformationList, type StayInformationItem} from '@/components/stay'
 import {approvedAmenityKeys, selectApprovedAmenities} from '@/lib/amenities'
+import {analyticsEvents} from '@/lib/analytics/event-names'
 import {createPageMetadata} from '@/lib/seo/metadata'
 import {stayPolicy} from '@/lib/stay/policy'
 import {getPublicAmenities} from '@/sanity/queries/amenities'
@@ -35,6 +37,7 @@ export async function generateMetadata(): Promise<Metadata> {
 
 const stayDetails = [
   {label: 'Stay', value: 'One private whole-house stay'},
+  {label: 'Maximum occupancy', value: `${stayPolicy.maximumGuests} guests`},
   {label: 'Check-in', value: stayPolicy.checkIn},
   {label: 'Check-out', value: stayPolicy.checkOut},
   {label: 'Minimum stay', value: stayPolicy.minimumStay},
@@ -149,6 +152,7 @@ export default async function PlanYourStayPage() {
 
   return (
     <>
+      <AnalyticsPageEvent event={analyticsEvents.planYourStayViewed} />
       <SiteHeader appearance="solid" />
       <main className="bg-canvas">
         <EditorialPageHero

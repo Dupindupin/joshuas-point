@@ -1,4 +1,8 @@
 import {stayOverlapsUnavailablePeriod, type PublicHouseAvailability} from '@/lib/availability/types'
+import {
+  beyondAvailabilityHorizonMessage,
+  unavailableStayMessage,
+} from '@/lib/availability/messages'
 
 import type {EnquiryFormState, EnquirySubmission} from './types'
 
@@ -15,8 +19,7 @@ export function validateEnquiryAvailability(
   ) {
     return {
       fieldErrors: {
-        departureDate:
-          'These dates are outside the currently confirmed availability window. Choose dates shown in the calendar or contact us directly.',
+        departureDate: beyondAvailabilityHorizonMessage,
       },
       success: false,
     }
@@ -27,8 +30,7 @@ export function validateEnquiryAvailability(
   ) {
     return {
       fieldErrors: {
-        departureDate:
-          'These dates are no longer available. Please choose a different arrival and departure.',
+        departureDate: unavailableStayMessage,
       },
       success: false,
     }
