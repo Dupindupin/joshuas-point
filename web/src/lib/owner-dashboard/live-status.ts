@@ -1,5 +1,5 @@
 import {isComingSoonModeEnabled} from '@/lib/coming-soon'
-import {getDeploymentEnvironment} from '@/lib/deployment'
+import {getDeploymentEnvironment, isSearchIndexingAllowed} from '@/lib/deployment'
 import {getEnquiryEmailMode} from '@/lib/email/email-service'
 import {getSubscriptionMode} from '@/lib/subscriptions/config'
 
@@ -7,17 +7,25 @@ export type OwnerDashboardLiveStatus = {
   analyticsEnabled: boolean
   checkedAt: string
   comingSoon: boolean
+  enquiryReplyToConfigured: boolean
   enquiryMode: 'disabled' | 'live' | 'test'
   newsletterReadiness: 'needsAttention' | 'ready'
+  productionDomain: string | null
   resendConfigured: boolean
   senderConfigured: boolean
+  segmentConfigured: boolean
   sendingDomainConfigured: boolean
   sentryEnabled: boolean
   siteDomainConfigured: boolean
+  sitemapEnabled: boolean
+  sslReady: boolean
+  subscriptionReplyToConfigured: boolean
   subscriptionMode: 'disabled' | 'live'
+  topicConfigured: boolean
 }
 
 const emailAddressPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+const productionSiteOrigin = 'https://joshuaspoint.com'
 
 function configured(name: string) {
   const value = process.env[name]?.trim()
@@ -72,12 +80,7 @@ function hasConfiguredSiteDomain() {
 
   try {
     const url = new URL(value)
-    return (
-      url.protocol === 'https:' &&
-      Boolean(url.hostname) &&
-      url.hostname !== 'localhost' &&
-      url.hostname !== '127.0.0.1'
-    )
+    return url.origin === productionSiteOrigin && url.pathname === '/' && !url.search && !url.hash
   } catch {
     return false
   }
@@ -87,6 +90,7 @@ export function getOwnerDashboardLiveStatus(): OwnerDashboardLiveStatus {
   const enquirySender = senderAddress('ENQUIRY_FROM_EMAIL')
   const subscriptionSender = senderAddress('SUBSCRIPTION_FROM_EMAIL')
   const enquirySendingDomain = enquirySender?.split('@')[1]
+  const productionDomain = process.env.NEXT_PUBLIC_SITE_URL?.trim() || null
 
   const resendConfigured =
     process.env.ENQUIRY_EMAIL_PROVIDER?.trim().toLowerCase() === 'resend' &&
@@ -105,13 +109,20 @@ export function getOwnerDashboardLiveStatus(): OwnerDashboardLiveStatus {
     analyticsEnabled: analyticsEnabled(),
     checkedAt: new Date().toISOString(),
     comingSoon: isComingSoonModeEnabled(),
+    enquiryReplyToConfigured: Boolean(senderAddress('ENQUIRY_REPLY_TO_EMAIL')),
     enquiryMode: getEnquiryEmailMode(),
     newsletterReadiness: newsletterConfigured ? 'ready' : 'needsAttention',
+    productionDomain,
     resendConfigured,
     senderConfigured: Boolean(enquirySender),
+    segmentConfigured: configured('RESEND_UPDATES_SEGMENT_ID'),
     sendingDomainConfigured: Boolean(enquirySendingDomain),
     sentryEnabled: sentryEnabled(),
     siteDomainConfigured: getDeploymentEnvironment() === 'production' && hasConfiguredSiteDomain(),
+    sitemapEnabled: isSearchIndexingAllowed(),
+    sslReady: Boolean(productionDomain && validHttpsUrl(productionDomain)),
+    subscriptionReplyToConfigured: Boolean(senderAddress('SUBSCRIPTION_REPLY_TO_EMAIL')),
     subscriptionMode: getSubscriptionMode(),
+    topicConfigured: configured('RESEND_UPDATES_TOPIC_ID'),
   }
 }

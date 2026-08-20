@@ -9,6 +9,7 @@ import {
   getContentReadiness,
   isDraftDocument,
   launchContentStatus,
+  ownerPhotographyNeeds,
   preferredDocuments,
   publishedDocumentIds,
 } from './contentReadiness'
@@ -24,6 +25,25 @@ import type {
 const apiVersion = '2026-08-12'
 const contentTypes = ['destination', 'diveSite', 'scenicRoute']
 const photographyContentTypes = ['destination', 'diveSite', 'scenicRoute', 'room', 'housePage']
+const intentionallyNoIndexInformationPageIds = new Set([
+  'accessibilityStatement',
+  'cancellationAndRebookingPolicy',
+  'cookiePolicy',
+  'emergencyInformation',
+  'guestInformation',
+  'houseGuide',
+  'privacyPolicy',
+  'termsAndConditions',
+])
+const ownerDecisionInformationPages = [
+  {id: 'guestInformation', label: 'Guest Information'},
+  {id: 'cookiePolicy', label: 'Cookie Policy'},
+  {id: 'accessibilityStatement', label: 'Accessibility Statement'},
+  {id: 'emergencyInformation', label: 'Emergency Information'},
+] as const
+const ownerDecisionInformationPageIds = new Set<string>(
+  ownerDecisionInformationPages.map(({id}) => id),
+)
 
 const studioEnvironment =
   (import.meta as unknown as {env?: Record<string, string | undefined>}).env ?? {}
@@ -173,6 +193,10 @@ function hasImage(image: {asset?: {_ref?: string} | null} | null | undefined) {
 
 function documentLabel(document: DashboardDocument) {
   return document.title?.trim() || document.name?.trim() || 'Untitled page'
+}
+
+function hasCompleteInformationContent(document: DashboardDocument | null | undefined) {
+  return Boolean(document?.title && document.summaryDescription && document.contentBlockCount)
 }
 
 function StatusBadge({label, status}: {label?: string; status: DashboardStatus}) {
@@ -528,12 +552,16 @@ function OwnerDashboardContent({
   const rooms = currentDocuments.filter((document) => document._type === 'room')
   const houseDocuments = currentDocuments.filter((document) => document._type === 'housePage')
 
-  const photographyDocuments = currentDocuments.filter((document) =>
-    photographyContentTypes.includes(document._type),
+  const publishedIds = publishedDocumentIds(data.documents)
+  const publicSeoDocuments = currentDocuments.filter(
+    (document) =>
+      document._type !== 'room' &&
+      !(
+        document._type === 'informationPage' &&
+        ownerDecisionInformationPageIds.has(baseDocumentId(document._id)) &&
+        !publishedIds.has(baseDocumentId(document._id))
+      ),
   )
-  const missingHeroes = photographyDocuments.filter((document) => !hasImage(document.heroImage))
-
-  const publicSeoDocuments = currentDocuments.filter((document) => document._type !== 'room')
   const seoReadiness = publicSeoDocuments.map((document) => ({
     document,
     readiness: getContentReadiness(document, settings ?? null),
@@ -550,6 +578,14 @@ function OwnerDashboardContent({
   )
   const canonicalIssues = seoReadiness.filter(({readiness}) => !readiness.canonicalReady)
   const noIndexDocuments = publicSeoDocuments.filter((document) => document.noIndex)
+  const intentionalNoIndexDocuments = noIndexDocuments.filter(
+    (document) =>
+      document._type === 'informationPage' &&
+      intentionallyNoIndexInformationPageIds.has(baseDocumentId(document._id)),
+  )
+  const unexpectedNoIndexDocuments = noIndexDocuments.filter(
+    (document) => !intentionalNoIndexDocuments.includes(document),
+  )
   const documentsWithoutSlugs = editorialDocuments.filter((document) => !document.slug?.trim())
 
   const draftDocuments = data.documents.filter(isDraftDocument)
@@ -559,7 +595,6 @@ function OwnerDashboardContent({
   const approvedDocuments = currentDocuments.filter(
     (document) => document.workflowStatus === 'approved',
   )
-  const publishedIds = publishedDocumentIds(data.documents)
   const remainingReviewCount = Math.max(0, currentDocuments.length - approvedDocuments.length)
   const publishedCurrentCount = currentDocuments.filter((document) =>
     publishedIds.has(baseDocumentId(document._id)),
@@ -610,29 +645,58 @@ function OwnerDashboardContent({
   const premiumGuide = resolvePremiumGuideStatus(data)
   const emailPreviewUrl = resolveOwnerPageUrl('/internal/email-preview')
   const reviewUrl = resolveOwnerPageUrl('/coming-soon?access=1')
-  const informationPageFor = (id: string) =>
-    currentDocuments.find(
-      (document) => document._type === 'informationPage' && baseDocumentId(document._id) === id,
+  const informationPageStateFor = (id: string) => {
+    const published = data.documents.find(
+      (document) => document._type === 'informationPage' && document._id === id,
     )
+    const draft = data.documents.find(
+      (document) => document._type === 'informationPage' && document._id === `drafts.${id}`,
+    )
+
+    return {current: draft ?? published, draft, published}
+  }
   const guestInformationPages = [
-    {id: 'planningYourStay', label: 'Planning Your Stay'},
-    {id: 'guestInformation', label: 'Guest Information'},
-    {id: 'houseGuide', label: 'House Guide'},
-    {id: 'emergencyInformation', label: 'Emergency Information (Future)'},
-  ]
+    {
+      id: 'planningYourStay',
+      label: 'Planning Your Stay',
+      ownerDecision: false,
+      route: '/plan-your-stay',
+    },
+    {id: 'guestInformation', label: 'Guest Information', ownerDecision: true, route: null},
+    {id: 'houseGuide', label: 'House Guide', ownerDecision: false, route: '/house-guide'},
+    {
+      id: 'emergencyInformation',
+      label: 'Emergency Information',
+      ownerDecision: true,
+      route: null,
+    },
+  ] as const
   const legalPages = [
-    {id: 'privacyPolicy', label: 'Privacy Policy'},
-    {id: 'termsAndConditions', label: 'Terms & Conditions'},
-    {id: 'cancellationAndRebookingPolicy', label: 'Cancellation & Rebooking Policy'},
-    {id: 'cookiePolicy', label: 'Cookie Policy'},
-    {id: 'accessibilityStatement', label: 'Accessibility Statement'},
-  ]
+    {id: 'privacyPolicy', label: 'Privacy Policy', ownerDecision: false, route: '/privacy'},
+    {id: 'termsAndConditions', label: 'Terms & Conditions', ownerDecision: false, route: '/terms'},
+    {
+      id: 'cancellationAndRebookingPolicy',
+      label: 'Cancellation & Rebooking Policy',
+      ownerDecision: false,
+      route: '/cancellation-policy',
+    },
+    {id: 'cookiePolicy', label: 'Cookie Policy', ownerDecision: true, route: null},
+    {
+      id: 'accessibilityStatement',
+      label: 'Accessibility Statement',
+      ownerDecision: true,
+      route: null,
+    },
+  ] as const
+
+  const photographyNeededLabels = ownerPhotographyNeeds.map(({label}) => label)
 
   const websiteLaunchStatus: LaunchControlStatus = !liveStatus
     ? 'unknown'
     : requiredWebsiteSettingsComplete(settings) &&
         liveStatus.siteDomainConfigured &&
-        !liveStatus.comingSoon
+        liveStatus.sslReady &&
+        liveStatus.comingSoon
       ? 'complete'
       : 'needsAttention'
   const emailLaunchStatus: LaunchControlStatus = !liveStatus
@@ -649,7 +713,7 @@ function OwnerDashboardContent({
     ? 'unknown'
     : liveStatus.analyticsEnabled
       ? 'complete'
-      : 'needsAttention'
+      : 'unknown'
   const contentLaunchStatus: LaunchControlStatus = contentGroups.some(
     ({status}) => status === 'needsAttention' || status === 'blocked',
   )
@@ -657,8 +721,12 @@ function OwnerDashboardContent({
     : contentGroups.every(({status}) => status === 'complete')
       ? 'complete'
       : 'unknown'
+  const photographyLaunchStatus: LaunchControlStatus = photographyNeededLabels.length
+    ? 'needsAttention'
+    : 'complete'
 
   const launchControlItems: Array<{
+    category: 'Content / photography needed' | 'Optional improvement' | 'Technical issue'
     detail: string
     label: string
     status: LaunchControlStatus
@@ -666,10 +734,11 @@ function OwnerDashboardContent({
     {
       detail:
         websiteLaunchStatus === 'complete'
-          ? 'The public domain and required website settings are ready, and Coming Soon is off.'
+          ? 'The production-review domain is healthy and protected by Coming Soon. The full website remains private.'
           : websiteLaunchStatus === 'unknown'
             ? 'Live domain and Coming Soon status could not be verified.'
-            : 'Review the domain, required Site Settings and Coming Soon state below.',
+            : 'Review the domain, SSL, required Site Settings or Coming Soon protection below.',
+      category: 'Technical issue',
       label: 'Website status',
       status: websiteLaunchStatus,
     },
@@ -680,6 +749,7 @@ function OwnerDashboardContent({
           : emailLaunchStatus === 'unknown'
             ? 'Live transactional email status could not be verified.'
             : 'Transactional email delivery is incomplete or remains disabled.',
+      category: 'Technical issue',
       label: 'Email readiness',
       status: emailLaunchStatus,
     },
@@ -690,6 +760,7 @@ function OwnerDashboardContent({
           : newsletterLaunchStatus === 'unknown'
             ? 'Live newsletter configuration could not be verified.'
             : 'Subscriber configuration needs attention or subscription delivery remains disabled.',
+      category: 'Technical issue',
       label: 'Newsletter readiness',
       status: newsletterLaunchStatus,
     },
@@ -697,49 +768,67 @@ function OwnerDashboardContent({
       detail:
         analyticsLaunchStatus === 'complete'
           ? 'Privacy-conscious production analytics is enabled.'
-          : analyticsLaunchStatus === 'unknown'
-            ? 'Live analytics status could not be verified.'
-            : 'Production analytics is not enabled.',
+          : liveStatus
+            ? 'Analytics is an optional improvement and does not block protected production review.'
+            : 'Live analytics status could not be verified.',
+      category: 'Optional improvement',
       label: 'Analytics readiness',
       status: analyticsLaunchStatus,
     },
     {
       detail:
         contentLaunchStatus === 'complete'
-          ? 'All launch content groups pass the existing publication, review, photography and SEO checks.'
+          ? 'Published launch content passes publication, editorial review and SEO checks. Photography is assessed separately.'
           : contentLaunchStatus === 'unknown'
             ? 'There is not enough current content information to assess launch readiness.'
-            : 'One or more launch content groups still needs attention.',
+            : 'One or more launch content groups has a genuine publication, review or SEO issue.',
+      category: 'Content / photography needed',
       label: 'Content readiness',
       status: contentLaunchStatus,
     },
+    {
+      category: 'Content / photography needed',
+      detail: photographyNeededLabels.length
+        ? `${photographyNeededLabels.length} text-led pages still need owner-approved, place-specific photography. Their content is not treated as broken.`
+        : 'No current production photography requirement is recorded.',
+      label: 'Photography readiness',
+      status: photographyLaunchStatus,
+    },
   ]
 
-  const remainingLaunchBlockers = [
+  const technicalIssues = [
     ...(!requiredWebsiteSettingsComplete(settings)
       ? ['Required Site Settings are incomplete.']
       : []),
     ...(liveStatus && !liveStatus.siteDomainConfigured
       ? ['The production site domain is not configured.']
       : []),
-    ...(liveStatus?.comingSoon ? ['Coming Soon is still active.'] : []),
+    ...(liveStatus && !liveStatus.sslReady ? ['Production SSL is not ready.'] : []),
+    ...(liveStatus && !liveStatus.comingSoon
+      ? ['Coming Soon protection is disabled. Restore it before continuing private review.']
+      : []),
     ...(emailLaunchStatus === 'needsAttention'
       ? ['Transactional enquiry email is not launch-ready.']
       : []),
     ...(newsletterLaunchStatus === 'needsAttention'
       ? ['Newsletter signup is not launch-ready.']
       : []),
-    ...(analyticsLaunchStatus === 'needsAttention' ? ['Production analytics is not enabled.'] : []),
-    ...contentGroups
-      .filter(({status}) => status === 'needsAttention' || status === 'blocked')
-      .map(({label}) => `${label} content needs attention.`),
   ]
-  const launchChecksUnknown = launchControlItems.some(({status}) => status === 'unknown')
-  const remainingBlockersStatus: LaunchControlStatus = remainingLaunchBlockers.length
-    ? 'needsAttention'
-    : launchChecksUnknown
-      ? 'unknown'
-      : 'complete'
+  const ownerDecisions = [
+    'Confirm the authoritative maximum whole-house occupancy.',
+    ...ownerDecisionInformationPages
+      .filter(({id}) => !publishedIds.has(id))
+      .map(({label}) => `${label} — owner review and publication decision.`),
+  ]
+  const contentIssues = contentGroups
+    .filter(({status}) => status === 'needsAttention' || status === 'blocked')
+    .map(({label}) => `${label} has a publication, review or SEO issue.`)
+  const photographyNeeds = photographyNeededLabels.map((label) => `${label} — photography needed.`)
+  const optionalImprovements = [
+    ...(!liveStatus?.analyticsEnabled
+      ? ['Production analytics can be enabled after owner review.']
+      : []),
+  ]
 
   return (
     <>
@@ -786,29 +875,96 @@ function OwnerDashboardContent({
               statusLabel={launchControlLabels[item.status]}
               title={item.label}
             >
+              <Value label="Type" value={item.category} />
               <Text muted size={1}>
                 {item.detail}
               </Text>
             </SummaryCard>
           ))}
           <SummaryCard
-            status={remainingBlockersStatus}
-            statusLabel={launchControlLabels[remainingBlockersStatus]}
-            title="Remaining blockers"
+            status={technicalIssues.length ? 'needsAttention' : liveStatus ? 'complete' : 'unknown'}
+            statusLabel={technicalIssues.length ? 'Technical issue' : 'No technical issue'}
+            title="Technical issues"
           >
-            {remainingLaunchBlockers.length ? (
+            {technicalIssues.length ? (
               <ul style={styles.issueList}>
-                {remainingLaunchBlockers.map((blocker) => (
-                  <li key={blocker} style={{listStyle: 'none'}}>
-                    <Text size={1}>{blocker}</Text>
+                {technicalIssues.map((issue) => (
+                  <li key={issue} style={{listStyle: 'none'}}>
+                    <Text size={1}>{issue}</Text>
                   </li>
                 ))}
               </ul>
             ) : (
               <Text muted size={1}>
-                {launchChecksUnknown
-                  ? 'No confirmed blocker is visible, but one or more live checks is unavailable.'
-                  : 'No launch blocker is reported by the current readiness checks.'}
+                {liveStatus
+                  ? 'No technical blocker is reported by the current checks.'
+                  : 'Live technical checks are unavailable.'}
+              </Text>
+            )}
+          </SummaryCard>
+          <SummaryCard status="unknown" statusLabel="Owner decision" title="Owner decisions">
+            <ul style={styles.issueList}>
+              {ownerDecisions.map((decision) => (
+                <li key={decision} style={{listStyle: 'none'}}>
+                  <Text size={1}>{decision}</Text>
+                </li>
+              ))}
+            </ul>
+          </SummaryCard>
+          <SummaryCard
+            status={contentIssues.length ? 'needsAttention' : 'complete'}
+            statusLabel={contentIssues.length ? 'Content incomplete' : 'Content complete'}
+            title="Content issues"
+          >
+            {contentIssues.length ? (
+              <ul style={styles.issueList}>
+                {contentIssues.map((issue) => (
+                  <li key={issue} style={{listStyle: 'none'}}>
+                    <Text size={1}>{issue}</Text>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <Text muted size={1}>
+                No current content or photography need is recorded.
+              </Text>
+            )}
+          </SummaryCard>
+          <SummaryCard
+            status={photographyNeeds.length ? 'needsAttention' : 'complete'}
+            statusLabel={photographyNeeds.length ? 'Photography needed' : 'Photography ready'}
+            title="Photography needs"
+          >
+            {photographyNeeds.length ? (
+              <ul style={styles.issueList}>
+                {photographyNeeds.map((need) => (
+                  <li key={need} style={{listStyle: 'none'}}>
+                    <Text size={1}>{need}</Text>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <Text muted size={1}>
+                No current photography need is recorded.
+              </Text>
+            )}
+          </SummaryCard>
+          <SummaryCard
+            status={optionalImprovements.length ? 'unknown' : 'complete'}
+            statusLabel={optionalImprovements.length ? 'Optional improvement' : 'Complete'}
+            title="Optional improvements"
+          >
+            {optionalImprovements.length ? (
+              <ul style={styles.issueList}>
+                {optionalImprovements.map((improvement) => (
+                  <li key={improvement} style={{listStyle: 'none'}}>
+                    <Text size={1}>{improvement}</Text>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <Text muted size={1}>
+                No optional improvement is currently reported.
               </Text>
             )}
           </SummaryCard>
@@ -935,22 +1091,44 @@ function OwnerDashboardContent({
         description="Owner-managed practical pages. Pages remain unpublished or return not found until their Studio content is complete and published."
       >
         <div style={styles.sectionGrid}>
-          {guestInformationPages.map(({id, label}) => {
-            const document = informationPageFor(id)
-            const complete = Boolean(
-              document?.title && document.summaryDescription && document.contentBlockCount,
-            )
+          {guestInformationPages.map(({id, label, ownerDecision, route}) => {
+            const page = informationPageStateFor(id)
+            const publishedAndComplete = hasCompleteInformationContent(page.published)
             return (
-              <SummaryCard key={id} status={complete ? 'complete' : 'needsAttention'} title={label}>
+              <SummaryCard
+                key={id}
+                status={
+                  publishedAndComplete ? 'complete' : ownerDecision ? 'unknown' : 'needsAttention'
+                }
+                statusLabel={
+                  publishedAndComplete
+                    ? 'Published / live'
+                    : ownerDecision
+                      ? 'Owner decision / Draft'
+                      : 'Content incomplete'
+                }
+                title={label}
+              >
                 <Value
                   label="Content"
                   value={
-                    document?.contentBlockCount
-                      ? `${document.contentBlockCount} blocks`
+                    page.current?.contentBlockCount
+                      ? `${page.current.contentBlockCount} blocks`
                       : 'Not added'
                   }
                 />
-                <Value label="Workflow" value={document?.workflowStatus ?? 'Draft not created'} />
+                <Value
+                  label="Publication"
+                  value={
+                    page.published
+                      ? 'Published'
+                      : page.draft
+                        ? 'Draft / unpublished'
+                        : 'Draft not created'
+                  }
+                />
+                <Value label="Workflow" value={page.current?.workflowStatus ?? 'Owner decision'} />
+                {route && page.published ? <Value label="Live route" value={route} /> : null}
                 <QuickDocument id={id} text={`Edit ${label}`} type="informationPage" />
               </SummaryCard>
             )
@@ -963,22 +1141,44 @@ function OwnerDashboardContent({
         description="Legal wording is owned in Studio rather than application code. Obtain professional review where required."
       >
         <div style={styles.sectionGrid}>
-          {legalPages.map(({id, label}) => {
-            const document = informationPageFor(id)
-            const complete = Boolean(
-              document?.title && document.summaryDescription && document.contentBlockCount,
-            )
+          {legalPages.map(({id, label, ownerDecision, route}) => {
+            const page = informationPageStateFor(id)
+            const publishedAndComplete = hasCompleteInformationContent(page.published)
             return (
-              <SummaryCard key={id} status={complete ? 'complete' : 'needsAttention'} title={label}>
+              <SummaryCard
+                key={id}
+                status={
+                  publishedAndComplete ? 'complete' : ownerDecision ? 'unknown' : 'needsAttention'
+                }
+                statusLabel={
+                  publishedAndComplete
+                    ? 'Published / live'
+                    : ownerDecision
+                      ? 'Owner decision / Draft'
+                      : 'Content incomplete'
+                }
+                title={label}
+              >
                 <Value
                   label="Content"
                   value={
-                    document?.contentBlockCount
-                      ? `${document.contentBlockCount} blocks`
+                    page.current?.contentBlockCount
+                      ? `${page.current.contentBlockCount} blocks`
                       : 'Not added'
                   }
                 />
-                <Value label="Workflow" value={document?.workflowStatus ?? 'Draft not created'} />
+                <Value
+                  label="Publication"
+                  value={
+                    page.published
+                      ? 'Published'
+                      : page.draft
+                        ? 'Draft / unpublished'
+                        : 'Draft not created'
+                  }
+                />
+                <Value label="Workflow" value={page.current?.workflowStatus ?? 'Owner decision'} />
+                {route && page.published ? <Value label="Live route" value={route} /> : null}
                 <QuickDocument id={id} text={`Edit ${label}`} type="informationPage" />
               </SummaryCard>
             )
@@ -1064,6 +1264,17 @@ function OwnerDashboardContent({
               text="Manage House Availability"
               tone="primary"
             />
+          </SummaryCard>
+          <SummaryCard
+            status="unknown"
+            statusLabel="Owner confirmation required"
+            title="Whole-house occupancy"
+          >
+            <Value label="Maximum occupancy" value="Owner confirmation required" />
+            <Text muted size={1}>
+              The Ocean Suite and Garden Suite capacities are room facts. They are not added
+              together or treated as the authoritative whole-house maximum.
+            </Text>
           </SummaryCard>
           <SummaryCard status="complete" statusLabel="Private Operations" title="Enquiries & Stays">
             <Text muted size={1}>
@@ -1303,7 +1514,7 @@ function OwnerDashboardContent({
 
         <DashboardSubsection
           title="Launch content summary"
-          description="A content type is complete only when its current documents are approved, published, reviewed, visually ready and covered by effective SEO."
+          description="Content completeness covers approval, publication, factual review and SEO. Photography is reported separately so a truthful text-led page is not called broken."
         >
           <div style={styles.sectionGrid}>
             {contentGroups.map(({documents, label, status}) => (
@@ -1350,19 +1561,32 @@ function OwnerDashboardContent({
                 <SummaryCard
                   key={label as string}
                   status={incomplete.length ? 'needsAttention' : 'complete'}
+                  statusLabel={incomplete.length ? 'Photography needed' : 'Photography ready'}
                   title={label as string}
                 >
-                  <Value label="Complete" value={values.length - incomplete.length} />
-                  <Value label="Incomplete" value={incomplete.length} />
+                  <Value label="Photography ready" value={values.length - incomplete.length} />
+                  <Value label="Photography needed" value={incomplete.length} />
                   <DetailedIssueList issues={incomplete} />
                 </SummaryCard>
               )
             })}
             <SummaryCard
-              status={missingHeroes.length ? 'needsAttention' : 'complete'}
-              title="Missing hero images"
+              status={photographyNeededLabels.length ? 'needsAttention' : 'complete'}
+              statusLabel={photographyNeededLabels.length ? 'Photography needed' : 'Complete'}
+              title="Current production photography needs"
             >
-              <IssueList documents={missingHeroes} />
+              <Value label="Pages" value={photographyNeededLabels.length} />
+              <ul style={styles.issueList}>
+                {photographyNeededLabels.map((label) => (
+                  <li key={label} style={{listStyle: 'none'}}>
+                    <Text size={1}>{label}</Text>
+                  </li>
+                ))}
+              </ul>
+              <Text muted size={1}>
+                These pages may remain intentionally text-led. Photography is needed, but their
+                content is not classified as incomplete.
+              </Text>
             </SummaryCard>
             <SummaryCard status="complete" title="Optional photo stories">
               <Text muted size={1}>
@@ -1514,10 +1738,13 @@ function OwnerDashboardContent({
               />
             </SummaryCard>
             <SummaryCard
-              status={noIndexDocuments.length ? 'needsAttention' : 'complete'}
-              title="Hidden from search"
+              status={unexpectedNoIndexDocuments.length ? 'needsAttention' : 'complete'}
+              statusLabel={unexpectedNoIndexDocuments.length ? 'Needs attention' : 'Intentional'}
+              title="Search visibility"
             >
-              <IssueList documents={noIndexDocuments} />
+              <Value label="Intentionally excluded" value={intentionalNoIndexDocuments.length} />
+              <Value label="Unexpected exclusions" value={unexpectedNoIndexDocuments.length} />
+              <IssueList documents={unexpectedNoIndexDocuments} />
             </SummaryCard>
           </div>
         </DashboardSubsection>
@@ -1674,11 +1901,9 @@ export function OwnerDashboard() {
     setError(null)
     setLiveStatusError(null)
     try {
-      const result = await client.fetch<OwnerDashboardData>(
-        ownerDashboardQuery,
-        {},
-        {perspective: 'raw'},
-      )
+      const result = await client
+        .withConfig({useCdn: false})
+        .fetch<OwnerDashboardData>(ownerDashboardQuery, {}, {perspective: 'raw'})
       setData(result)
 
       const token = client.config().token
@@ -1700,6 +1925,7 @@ export function OwnerDashboard() {
       }
 
       try {
+        statusUrl.searchParams.set('_checkedAt', Date.now().toString())
         const statusResponse = await fetch(statusUrl, {
           cache: 'no-store',
           headers: {Authorization: `Bearer ${token}`},

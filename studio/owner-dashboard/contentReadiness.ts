@@ -50,6 +50,33 @@ const reviewWindows: Partial<Record<string, number>> = {
   scenicRoute: 90,
 }
 
+export const ownerPhotographyNeeds = [
+  {documentType: 'destination', label: 'Pulangbato Falls', slug: 'pulangbato-falls'},
+  {documentType: 'destination', label: 'Twin Lakes', slug: 'twin-lakes'},
+  {documentType: 'destination', label: 'Valencia', slug: 'valencia'},
+  {documentType: 'destination', label: 'Siaton', slug: 'siaton'},
+  {documentType: 'scenicRoute', label: 'Twin Lakes Escape', slug: 'twin-lakes-escape'},
+  {documentType: 'diveSite', label: 'Zamboanguita Dive Guide', slug: 'zamboanguita'},
+  {
+    documentType: 'scenicRoute',
+    label: 'Coastal Ride to Dumaguete',
+    slug: 'coastal-ride-to-dumaguete',
+  },
+  {documentType: 'scenicRoute', label: 'Southern Explorer', slug: 'southern-explorer'},
+  {
+    documentType: 'scenicRoute',
+    label: 'Valencia Highlands Loop',
+    slug: 'valencia-highlands-loop',
+  },
+  {documentType: 'scenicRoute', label: 'Waterfall Explorer', slug: 'waterfall-explorer'},
+] as const
+
+export function ownerPhotographyNeedFor(document: DashboardDocument) {
+  return ownerPhotographyNeeds.find(
+    (need) => need.documentType === document._type && need.slug === document.slug?.trim(),
+  )
+}
+
 function hasImage(image: DashboardImage | null | undefined) {
   return Boolean(image?.asset?._ref)
 }
@@ -97,7 +124,9 @@ function photographyReadiness(document: DashboardDocument) {
   const issues: string[] = []
 
   if (['destination', 'diveSite', 'scenicRoute'].includes(document._type)) {
-    if (!hasImage(document.heroImage)) issues.push('Hero image')
+    if (ownerPhotographyNeedFor(document)) {
+      issues.push('Owner-approved place-specific photography')
+    }
   } else if (document._type === 'room') {
     if (!hasImage(document.heroImage)) issues.push('Verified room preview image')
   } else if (document._type === 'housePage') {
@@ -194,14 +223,10 @@ export function launchContentStatus(
   const complete = documents.every((document) => {
     const readiness = getContentReadiness(document, settings)
     const reviewed = readiness.reviewStatus === 'current' || readiness.reviewStatus === 'unknown'
-    const photographed =
-      readiness.photographyStatus === 'complete' || readiness.photographyStatus === 'unknown'
-
     return (
       published.has(baseDocumentId(document._id)) &&
       document.workflowStatus === 'approved' &&
       reviewed &&
-      photographed &&
       readiness.seoStatus === 'complete'
     )
   })
