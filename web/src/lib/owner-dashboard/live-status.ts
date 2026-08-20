@@ -106,7 +106,7 @@ type PropertyCoordinates = {lat?: number | null; lng?: number | null} | null
 async function getPublishedPropertyCoordinates(client: SanityClient) {
   try {
     const coordinates = await client.fetch<PropertyCoordinates>(
-      '*[_type == "siteSettings" && _id == "siteSettings"][0].propertyLocation.coordinates',
+      'coalesce(*[_type == "siteSettings" && _id == "siteSettings"][0].propertyLocation.coordinates, *[_type == "diveSite" && _id == "dive-site-zamboanguita"][0].mapLocation.coordinates)',
     )
     if (
       !coordinates ||
