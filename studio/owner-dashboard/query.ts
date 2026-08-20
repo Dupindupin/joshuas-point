@@ -56,7 +56,8 @@ export const ownerDashboardQuery = /* groq */ `{
   "documents": *[
     _type in [
       "homePage", "housePage", "roomsPage", "destinationsPage", "diveSitesPage",
-      "scenicRoutesPage", "room", "destination", "diveSite", "scenicRoute"
+      "scenicRoutesPage", "room", "destination", "diveSite", "scenicRoute",
+      "informationPage"
     ]
   ] | order(_type asc, title asc) {
     _id,
@@ -66,7 +67,8 @@ export const ownerDashboardQuery = /* groq */ `{
     "slug": slug.current,
     workflowStatus,
     lastReviewedAt,
-    "summaryDescription": coalesce(excerpt, hero.introduction, siteDescription),
+    "summaryDescription": coalesce(excerpt, hero.introduction, introduction, siteDescription),
+    "contentBlockCount": count(body),
     "heroImage": coalesce(heroImage, previewImage, hero.image) {asset},
     "roomImages": featuredRooms[]->previewImage {asset},
     "viewImage": view.image {asset},

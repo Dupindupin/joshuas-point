@@ -11,6 +11,7 @@ type Ordering = {
 }
 
 type StudioDocument = {
+  documentId?: string
   type: string
   title: string
   singleton?: boolean
@@ -92,6 +93,72 @@ const studioSections: StudioSection[] = [
     documents: [{type: 'houseAvailability', title: 'House Availability', singleton: true}],
   },
   {
+    id: 'guest-information',
+    title: 'Guest Information',
+    documents: [
+      {
+        type: 'informationPage',
+        documentId: 'planningYourStay',
+        title: 'Planning Your Stay',
+        singleton: true,
+      },
+      {
+        type: 'informationPage',
+        documentId: 'guestInformation',
+        title: 'Guest Information',
+        singleton: true,
+      },
+      {
+        type: 'informationPage',
+        documentId: 'houseGuide',
+        title: 'House Guide',
+        singleton: true,
+      },
+      {
+        type: 'informationPage',
+        documentId: 'emergencyInformation',
+        title: 'Emergency Information (Future)',
+        singleton: true,
+      },
+    ],
+  },
+  {
+    id: 'legal',
+    title: 'Legal',
+    documents: [
+      {
+        type: 'informationPage',
+        documentId: 'privacyPolicy',
+        title: 'Privacy Policy',
+        singleton: true,
+      },
+      {
+        type: 'informationPage',
+        documentId: 'termsAndConditions',
+        title: 'Terms & Conditions',
+        singleton: true,
+      },
+      {
+        type: 'informationPage',
+        documentId: 'cancellationAndRebookingPolicy',
+        title: 'Cancellation & Rebooking Policy',
+        singleton: true,
+      },
+      {
+        type: 'informationPage',
+        documentId: 'cookiePolicy',
+        title: 'Cookie Policy',
+        singleton: true,
+      },
+      {
+        type: 'informationPage',
+        documentId: 'accessibilityStatement',
+        title: 'Accessibility Statement',
+        singleton: true,
+      },
+    ],
+  },
+  {
     id: 'accommodation',
     title: 'Accommodation',
     documents: [
@@ -166,15 +233,16 @@ function createDocumentItem(
   document: StudioDocument,
 ): ListItemBuilder {
   if (document.singleton) {
+    const documentId = document.documentId ?? document.type
     return structureBuilder
       .listItem()
-      .id(document.type)
+      .id(documentId)
       .title(document.title)
       .child(
         structureBuilder
           .document()
           .schemaType(document.type)
-          .documentId(document.type)
+          .documentId(documentId)
           .title(document.title),
       )
   }

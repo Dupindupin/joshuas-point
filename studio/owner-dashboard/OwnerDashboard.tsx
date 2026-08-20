@@ -56,6 +56,13 @@ const styles = {
     gap: '0.75rem',
     marginTop: '0.25rem',
   },
+  quickAction: {
+    alignItems: 'center',
+    display: 'flex',
+    justifyContent: 'center',
+    minHeight: '4.5rem',
+    textAlign: 'center' as const,
+  },
   row: {
     alignItems: 'center',
     display: 'flex',
@@ -74,10 +81,13 @@ const styles = {
 } as const
 
 const resendManagementLinks = {
-  audience: 'https://resend.com/audiences',
+  contacts: 'https://resend.com/audience',
   broadcasts: 'https://resend.com/broadcasts',
   emails: 'https://resend.com/emails',
+  topics: 'https://resend.com/audience/topics',
 } as const
+
+const operationsStudioUrl = 'https://joshuas-point-operations.sanity.studio/owner-operations'
 
 const statusLabels: Record<DashboardStatus, string> = {
   blocked: 'Blocked',
@@ -182,13 +192,11 @@ function DashboardSection({
   description: string
   title: string
 }) {
+  const sectionId = `dashboard-${title.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`
   return (
-    <section
-      aria-labelledby={`dashboard-${title.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`}
-      style={styles.section}
-    >
+    <section aria-labelledby={`${sectionId}-title`} id={sectionId} style={styles.section}>
       <div style={{display: 'grid', gap: '0.4rem', marginBottom: '1rem'}}>
-        <Heading id={`dashboard-${title.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`} size={2}>
+        <Heading id={`${sectionId}-title`} size={2}>
           {title}
         </Heading>
         <Text muted size={1}>
@@ -209,10 +217,11 @@ function DashboardSubsection({
   description: string
   title: string
 }) {
+  const sectionId = `dashboard-${title.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`
   return (
-    <section style={styles.subsection}>
+    <section aria-labelledby={`${sectionId}-title`} id={sectionId} style={styles.subsection}>
       <div style={{display: 'grid', gap: '0.35rem', marginBottom: '1rem'}}>
-        <Heading as="h3" size={1}>
+        <Heading as="h3" id={`${sectionId}-title`} size={1}>
           {title}
         </Heading>
         <Text muted size={1}>
@@ -271,6 +280,41 @@ function ExternalButton({href, text}: {href: string; text: string}) {
       mode="ghost"
       rel="noreferrer"
       target="_blank"
+      text={text}
+      tone="primary"
+    />
+  )
+}
+
+function QuickLink({
+  external = false,
+  href,
+  text,
+}: {
+  external?: boolean
+  href: string
+  text: string
+}) {
+  return (
+    <Button
+      as="a"
+      href={href}
+      mode="default"
+      rel={external ? 'noreferrer' : undefined}
+      style={styles.quickAction}
+      target={external ? '_blank' : undefined}
+      text={text}
+      tone="primary"
+    />
+  )
+}
+
+function QuickDocument({id, text, type}: {id: string; text: string; type: string}) {
+  return (
+    <IntentButton
+      intent="edit"
+      params={{id, type}}
+      style={styles.quickAction}
       text={text}
       tone="primary"
     />
@@ -382,13 +426,20 @@ function isDashboardLiveStatus(value: unknown): value is DashboardLiveStatus {
     'comingSoon',
     'resendConfigured',
     'senderConfigured',
+    'enquiryReplyToConfigured',
+    'segmentConfigured',
     'sendingDomainConfigured',
     'sentryEnabled',
     'siteDomainConfigured',
+    'sitemapEnabled',
+    'sslReady',
+    'subscriptionReplyToConfigured',
+    'topicConfigured',
   ]
 
   return (
     booleanFields.every((field) => typeof status[field] === 'boolean') &&
+    (status.productionDomain === null || typeof status.productionDomain === 'string') &&
     typeof status.checkedAt === 'string' &&
     !Number.isNaN(Date.parse(status.checkedAt)) &&
     ['disabled', 'live', 'test'].includes(String(status.enquiryMode)) &&
@@ -558,6 +609,24 @@ function OwnerDashboardContent({
 
   const premiumGuide = resolvePremiumGuideStatus(data)
   const emailPreviewUrl = resolveOwnerPageUrl('/internal/email-preview')
+  const reviewUrl = resolveOwnerPageUrl('/coming-soon?access=1')
+  const informationPageFor = (id: string) =>
+    currentDocuments.find(
+      (document) => document._type === 'informationPage' && baseDocumentId(document._id) === id,
+    )
+  const guestInformationPages = [
+    {id: 'planningYourStay', label: 'Planning Your Stay'},
+    {id: 'guestInformation', label: 'Guest Information'},
+    {id: 'houseGuide', label: 'House Guide'},
+    {id: 'emergencyInformation', label: 'Emergency Information (Future)'},
+  ]
+  const legalPages = [
+    {id: 'privacyPolicy', label: 'Privacy Policy'},
+    {id: 'termsAndConditions', label: 'Terms & Conditions'},
+    {id: 'cancellationAndRebookingPolicy', label: 'Cancellation & Rebooking Policy'},
+    {id: 'cookiePolicy', label: 'Cookie Policy'},
+    {id: 'accessibilityStatement', label: 'Accessibility Statement'},
+  ]
 
   const websiteLaunchStatus: LaunchControlStatus = !liveStatus
     ? 'unknown'
@@ -675,6 +744,37 @@ function OwnerDashboardContent({
   return (
     <>
       <DashboardSection
+        title="Owner Quick Actions"
+        description="Start every regular owner task here. Review and preview links open safely without publishing the website."
+      >
+        <div style={styles.sectionGrid}>
+          {reviewUrl ? (
+            <QuickLink external href={reviewUrl} text="🌐 Open Website (Review Mode)" />
+          ) : (
+            <Button disabled style={styles.quickAction} text="🌐 Website Review Unavailable" />
+          )}
+          {emailPreviewUrl ? (
+            <QuickLink external href={emailPreviewUrl} text="📧 Email Preview" />
+          ) : (
+            <Button disabled style={styles.quickAction} text="📧 Email Preview Unavailable" />
+          )}
+          <QuickDocument
+            id="houseAvailability"
+            text="📅 House Availability"
+            type="houseAvailability"
+          />
+          <QuickLink external href={operationsStudioUrl} text="📥 Enquiries & Stays" />
+          <QuickLink href="#dashboard-launch-control" text="🚀 Launch Control" />
+          <QuickDocument id="siteSettings" text="📝 Site Settings" type="siteSettings" />
+          <QuickLink href="#dashboard-photography" text="📷 Photography" />
+          <QuickLink href="/structure/travel-guide;destination" text="📍 Destinations" />
+          <QuickLink href="#dashboard-maps" text="🗺 Explorer / Maps" />
+          <QuickDocument id="guestInformation" text="📄 Guest Information" type="informationPage" />
+          <QuickDocument id="privacyPolicy" text="⚖ Legal Pages" type="informationPage" />
+        </div>
+      </DashboardSection>
+
+      <DashboardSection
         title="Launch Control"
         description="One truthful overview of what is ready for launch and what still needs attention. No services can be enabled from this dashboard."
       >
@@ -751,11 +851,23 @@ function OwnerDashboardContent({
             title="Production status"
           >
             <Value label="Domain" value={settings?.siteUrl} />
+            <Value label="Production domain" value={liveStatus?.productionDomain} />
+            <Value label="SSL" value={configuredLabel(liveStatus?.sslReady)} />
             <Value
               label="Domain configuration"
               value={configuredLabel(liveStatus?.siteDomainConfigured)}
             />
             <Value label="Coming Soon" value={enabledLabel(liveStatus?.comingSoon)} />
+            <Value
+              label="Robots"
+              value={liveStatus?.comingSoon ? 'Protected: no indexing' : 'Launch rules active'}
+            />
+            <Value
+              label="Sitemap"
+              value={
+                liveStatus?.sitemapEnabled ? 'Public routes enabled' : 'Withheld while private'
+              }
+            />
             <Value label="Plausible analytics" value={enabledLabel(liveStatus?.analyticsEnabled)} />
             <Value label="Sentry monitoring" value={enabledLabel(liveStatus?.sentryEnabled)} />
             <Value
@@ -768,6 +880,109 @@ function OwnerDashboardContent({
               </Text>
             ) : null}
           </SummaryCard>
+        </div>
+      </DashboardSection>
+
+      <DashboardSection
+        title="Analytics"
+        description="Production analytics status and the underlying privacy-conscious service."
+      >
+        <div style={styles.sectionGrid}>
+          <SummaryCard
+            status={liveStatus?.analyticsEnabled ? 'complete' : 'needsAttention'}
+            title="Plausible Analytics"
+          >
+            <Value label="Analytics" value={enabledLabel(liveStatus?.analyticsEnabled)} />
+            <Value
+              label="Search Console readiness"
+              value={
+                liveStatus?.sitemapEnabled ? 'Ready for submission' : 'Wait until public launch'
+              }
+            />
+            <Value
+              label="Last status check"
+              value={formatDashboardDateTime(liveStatus?.checkedAt)}
+            />
+            <ExternalButton href="https://plausible.io" text="Open Plausible" />
+          </SummaryCard>
+        </div>
+      </DashboardSection>
+
+      <DashboardSection
+        title="Monitoring"
+        description="Error monitoring and hosting remain in their specialist services, reachable from here."
+      >
+        <div style={styles.sectionGrid}>
+          <SummaryCard
+            status={liveStatus?.sentryEnabled ? 'complete' : 'needsAttention'}
+            title="Production monitoring"
+          >
+            <Value label="Sentry" value={enabledLabel(liveStatus?.sentryEnabled)} />
+            <Value
+              label="Last status check"
+              value={formatDashboardDateTime(liveStatus?.checkedAt)}
+            />
+            <div style={styles.actions}>
+              <ExternalButton href="https://sentry.io" text="Open Sentry" />
+              <ExternalButton href="https://xcloud.host" text="Open xCloud" />
+            </div>
+          </SummaryCard>
+        </div>
+      </DashboardSection>
+
+      <DashboardSection
+        title="Guest Information"
+        description="Owner-managed practical pages. Pages remain unpublished or return not found until their Studio content is complete and published."
+      >
+        <div style={styles.sectionGrid}>
+          {guestInformationPages.map(({id, label}) => {
+            const document = informationPageFor(id)
+            const complete = Boolean(
+              document?.title && document.summaryDescription && document.contentBlockCount,
+            )
+            return (
+              <SummaryCard key={id} status={complete ? 'complete' : 'needsAttention'} title={label}>
+                <Value
+                  label="Content"
+                  value={
+                    document?.contentBlockCount
+                      ? `${document.contentBlockCount} blocks`
+                      : 'Not added'
+                  }
+                />
+                <Value label="Workflow" value={document?.workflowStatus ?? 'Draft not created'} />
+                <QuickDocument id={id} text={`Edit ${label}`} type="informationPage" />
+              </SummaryCard>
+            )
+          })}
+        </div>
+      </DashboardSection>
+
+      <DashboardSection
+        title="Legal"
+        description="Legal wording is owned in Studio rather than application code. Obtain professional review where required."
+      >
+        <div style={styles.sectionGrid}>
+          {legalPages.map(({id, label}) => {
+            const document = informationPageFor(id)
+            const complete = Boolean(
+              document?.title && document.summaryDescription && document.contentBlockCount,
+            )
+            return (
+              <SummaryCard key={id} status={complete ? 'complete' : 'needsAttention'} title={label}>
+                <Value
+                  label="Content"
+                  value={
+                    document?.contentBlockCount
+                      ? `${document.contentBlockCount} blocks`
+                      : 'Not added'
+                  }
+                />
+                <Value label="Workflow" value={document?.workflowStatus ?? 'Draft not created'} />
+                <QuickDocument id={id} text={`Edit ${label}`} type="informationPage" />
+              </SummaryCard>
+            )
+          })}
         </div>
       </DashboardSection>
 
@@ -849,6 +1064,13 @@ function OwnerDashboardContent({
               text="Manage House Availability"
               tone="primary"
             />
+          </SummaryCard>
+          <SummaryCard status="complete" statusLabel="Private Operations" title="Enquiries & Stays">
+            <Text muted size={1}>
+              Guest records, enquiry status, whole-house stays, and reservation workflow stay in the
+              separate private Operations project.
+            </Text>
+            <ExternalButton href={operationsStudioUrl} text="Open Enquiries & Stays" />
           </SummaryCard>
         </div>
       </DashboardSection>
@@ -1317,11 +1539,16 @@ function OwnerDashboardContent({
             />
             <Value label="Public sender" value={configuredLabel(liveStatus?.senderConfigured)} />
             <Value label="Enquiry mode" value={liveStatus?.enquiryMode ?? 'Unavailable'} />
+            <Value label="Reply-To" value={configuredLabel(liveStatus?.enquiryReplyToConfigured)} />
             <Value
               label="Subscription mode"
               value={liveStatus?.subscriptionMode ?? 'Unavailable'}
             />
             <Value label="Test-email readiness" value={emailReady ? 'Ready' : 'Not ready'} />
+            <Value
+              label="Last successful test"
+              value="Not recorded by the current delivery service"
+            />
             {liveStatus?.enquiryMode === 'disabled' ? (
               <Card padding={3} radius={2} tone="caution">
                 <Text size={1}>Enquiry delivery is disabled. Studio cannot send email.</Text>
@@ -1335,6 +1562,11 @@ function OwnerDashboardContent({
             <Text muted size={1}>
               API keys, SMTP passwords and provider tokens are never available in Studio.
             </Text>
+            <IntentButton
+              intent="edit"
+              params={{id: 'siteSettings', type: 'siteSettings'}}
+              text="Edit Email Content"
+            />
           </SummaryCard>
           <SummaryCard status={emailPreviewUrl ? 'complete' : 'blocked'} title="Email previews">
             <Text muted size={1}>
@@ -1345,11 +1577,19 @@ function OwnerDashboardContent({
               <div style={styles.actions}>
                 <ExternalButton
                   href={`${emailPreviewUrl}#guest-confirmation`}
-                  text="Transactional previews"
+                  text="Preview Guest Email"
+                />
+                <ExternalButton
+                  href={`${emailPreviewUrl}#internal-notification`}
+                  text="Preview Internal Email"
                 />
                 <ExternalButton
                   href={`${emailPreviewUrl}#subscription-confirmation`}
-                  text="Subscription previews"
+                  text="Preview Subscription Confirmation"
+                />
+                <ExternalButton
+                  href={`${emailPreviewUrl}#welcome-email`}
+                  text="Preview Welcome Email"
                 />
               </div>
             ) : (
@@ -1378,6 +1618,19 @@ function OwnerDashboardContent({
               label="Subscription mode"
               value={liveStatus?.subscriptionMode ?? 'Unavailable'}
             />
+            <Value label="Topic" value={configuredLabel(liveStatus?.topicConfigured)} />
+            <Value label="Segment" value={configuredLabel(liveStatus?.segmentConfigured)} />
+            <Value
+              label="Reply-To"
+              value={configuredLabel(liveStatus?.subscriptionReplyToConfigured)}
+            />
+            <Value label="Subscriber count" value="View live count in Resend" />
+            <Value
+              label="Broadcast readiness"
+              value={
+                liveStatus?.newsletterReadiness === 'ready' ? 'Ready in Resend' : 'Needs attention'
+              }
+            />
             {liveStatus?.subscriptionMode === 'disabled' ? (
               <Card padding={3} radius={2} tone="caution">
                 <Text size={1}>
@@ -1396,8 +1649,9 @@ function OwnerDashboardContent({
               test inside Resend. Campaigns are not created or duplicated in Sanity.
             </Text>
             <div style={styles.actions}>
-              <ExternalButton href={resendManagementLinks.audience} text="Contacts and audience" />
+              <ExternalButton href={resendManagementLinks.contacts} text="Resend Contacts" />
               <ExternalButton href={resendManagementLinks.broadcasts} text="Broadcasts" />
+              <ExternalButton href={resendManagementLinks.topics} text="Topics" />
               <ExternalButton href={resendManagementLinks.emails} text="Delivery activity" />
             </div>
           </SummaryCard>

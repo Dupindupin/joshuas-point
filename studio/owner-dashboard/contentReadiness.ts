@@ -31,6 +31,18 @@ const detailPaths: Record<string, string> = {
   scenicRoute: '/scenic-routes',
 }
 
+const informationPaths: Record<string, string> = {
+  accessibilityStatement: '/accessibility',
+  cancellationAndRebookingPolicy: '/cancellation-policy',
+  cookiePolicy: '/cookies',
+  emergencyInformation: '/emergency-information',
+  guestInformation: '/guest-information',
+  houseGuide: '/house-guide',
+  planningYourStay: '/plan-your-stay',
+  privacyPolicy: '/privacy',
+  termsAndConditions: '/terms',
+}
+
 const reviewWindows: Partial<Record<string, number>> = {
   destination: 90,
   diveSite: 90,
@@ -126,6 +138,9 @@ function canonicalReady(document: DashboardDocument, settings: DashboardSiteSett
   if (!validHttpsUrl(settings?.siteUrl)) return false
   if (fixedPaths[document._type]) return true
   if (detailPaths[document._type]) return Boolean(document.slug?.trim())
+  if (document._type === 'informationPage') {
+    return Boolean(informationPaths[baseDocumentId(document._id)])
+  }
 
   // Room documents feed the Rooms page and do not own individual public routes.
   return document._type === 'room'

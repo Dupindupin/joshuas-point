@@ -4,14 +4,21 @@ export type DashboardLiveStatus = {
   analyticsEnabled: boolean
   checkedAt: string
   comingSoon: boolean
+  enquiryReplyToConfigured: boolean
   enquiryMode: 'disabled' | 'live' | 'test'
   newsletterReadiness: 'needsAttention' | 'ready'
+  productionDomain: string | null
   resendConfigured: boolean
   senderConfigured: boolean
+  segmentConfigured: boolean
   sendingDomainConfigured: boolean
   sentryEnabled: boolean
   siteDomainConfigured: boolean
+  sitemapEnabled: boolean
+  sslReady: boolean
+  subscriptionReplyToConfigured: boolean
   subscriptionMode: 'disabled' | 'live'
+  topicConfigured: boolean
 }
 
 export type DashboardImage = {
@@ -53,6 +60,7 @@ export type DashboardDocument = {
   _type: string
   _updatedAt?: string | null
   canonicalUrl?: string | null
+  contentBlockCount?: number | null
   eveningImage?: DashboardImage | null
   eveningPresent?: boolean | null
   heroImage?: DashboardImage | null

@@ -6,6 +6,7 @@ import {diveSitesPage} from './documents/diveSitesPage'
 import {homePage} from './documents/homePage'
 import {houseAvailability} from './documents/houseAvailability'
 import {housePage} from './documents/housePage'
+import {informationPage} from './documents/informationPage'
 import {room} from './documents/room'
 import {roomsPage} from './documents/roomsPage'
 import {scenicRoute} from './documents/scenicRoute'
@@ -74,6 +75,7 @@ export const schemaTypes = [
   homePage,
   houseAvailability,
   housePage,
+  informationPage,
   amenity,
   room,
   roomsPage,
