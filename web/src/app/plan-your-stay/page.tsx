@@ -1,3 +1,4 @@
+import type {PortableTextBlock} from '@portabletext/react'
 import type {Metadata} from 'next'
 import Link from 'next/link'
 
@@ -33,6 +34,7 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 const stayDetails = [
+  {label: 'Stay', value: 'One private whole-house stay'},
   {label: 'Check-in', value: stayPolicy.checkIn},
   {label: 'Check-out', value: stayPolicy.checkOut},
   {label: 'Minimum stay', value: stayPolicy.minimumStay},
@@ -44,6 +46,78 @@ const paymentDetails = [
 
 const quietLinkClasses =
   'inline-flex border-b border-ink/35 pb-1 font-body text-sm font-semibold text-ink hover:border-accent hover:text-accent focus-visible:rounded-sm focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-focus'
+
+type CmsSection = {
+  blocks: PortableTextBlock[]
+  heading: string
+}
+
+function blockText(block: PortableTextBlock) {
+  return block.children
+    .map((child) => ('text' in child && typeof child.text === 'string' ? child.text : ''))
+    .join('')
+    .trim()
+}
+
+function groupCmsSections(body: PortableTextBlock[]) {
+  const sections: CmsSection[] = []
+
+  for (const block of body) {
+    const isHeading = block.style === 'h2' || block.style === 'h3'
+    if (isHeading) {
+      sections.push({blocks: [block], heading: blockText(block)})
+    } else if (sections.length > 0) {
+      sections.at(-1)!.blocks.push(block)
+    }
+  }
+
+  return new Map(sections.map((section) => [section.heading.toLowerCase(), section.blocks]))
+}
+
+function selectCmsSections(
+  sections: Map<string, PortableTextBlock[]>,
+  headings: readonly string[],
+) {
+  return headings.flatMap((heading) => sections.get(heading.toLowerCase()) ?? [])
+}
+
+const nextStepSections = ['Welcome', 'Reservation confirmation', 'Before you arrive', 'Contact']
+const essentialStaySections = ['Whole-house rental', 'Check-in']
+const paymentSections = ['Changes']
+const houseInformationSections = [
+  'Identification',
+  'Visitors',
+  'Quiet enjoyment',
+  'Smoking',
+  'Children',
+  'Swimming Pool',
+  'Kitchen',
+  'Caring for the house',
+  'Safety',
+  'CCTV',
+]
+const environmentalSections = ['Environmental commitment']
+
+const enquirySteps = [
+  {
+    description: 'Choose possible arrival and departure dates from the current calendar.',
+    title: 'Check availability',
+  },
+  {
+    description:
+      'Send a stay enquiry with your dates, group details, and anything you would like to ask.',
+    title: 'Send an enquiry',
+  },
+  {
+    description:
+      'We reply personally to confirm availability, pricing, payment arrangements, and the details of your stay.',
+    title: 'Agree the details',
+  },
+  {
+    description: 'Your dates are reserved once you receive your personal confirmation in writing.',
+    title: 'Receive confirmation',
+  },
+] as const
 
 export default async function PlanYourStayPage() {
   const [cmsPage, publicAmenities, houseAvailability] = await Promise.all([
@@ -65,6 +139,13 @@ export default async function PlanYourStayPage() {
     approvedAmenityKeys.twoScooters,
     approvedAmenityKeys.transfers,
   ])
+  const cmsSections = groupCmsSections(cmsPage?.body ?? [])
+  const nextStepContent = selectCmsSections(cmsSections, nextStepSections)
+  const essentialStayContent = selectCmsSections(cmsSections, essentialStaySections)
+  const paymentContent = selectCmsSections(cmsSections, paymentSections)
+  const houseInformationContent = selectCmsSections(cmsSections, houseInformationSections)
+  const environmentalContent = selectCmsSections(cmsSections, environmentalSections)
+  const environmentalBody = environmentalContent.slice(1)
 
   return (
     <>
@@ -77,193 +158,51 @@ export default async function PlanYourStayPage() {
               ? cmsPage!.introduction
               : 'The practical details to know before deciding whether Joshua’s Point feels right for your stay.'
           }
+          size="focused"
           title={hasApprovedCmsContent ? cmsPage!.title : 'Planning your stay.'}
         />
 
-        {hasApprovedCmsContent ? (
-          <SectionSpacing aria-label={cmsPage!.title} size="generous">
-            <EditorialContainer size="reading">
-              <EditorialPortableText value={cmsPage!.body} />
-            </EditorialContainer>
-          </SectionSpacing>
-        ) : (
-          <SectionSpacing aria-labelledby="before-booking-title" size="generous">
-            <EditorialContainer>
-              <EditorialGrid gap="generous">
-                <EditorialText className="lg:col-span-2" variant="eyebrow">
-                  Before you book
-                </EditorialText>
-                <div className="lg:col-span-8 lg:col-start-3">
-                  <EditorialText
-                    className="max-w-3xl"
-                    headingSize="small"
-                    id="before-booking-title"
-                    variant="heading"
-                  >
-                    Know the important details before you decide.
-                  </EditorialText>
-                  <EditorialText className="mt-11 max-w-2xl" variant="body">
-                    Before a stay is confirmed, we want you to understand the house, its setting,
-                    and the terms that apply to your dates.
-                  </EditorialText>
-                </div>
-              </EditorialGrid>
-            </EditorialContainer>
-          </SectionSpacing>
-        )}
-
         {houseAvailability ? (
-          <SectionSpacing id="availability" size="generous">
+          <SectionSpacing axis="bottom" id="availability" size="compact">
             <EditorialContainer>
               <HouseAvailabilityCalendar availability={houseAvailability} />
             </EditorialContainer>
           </SectionSpacing>
         ) : null}
 
-        {!hasApprovedCmsContent ? (
-          <>
-            <SectionSpacing
-              aria-labelledby="stay-details-title"
-              className="bg-surface-soft"
-              size="immersive"
-            >
-              <EditorialContainer>
-                <EditorialGrid gap="generous">
-                  <EditorialText className="lg:col-span-2" variant="eyebrow">
-                    Stay details
-                  </EditorialText>
-                  <EditorialText
-                    className="max-w-4xl lg:col-span-9 lg:col-start-3"
-                    headingSize="medium"
-                    id="stay-details-title"
-                    variant="heading"
-                  >
-                    The useful details, gathered in one place.
-                  </EditorialText>
-                </EditorialGrid>
-                <div className="mt-20 sm:mt-28 lg:ml-[16.666667%]">
-                  <StayInformationList items={stayDetails} />
-                </div>
-              </EditorialContainer>
-            </SectionSpacing>
-
-            {practicalAmenities.length > 0 ? (
-              <SectionSpacing aria-labelledby="stay-amenities-title" size="generous">
-                <EditorialContainer>
-                  <EditorialGrid gap="generous">
-                    <EditorialText className="lg:col-span-2" variant="eyebrow">
-                      At the house
-                    </EditorialText>
-                    <div className="lg:col-span-7 lg:col-start-4">
-                      <EditorialText
-                        headingSize="small"
-                        id="stay-amenities-title"
-                        variant="heading"
-                      >
-                        A few practical details about the house.
-                      </EditorialText>
-                      <EditorialAmenityList className="mt-12" items={practicalAmenities} />
-                    </div>
-                  </EditorialGrid>
-                </EditorialContainer>
-              </SectionSpacing>
-            ) : null}
-
-            <SectionSpacing
-              aria-labelledby="payments-title"
-              className="bg-inverse-surface"
-              size="immersive"
-            >
-              <EditorialContainer>
-                <EditorialGrid gap="generous">
-                  <EditorialText className="lg:col-span-2" tone="inverse" variant="eyebrow">
-                    Payments
-                  </EditorialText>
-                  <div className="lg:col-span-8 lg:col-start-3">
-                    <EditorialText
-                      className="max-w-3xl"
-                      headingSize="medium"
-                      id="payments-title"
-                      tone="inverse"
-                      variant="heading"
-                    >
-                      Payment details, stated clearly.
-                    </EditorialText>
-                    <EditorialText className="mt-11 max-w-2xl" tone="inverse" variant="body">
-                      This page does not collect or process payment.
-                    </EditorialText>
-                  </div>
-                </EditorialGrid>
-                <div className="mt-20 bg-canvas px-6 py-4 sm:mt-28 sm:px-10 lg:ml-[16.666667%] lg:px-14">
-                  <StayInformationList items={paymentDetails} />
-                </div>
-              </EditorialContainer>
-            </SectionSpacing>
-
-            <SectionSpacing aria-labelledby="cancellation-title" size="generous">
-              <EditorialContainer size="reading">
-                <EditorialText variant="eyebrow">Cancellation</EditorialText>
-                <EditorialText className="mt-9" id="cancellation-title" variant="lead">
-                  Please read the cancellation terms before dates are held.
-                </EditorialText>
-                <EditorialText className="mt-12 max-w-2xl" variant="body">
-                  Your personal written confirmation will set out the terms for your stay. Please
-                  read the{' '}
-                  <Link className={quietLinkClasses} href="/cancellation-policy">
-                    Cancellation &amp; Rebooking Policy
-                  </Link>
-                  .
-                </EditorialText>
-              </EditorialContainer>
-            </SectionSpacing>
-
-            <SectionSpacing aria-labelledby="house-expectations-title" size="generous">
-              <EditorialContainer>
-                <EditorialGrid gap="generous">
-                  <EditorialText className="lg:col-span-2" variant="eyebrow">
-                    House expectations
-                  </EditorialText>
-                  <div className="lg:col-span-7 lg:col-start-4">
-                    <EditorialText
-                      headingSize="small"
-                      id="house-expectations-title"
-                      variant="heading"
-                    >
-                      Please care for the house and its surroundings.
-                    </EditorialText>
-                    <EditorialText className="mt-11" variant="body">
-                      We ask everyone to treat the house, its shared spaces, the surrounding nature,
-                      and nearby neighbours with care.
-                    </EditorialText>
-                  </div>
-                </EditorialGrid>
-              </EditorialContainer>
-            </SectionSpacing>
-          </>
-        ) : null}
-
         <SectionSpacing
-          aria-labelledby="journey-and-questions-title"
+          aria-labelledby="what-happens-next-title"
           className="bg-inverse-surface"
-          size="generous"
+          size="standard"
         >
           <EditorialContainer>
             <EditorialGrid gap="generous">
-              <div className="lg:col-span-6 lg:col-start-4">
-                <EditorialText tone="inverse" variant="eyebrow">
-                  Questions
-                </EditorialText>
+              <EditorialText className="lg:col-span-2" tone="inverse" variant="eyebrow">
+                What happens next
+              </EditorialText>
+              <div className="lg:col-span-9 lg:col-start-3">
                 <EditorialText
-                  as="h2"
-                  className="mt-8"
                   headingSize="small"
-                  id="journey-and-questions-title"
+                  id="what-happens-next-title"
                   tone="inverse"
                   variant="heading"
                 >
-                  Ask what matters before deciding.
+                  From possible dates to a personal confirmation.
                 </EditorialText>
-                <div className="mt-9 flex flex-wrap gap-x-8 gap-y-5">
+                <ol className="mt-14 grid gap-x-10 gap-y-10 sm:grid-cols-2">
+                  {enquirySteps.map((step, index) => (
+                    <li className="border-t border-inverse/25 pt-6" key={step.title}>
+                      <p className="font-body text-xs font-semibold tracking-[0.14em] text-evening-accent uppercase">
+                        Step {index + 1}
+                      </p>
+                      <h3 className="mt-4 font-display text-2xl text-inverse">{step.title}</h3>
+                      <p className="mt-4 max-w-md font-body text-base leading-8 text-inverse/75">
+                        {step.description}
+                      </p>
+                    </li>
+                  ))}
+                </ol>
+                <div className="mt-12 flex flex-wrap gap-x-8 gap-y-5">
                   <Link
                     className={`${quietLinkClasses} border-inverse/35 text-inverse hover:border-inverse hover:text-inverse focus-visible:outline-evening-accent`}
                     href="/contact"
@@ -273,12 +212,133 @@ export default async function PlanYourStayPage() {
                 </div>
               </div>
             </EditorialGrid>
+            {nextStepContent.length > 0 ? (
+              <div className="mt-20 bg-canvas px-6 py-4 text-ink sm:mt-24 sm:px-10 lg:ml-[16.666667%] lg:px-14 lg:py-8">
+                <EditorialPortableText value={nextStepContent} />
+              </div>
+            ) : null}
           </EditorialContainer>
         </SectionSpacing>
 
-        <SectionSpacing aria-label="Closing reflection" size="immersive">
+        <SectionSpacing
+          aria-labelledby="essential-stay-facts-title"
+          className="bg-surface-soft"
+          size="standard"
+        >
+          <EditorialContainer>
+            <EditorialGrid gap="generous">
+              <EditorialText className="lg:col-span-2" variant="eyebrow">
+                Essential stay facts
+              </EditorialText>
+              <EditorialText
+                className="max-w-4xl lg:col-span-9 lg:col-start-3"
+                headingSize="medium"
+                id="essential-stay-facts-title"
+                variant="heading"
+              >
+                The useful details, gathered in one place.
+              </EditorialText>
+            </EditorialGrid>
+            <div className="mt-16 sm:mt-20 lg:ml-[16.666667%]">
+              <StayInformationList items={stayDetails} />
+            </div>
+            {essentialStayContent.length > 0 ? (
+              <div className="mt-16 lg:ml-[16.666667%] lg:max-w-3xl">
+                <EditorialPortableText value={essentialStayContent} />
+              </div>
+            ) : null}
+          </EditorialContainer>
+        </SectionSpacing>
+
+        <SectionSpacing aria-labelledby="payments-title" size="standard">
+          <EditorialContainer>
+            <EditorialGrid gap="generous">
+              <EditorialText className="lg:col-span-2" variant="eyebrow">
+                Payment &amp; cancellation
+              </EditorialText>
+              <div className="lg:col-span-8 lg:col-start-3">
+                <EditorialText headingSize="small" id="payments-title" variant="heading">
+                  Clear terms before dates are held.
+                </EditorialText>
+                <EditorialText className="mt-9 max-w-2xl" variant="body">
+                  This page does not collect or process payment. Your personal written confirmation
+                  will set out the terms for your stay.
+                </EditorialText>
+                <div className="mt-8 flex flex-wrap gap-x-8 gap-y-5">
+                  <Link className={quietLinkClasses} href="/cancellation-policy">
+                    Cancellation &amp; Rebooking Policy
+                  </Link>
+                  <Link className={quietLinkClasses} href="/terms">
+                    Terms &amp; Conditions
+                  </Link>
+                </div>
+              </div>
+            </EditorialGrid>
+            <div className="mt-16 lg:ml-[16.666667%]">
+              <StayInformationList items={paymentDetails} />
+            </div>
+            {paymentContent.length > 0 ? (
+              <div className="mt-14 lg:ml-[16.666667%] lg:max-w-3xl">
+                <EditorialPortableText value={paymentContent} />
+              </div>
+            ) : null}
+          </EditorialContainer>
+        </SectionSpacing>
+
+        <SectionSpacing
+          aria-labelledby="house-information-title"
+          className="bg-surface-soft"
+          size="standard"
+        >
+          <EditorialContainer>
+            <EditorialGrid gap="generous">
+              <EditorialText className="lg:col-span-2" variant="eyebrow">
+                House information
+              </EditorialText>
+              <div className="lg:col-span-8 lg:col-start-3">
+                <EditorialText headingSize="small" id="house-information-title" variant="heading">
+                  Practical guidance for enjoying the house with care.
+                </EditorialText>
+                {practicalAmenities.length > 0 ? (
+                  <EditorialAmenityList className="mt-12" items={practicalAmenities} />
+                ) : null}
+              </div>
+            </EditorialGrid>
+            {houseInformationContent.length > 0 ? (
+              <div className="mt-16 lg:ml-[16.666667%] lg:max-w-3xl">
+                <EditorialPortableText value={houseInformationContent} />
+              </div>
+            ) : (
+              <EditorialText className="mt-12 max-w-2xl lg:ml-[16.666667%]" variant="body">
+                We ask everyone to treat the house, its shared spaces, the surrounding nature, and
+                nearby neighbours with care.
+              </EditorialText>
+            )}
+          </EditorialContainer>
+        </SectionSpacing>
+
+        <SectionSpacing aria-labelledby="environmental-commitment-title" size="standard">
           <EditorialContainer size="reading">
-            <EditorialText variant="lead">
+            <EditorialText variant="eyebrow">Care for the setting</EditorialText>
+            <EditorialText
+              className="mt-9"
+              headingSize="small"
+              id="environmental-commitment-title"
+              variant="heading"
+            >
+              Environmental commitment
+            </EditorialText>
+            {environmentalBody.length > 0 ? (
+              <div className="mt-8">
+                <EditorialPortableText value={environmentalBody} />
+              </div>
+            ) : (
+              <EditorialText className="mt-8" variant="body">
+                Please use water and electricity thoughtfully and take care of the landscape around
+                the house.
+              </EditorialText>
+            )}
+            <EditorialText className="mt-14" variant="lead">
               A well-planned stay leaves more room for the light, the weather, and the days as they
               unfold.
             </EditorialText>

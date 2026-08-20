@@ -2,7 +2,7 @@ type EditorialPageHeroProps = {
   eyebrow: string
   introduction?: string
   motion?: boolean
-  size?: 'compact' | 'standard'
+  size?: 'compact' | 'focused' | 'standard'
   title: string
 }
 
@@ -14,15 +14,17 @@ export function EditorialPageHero({
   title,
 }: EditorialPageHeroProps) {
   const headerClasses =
-    size === 'compact'
-      ? 'px-6 pt-40 pb-16 sm:px-8 sm:pt-44 sm:pb-20 md:px-10 lg:pt-48 lg:pb-24'
-      : 'px-6 pt-48 pb-24 sm:px-8 sm:pt-52 sm:pb-32 md:px-10 lg:pt-60 lg:pb-36'
+    size === 'focused'
+      ? 'px-6 pt-32 pb-10 sm:px-8 sm:pt-36 sm:pb-12 md:px-10 lg:pt-32 lg:pb-10'
+      : size === 'compact'
+        ? 'px-6 pt-40 pb-16 sm:px-8 sm:pt-44 sm:pb-20 md:px-10 lg:pt-48 lg:pb-24'
+        : 'px-6 pt-48 pb-24 sm:px-8 sm:pt-52 sm:pb-32 md:px-10 lg:pt-60 lg:pb-36'
   const titleClasses =
-    size === 'compact'
+    size === 'compact' || size === 'focused'
       ? 'text-[clamp(3rem,14vw,4.25rem)] sm:text-[5rem] lg:text-[6.5rem] xl:text-[7.5rem]'
       : 'text-[clamp(3rem,15vw,4.25rem)] sm:text-[5.5rem] lg:text-[7.75rem] xl:text-[9rem]'
   const introductionClasses =
-    size === 'compact' ? 'mt-10 lg:mt-14' : 'mt-14 lg:mt-20'
+    size === 'focused' ? 'mt-8 lg:mt-10' : size === 'compact' ? 'mt-10 lg:mt-14' : 'mt-14 lg:mt-20'
 
   return (
     <header className={`bg-canvas text-ink ${headerClasses}`}>
