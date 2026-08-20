@@ -23,7 +23,12 @@ export type OwnerDashboardLiveStatus = {
     completedAt: string
     referenceNumber: string
   } | null
+  newEnquiryCount: number | null
   newsletterReadiness: 'needsAttention' | 'ready'
+  nextArrival: {
+    arrival: string
+    referenceNumber: string
+  } | null
   productionDomain: string | null
   resendConfigured: boolean
   senderConfigured: boolean
@@ -171,7 +176,9 @@ export async function getOwnerDashboardLiveStatus(
     enquiryReplyToConfigured: Boolean(enquiryReplyTo),
     enquiryMode,
     lastSuccessfulOwnerEnquiryTest: operationsSummary?.lastSuccessfulOwnerTest ?? null,
+    newEnquiryCount: operationsSummary?.newEnquiryCount ?? null,
     newsletterReadiness: newsletterConfigured ? 'ready' : 'needsAttention',
+    nextArrival: operationsSummary?.nextArrival ?? null,
     productionDomain,
     resendConfigured,
     senderConfigured: Boolean(enquirySender),

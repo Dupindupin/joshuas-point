@@ -57,7 +57,7 @@ const styles = {
   page: {
     margin: '0 auto',
     maxWidth: 1440,
-    padding: 'clamp(1rem, 3vw, 3rem)',
+    padding: 'clamp(0.75rem, 2vw, 2rem)',
   },
   header: {
     alignItems: 'flex-start',
@@ -65,16 +65,54 @@ const styles = {
     flexWrap: 'wrap' as const,
     gap: '1rem',
     justifyContent: 'space-between',
-    marginBottom: '2rem',
+    marginBottom: '1rem',
   },
   sectionGrid: {
     display: 'grid',
-    gap: '1rem',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 290px), 1fr))',
+    gap: '0.75rem',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 260px), 1fr))',
   },
-  section: {marginTop: '2rem'},
+  quickActionsGrid: {
+    display: 'grid',
+    gap: '0.6rem',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 185px), 1fr))',
+  },
+  briefingGrid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 180px), 1fr))',
+  },
+  briefingItem: {
+    borderRight: '1px solid var(--card-border-color)',
+    display: 'grid',
+    gap: '0.35rem',
+    minHeight: '5.25rem',
+    padding: '0.8rem 1rem',
+  },
+  compactStatusGrid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 190px), 1fr))',
+  },
+  compactStatusItem: {
+    alignItems: 'center',
+    borderBottom: '1px solid var(--card-border-color)',
+    display: 'flex',
+    gap: '0.75rem',
+    justifyContent: 'space-between',
+    minHeight: '3rem',
+    padding: '0.55rem 0.8rem',
+  },
+  collapsibleSummary: {
+    alignItems: 'center',
+    cursor: 'pointer',
+    display: 'flex',
+    gap: '1rem',
+    justifyContent: 'space-between',
+    listStyle: 'none',
+    padding: '0.9rem 1rem',
+  },
+  section: {marginTop: '1.5rem'},
   card: {height: '100%'},
-  cardBody: {display: 'grid', gap: '0.8rem'},
+  cardBody: {display: 'grid', gap: '0.55rem'},
   actions: {
     display: 'flex',
     flexWrap: 'wrap' as const,
@@ -85,7 +123,7 @@ const styles = {
     alignItems: 'center',
     display: 'flex',
     justifyContent: 'center',
-    minHeight: '4.5rem',
+    minHeight: '3.25rem',
     textAlign: 'center' as const,
   },
   row: {
@@ -102,7 +140,7 @@ const styles = {
     justifyContent: 'space-between',
     listStyle: 'none',
   },
-  subsection: {marginTop: '1.5rem'},
+  subsection: {marginTop: '1rem'},
 } as const
 
 const resendManagementLinks = {
@@ -126,6 +164,16 @@ const statusTones = {
   complete: 'positive',
   needsAttention: 'caution',
   unknown: 'default',
+} as const
+
+type StatusColour = 'attention' | 'disabled' | 'information' | 'problem' | 'ready'
+
+const statusColourTones = {
+  attention: 'caution',
+  disabled: 'default',
+  information: 'primary',
+  problem: 'critical',
+  ready: 'positive',
 } as const
 
 type LaunchControlStatus = Extract<DashboardStatus, 'complete' | 'needsAttention' | 'unknown'>
@@ -173,17 +221,6 @@ function formatDashboardDateTime(value: string | null | undefined) {
   })
 }
 
-function formatPropertyTime(value: string | null | undefined) {
-  if (!value) return 'Unavailable'
-  const parsed = new Date(value)
-  if (Number.isNaN(parsed.getTime())) return 'Unavailable'
-  return parsed.toLocaleTimeString(undefined, {
-    hour: 'numeric',
-    minute: '2-digit',
-    timeZone: 'Asia/Manila',
-  })
-}
-
 function completeAvailabilityPeriods(periods: DashboardAvailabilityPeriod[] | null | undefined) {
   return (periods ?? [])
     .filter(
@@ -215,9 +252,17 @@ function hasCompleteInformationContent(document: DashboardDocument | null | unde
   return Boolean(document?.title && document.summaryDescription && document.contentBlockCount)
 }
 
-function StatusBadge({label, status}: {label?: string; status: DashboardStatus}) {
+function StatusBadge({
+  colour,
+  label,
+  status,
+}: {
+  colour?: StatusColour
+  label?: string
+  status: DashboardStatus
+}) {
   return (
-    <Card padding={2} radius={2} tone={statusTones[status]}>
+    <Card padding={2} radius={2} tone={colour ? statusColourTones[colour] : statusTones[status]}>
       {label ?? statusLabels[status]}
     </Card>
   )
@@ -229,7 +274,7 @@ function DashboardSection({
   title,
 }: {
   children: React.ReactNode
-  description: string
+  description?: string
   title: string
 }) {
   const sectionId = `dashboard-${title.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`
@@ -239,9 +284,11 @@ function DashboardSection({
         <Heading id={`${sectionId}-title`} size={2}>
           {title}
         </Heading>
-        <Text muted size={1}>
-          {description}
-        </Text>
+        {description ? (
+          <Text muted size={1}>
+            {description}
+          </Text>
+        ) : null}
       </div>
       {children}
     </section>
@@ -275,27 +322,138 @@ function DashboardSubsection({
 
 function SummaryCard({
   children,
+  colour,
   status,
   statusLabel,
   title,
 }: {
   children: React.ReactNode
+  colour?: StatusColour
   status: DashboardStatus
   statusLabel?: string
   title: string
 }) {
   return (
-    <Card border padding={4} radius={3} style={styles.card}>
+    <Card border padding={3} radius={2} style={styles.card}>
       <div style={styles.cardBody}>
         <div style={styles.row}>
           <Heading as="h3" size={1}>
             {title}
           </Heading>
-          <StatusBadge label={statusLabel} status={status} />
+          <StatusBadge colour={colour} label={statusLabel} status={status} />
         </div>
         {children}
       </div>
     </Card>
+  )
+}
+
+function CompactStatusGrid({
+  items,
+}: {
+  items: Array<{
+    colour: StatusColour
+    label: string
+    status: DashboardStatus
+    statusLabel: string
+  }>
+}) {
+  return (
+    <Card border padding={0} radius={2}>
+      <div style={styles.compactStatusGrid}>
+        {items.map((item) => (
+          <div key={item.label} style={styles.compactStatusItem}>
+            <Text size={1} weight="medium">
+              {item.label}
+            </Text>
+            <StatusBadge colour={item.colour} label={item.statusLabel} status={item.status} />
+          </div>
+        ))}
+      </div>
+    </Card>
+  )
+}
+
+function CollapsibleDashboardSection({
+  children,
+  description,
+  status,
+  statusLabel,
+  title,
+}: {
+  children: React.ReactNode
+  description: string
+  status: DashboardStatus
+  statusLabel: string
+  title: string
+}) {
+  const sectionId = `dashboard-${title.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`
+  return (
+    <section id={sectionId} style={styles.subsection}>
+      <Card border padding={0} radius={2}>
+        <details>
+          <summary aria-controls={`${sectionId}-content`} style={styles.collapsibleSummary}>
+            <div style={{display: 'grid', gap: '0.25rem'}}>
+              <Heading as="h3" size={1}>
+                {title}
+              </Heading>
+              <Text muted size={1}>
+                {description}
+              </Text>
+            </div>
+            <div style={{alignItems: 'center', display: 'flex', gap: '0.75rem'}}>
+              <StatusBadge label={statusLabel} status={status} />
+              <Text muted size={1}>
+                Review
+              </Text>
+            </div>
+          </summary>
+          <div id={`${sectionId}-content`} style={{padding: '0 1rem 1rem'}}>
+            {children}
+          </div>
+        </details>
+      </Card>
+    </section>
+  )
+}
+
+function BriefingItem({
+  actionHref,
+  actionText = 'Open',
+  children,
+  external = false,
+  icon,
+  label,
+  value,
+}: {
+  actionHref?: string
+  actionText?: string
+  children?: React.ReactNode
+  external?: boolean
+  icon: string
+  label: string
+  value: string
+}) {
+  return (
+    <div style={styles.briefingItem}>
+      <Text muted size={1}>
+        <span aria-hidden="true">{icon}</span> {label}
+      </Text>
+      <Text size={2} weight="semibold">
+        {value}
+      </Text>
+      {children}
+      {actionHref ? (
+        <a
+          href={actionHref}
+          rel={external ? 'noreferrer' : undefined}
+          style={{color: 'inherit', fontSize: '0.75rem', width: 'fit-content'}}
+          target={external ? '_blank' : undefined}
+        >
+          {actionText}
+        </a>
+      ) : null}
+    </div>
   )
 }
 
@@ -495,6 +653,16 @@ function isDashboardLiveStatus(value: unknown): value is DashboardLiveStatus {
           'string' &&
         typeof (status.lastSuccessfulOwnerEnquiryTest as Record<string, unknown>)
           .referenceNumber === 'string')) &&
+    (status.newEnquiryCount === undefined ||
+      status.newEnquiryCount === null ||
+      (typeof status.newEnquiryCount === 'number' &&
+        Number.isInteger(status.newEnquiryCount) &&
+        status.newEnquiryCount >= 0)) &&
+    (status.nextArrival === undefined ||
+      status.nextArrival === null ||
+      (typeof status.nextArrival === 'object' &&
+        typeof (status.nextArrival as Record<string, unknown>).arrival === 'string' &&
+        typeof (status.nextArrival as Record<string, unknown>).referenceNumber === 'string')) &&
     (status.weather === null ||
       (typeof status.weather === 'object' &&
         typeof (status.weather as Record<string, unknown>).condition === 'string' &&
@@ -753,11 +921,6 @@ function OwnerDashboardContent({
     : liveStatus.newsletterReadiness === 'ready' && liveStatus.subscriptionMode === 'live'
       ? 'complete'
       : 'needsAttention'
-  const analyticsLaunchStatus: LaunchControlStatus = !liveStatus
-    ? 'unknown'
-    : liveStatus.analyticsEnabled
-      ? 'complete'
-      : 'unknown'
   const contentLaunchStatus: LaunchControlStatus = contentGroups.some(
     ({status}) => status === 'needsAttention' || status === 'blocked',
   )
@@ -768,90 +931,6 @@ function OwnerDashboardContent({
   const photographyLaunchStatus: LaunchControlStatus = photographyNeededLabels.length
     ? 'needsAttention'
     : 'complete'
-
-  const launchControlItems: Array<{
-    category: string
-    detail: string
-    label: string
-    status: LaunchControlStatus
-    statusLabel?: string
-  }> = [
-    {
-      detail:
-        websiteLaunchStatus === 'complete'
-          ? 'The production-review domain is healthy and protected by Coming Soon. The full website remains private.'
-          : websiteLaunchStatus === 'unknown'
-            ? 'Live domain and Coming Soon status could not be verified.'
-            : 'Review the domain, SSL, required Site Settings or Coming Soon protection below.',
-      category: 'Technical readiness',
-      label: 'Website status',
-      status: websiteLaunchStatus,
-    },
-    {
-      detail:
-        emailOperationalState === 'systemReady'
-          ? 'The enquiry system is configured and delivery is enabled.'
-          : emailOperationalState === 'disabledByOwner'
-            ? liveStatus?.comingSoon
-              ? 'Delivery is intentionally disabled by the owner while Coming Soon remains active. Coming Soon itself does not create a delivery error.'
-              : 'Delivery is intentionally disabled by the owner.'
-            : emailOperationalState === 'deliveryError'
-              ? 'The most recent recorded delivery attempt failed or was only partially sent.'
-              : 'The current delivery configuration or live status could not be verified.',
-      category:
-        emailOperationalState === 'disabledByOwner' ? 'Owner decision' : 'Technical readiness',
-      label: 'Email readiness',
-      status: emailLaunchStatus,
-      statusLabel: emailStatusLabel,
-    },
-    {
-      detail:
-        newsletterLaunchStatus === 'complete'
-          ? 'Subscriber configuration is ready and subscription delivery is live.'
-          : newsletterLaunchStatus === 'unknown'
-            ? 'Live newsletter configuration could not be verified.'
-            : 'Subscriber configuration needs attention or subscription delivery remains disabled.',
-      category: 'Technical readiness',
-      label: 'Newsletter readiness',
-      status: newsletterLaunchStatus,
-    },
-    {
-      detail:
-        analyticsLaunchStatus === 'complete'
-          ? 'Privacy-conscious production analytics is enabled.'
-          : liveStatus
-            ? 'Analytics is an optional improvement and does not block protected production review.'
-            : 'Live analytics status could not be verified.',
-      category: 'Optional improvement',
-      label: 'Analytics readiness',
-      status: analyticsLaunchStatus,
-    },
-    {
-      detail:
-        contentLaunchStatus === 'complete'
-          ? 'Published launch content passes publication, editorial review and SEO checks. Photography is assessed separately.'
-          : contentLaunchStatus === 'unknown'
-            ? 'There is not enough current content information to assess launch readiness.'
-            : 'One or more launch content groups has a genuine publication, review or SEO issue.',
-      category: contentLaunchStatus === 'complete' ? 'Content readiness' : 'Content incomplete',
-      label: 'Content readiness',
-      status: contentLaunchStatus,
-    },
-    {
-      category: 'Owner decision resolved',
-      detail: wholeHouseOccupancyDescription,
-      label: 'Whole-house occupancy',
-      status: 'complete',
-    },
-    {
-      category: photographyNeededLabels.length ? 'Photography needed' : 'Photography readiness',
-      detail: photographyNeededLabels.length
-        ? `${photographyNeededLabels.length} text-led pages still need owner-approved, place-specific photography. Their content is not treated as broken.`
-        : 'No current production photography requirement is recorded.',
-      label: 'Photography readiness',
-      status: photographyLaunchStatus,
-    },
-  ]
 
   const technicalIssues = [
     ...(!requiredWebsiteSettingsComplete(settings)
@@ -869,7 +948,7 @@ function OwnerDashboardContent({
       : emailOperationalState === 'unavailable' && liveStatus
         ? ['Transactional enquiry email configuration could not be verified.']
         : []),
-    ...(newsletterLaunchStatus === 'needsAttention'
+    ...(liveStatus && liveStatus.newsletterReadiness !== 'ready'
       ? ['Newsletter signup is not launch-ready.']
       : []),
   ]
@@ -879,20 +958,109 @@ function OwnerDashboardContent({
   const contentIssues = contentGroups
     .filter(({status}) => status === 'needsAttention' || status === 'blocked')
     .map(({label}) => `${label} has a publication, review or SEO issue.`)
-  const photographyNeeds = photographyNeededLabels.map((label) => `${label} — photography needed.`)
-  const optionalImprovements = [
-    ...(!liveStatus?.analyticsEnabled
-      ? ['Production analytics can be enabled after owner review.']
+  const houseBriefingState = currentUnavailablePeriod
+    ? currentUnavailablePeriod.status === 'reserved' ||
+      currentUnavailablePeriod.status === 'ownerStay'
+      ? 'Occupied'
+      : 'Unavailable'
+    : availability?.availabilityConfirmedThrough && !confirmationHorizonExpired
+      ? 'Available'
+      : 'Needs review'
+  const briefingAttentionItems = [
+    ...technicalIssues,
+    ...availabilityWarnings,
+    ...ownerDecisions,
+    ...contentIssues,
+    ...(photographyNeededLabels.length
+      ? [`${photographyNeededLabels.length} pages need photography.`]
       : []),
+  ].slice(0, 3)
+  const compactLaunchItems: Parameters<typeof CompactStatusGrid>[0]['items'] = [
+    {
+      colour:
+        websiteLaunchStatus === 'complete'
+          ? 'ready'
+          : websiteLaunchStatus === 'needsAttention'
+            ? 'attention'
+            : 'information',
+      label: 'Website',
+      status: websiteLaunchStatus,
+      statusLabel: launchControlLabels[websiteLaunchStatus],
+    },
+    {
+      colour:
+        emailOperationalState === 'systemReady'
+          ? 'ready'
+          : emailOperationalState === 'disabledByOwner'
+            ? 'disabled'
+            : emailOperationalState === 'deliveryError'
+              ? 'problem'
+              : 'information',
+      label: 'Email',
+      status: emailLaunchStatus,
+      statusLabel: emailStatusLabel,
+    },
+    {
+      colour:
+        liveStatus?.subscriptionMode === 'disabled'
+          ? 'disabled'
+          : newsletterLaunchStatus === 'complete'
+            ? 'ready'
+            : newsletterLaunchStatus === 'needsAttention'
+              ? 'attention'
+              : 'information',
+      label: 'Newsletter',
+      status: liveStatus?.subscriptionMode === 'disabled' ? 'unknown' : newsletterLaunchStatus,
+      statusLabel:
+        liveStatus?.subscriptionMode === 'disabled'
+          ? 'Disabled by owner'
+          : launchControlLabels[newsletterLaunchStatus],
+    },
+    {
+      colour:
+        contentLaunchStatus === 'complete'
+          ? 'ready'
+          : contentLaunchStatus === 'needsAttention'
+            ? 'attention'
+            : 'information',
+      label: 'Content',
+      status: contentLaunchStatus,
+      statusLabel:
+        contentLaunchStatus === 'needsAttention'
+          ? 'Needs review'
+          : launchControlLabels[contentLaunchStatus],
+    },
+    {
+      colour: photographyLaunchStatus === 'complete' ? 'ready' : 'attention',
+      label: 'Photography',
+      status: photographyLaunchStatus,
+      statusLabel: photographyNeededLabels.length ? 'Needed' : 'Ready',
+    },
+    {
+      colour: technicalIssues.length ? 'problem' : liveStatus ? 'ready' : 'information',
+      label: 'Technical',
+      status: technicalIssues.length ? 'needsAttention' : liveStatus ? 'complete' : 'unknown',
+      statusLabel: technicalIssues.length ? 'Problem' : liveStatus ? 'Healthy' : 'Unavailable',
+    },
   ]
+  const mapIssueCount =
+    Number(!mapProviderConfigured) +
+    (destinations.length - destinationMaps.length) +
+    (diveSites.length - diveMaps.length) +
+    (scenicRoutes.length - routeMaps.length) +
+    Number(!mountainLakeRoute)
+  const seoIssueCount =
+    missingEffectiveTitles.length +
+    missingEffectiveDescriptions.length +
+    missingSocialImageFallback.length +
+    canonicalIssues.length +
+    documentsWithoutSlugs.length +
+    unexpectedNoIndexDocuments.length
 
   return (
     <>
-      <DashboardSection
-        title="Owner Quick Actions"
-        description="Start every regular owner task here. Review and preview links open safely without publishing the website."
-      >
-        <div style={styles.sectionGrid}>
+      <DashboardSection title="Owner Quick Actions" description="Open regular owner tasks.">
+        <div style={styles.quickActionsGrid}>
           {reviewUrl ? (
             <QuickLink external href={reviewUrl} text="🌐 Open Website (Review Mode)" />
           ) : (
@@ -919,147 +1087,96 @@ function OwnerDashboardContent({
         </div>
       </DashboardSection>
 
-      <DashboardSection
-        title="Today at Joshua's Point"
-        description="A current property weather snapshot for the owner's morning overview. Recent data is reused for fifteen minutes and refreshed automatically."
-      >
-        <div style={styles.sectionGrid}>
-          <SummaryCard
-            status={liveStatus?.weather ? 'complete' : 'unknown'}
-            statusLabel={liveStatus?.weather ? 'Current' : 'Unavailable'}
-            title="Weather"
-          >
-            {liveStatus?.weather ? (
-              <>
-                <Value label="Conditions" value={liveStatus.weather.condition} />
-                <Value label="Temperature" value={`${liveStatus.weather.temperatureCelsius} °C`} />
-                <Value
-                  label="Rain probability"
-                  value={`${liveStatus.weather.rainProbabilityPercent}%`}
-                />
-                <Value label="Wind" value={`${liveStatus.weather.windKilometresPerHour} km/h`} />
-                <Value label="Sunrise" value={formatPropertyTime(liveStatus.weather.sunrise)} />
-                <Value label="Sunset" value={formatPropertyTime(liveStatus.weather.sunset)} />
-                <Text muted size={1}>
-                  Updated {formatDashboardDateTime(liveStatus.weather.fetchedAt)} · Open-Meteo
-                  forecast for the approved Site Settings location.
-                </Text>
-              </>
-            ) : (
+      <DashboardSection title="Today's Briefing">
+        <Card border padding={0} radius={2}>
+          <div style={styles.briefingGrid}>
+            <BriefingItem
+              icon="🌤"
+              label="Weather"
+              value={
+                liveStatus?.weather
+                  ? `${liveStatus.weather.condition} · ${liveStatus.weather.temperatureCelsius} °C`
+                  : 'Unavailable'
+              }
+            >
               <Text muted size={1}>
-                Weather is temporarily unavailable. Other dashboard checks remain available.
+                {liveStatus?.weather
+                  ? `${liveStatus.weather.rainProbabilityPercent}% rain · ${liveStatus.weather.windKilometresPerHour} km/h wind`
+                  : 'Check again shortly.'}
               </Text>
-            )}
-          </SummaryCard>
-        </div>
+            </BriefingItem>
+            <BriefingItem
+              actionHref="#dashboard-booking-center"
+              actionText="Open calendar"
+              icon="🏡"
+              label="House"
+              value={houseBriefingState}
+            >
+              <Text muted size={1}>
+                {currentUnavailablePeriod
+                  ? formatAvailabilityPeriod(currentUnavailablePeriod)
+                  : 'Whole-house availability today.'}
+              </Text>
+            </BriefingItem>
+            <BriefingItem
+              actionHref={operationsStudioUrl}
+              actionText="Review enquiries"
+              external
+              icon="📨"
+              label="New enquiries"
+              value={
+                liveStatus?.newEnquiryCount === null || liveStatus?.newEnquiryCount === undefined
+                  ? 'Unavailable'
+                  : String(liveStatus.newEnquiryCount)
+              }
+            />
+            <BriefingItem
+              actionHref={operationsStudioUrl}
+              actionText="Open stays"
+              external
+              icon="📅"
+              label="Next arrival"
+              value={
+                liveStatus?.nextArrival
+                  ? formatDashboardDate(liveStatus.nextArrival.arrival)
+                  : liveStatus?.nextArrival === null
+                    ? 'None scheduled'
+                    : 'Unavailable'
+              }
+            >
+              {liveStatus?.nextArrival ? (
+                <Text muted size={1}>
+                  {liveStatus.nextArrival.referenceNumber}
+                </Text>
+              ) : null}
+            </BriefingItem>
+            <BriefingItem
+              actionHref="#dashboard-content-center"
+              actionText="Review details"
+              icon="⚠"
+              label="Needs attention"
+              value={
+                briefingAttentionItems.length ? `${briefingAttentionItems.length} items` : 'Clear'
+              }
+            >
+              {briefingAttentionItems.length ? (
+                <ul style={{display: 'grid', gap: '0.2rem', margin: 0, paddingLeft: '1rem'}}>
+                  {briefingAttentionItems.map((item) => (
+                    <li key={item}>
+                      <Text muted size={1}>
+                        {item}
+                      </Text>
+                    </li>
+                  ))}
+                </ul>
+              ) : null}
+            </BriefingItem>
+          </div>
+        </Card>
       </DashboardSection>
 
-      <DashboardSection
-        title="Launch Control"
-        description="One truthful overview of what is ready for launch and what still needs attention. No services can be enabled from this dashboard."
-      >
-        <div style={styles.sectionGrid}>
-          {launchControlItems.map((item) => (
-            <SummaryCard
-              key={item.label}
-              status={item.status}
-              statusLabel={item.statusLabel ?? launchControlLabels[item.status]}
-              title={item.label}
-            >
-              <Value label="Type" value={item.category} />
-              <Text muted size={1}>
-                {item.detail}
-              </Text>
-            </SummaryCard>
-          ))}
-          <SummaryCard
-            status={technicalIssues.length ? 'needsAttention' : liveStatus ? 'complete' : 'unknown'}
-            statusLabel={technicalIssues.length ? 'Technical issue' : 'No technical issue'}
-            title="Technical issues"
-          >
-            {technicalIssues.length ? (
-              <ul style={styles.issueList}>
-                {technicalIssues.map((issue) => (
-                  <li key={issue} style={{listStyle: 'none'}}>
-                    <Text size={1}>{issue}</Text>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <Text muted size={1}>
-                {liveStatus
-                  ? 'No technical blocker is reported by the current checks.'
-                  : 'Live technical checks are unavailable.'}
-              </Text>
-            )}
-          </SummaryCard>
-          <SummaryCard status="unknown" statusLabel="Owner decision" title="Owner decisions">
-            <ul style={styles.issueList}>
-              {ownerDecisions.map((decision) => (
-                <li key={decision} style={{listStyle: 'none'}}>
-                  <Text size={1}>{decision}</Text>
-                </li>
-              ))}
-            </ul>
-          </SummaryCard>
-          <SummaryCard
-            status={contentIssues.length ? 'needsAttention' : 'complete'}
-            statusLabel={contentIssues.length ? 'Content incomplete' : 'Content complete'}
-            title="Content issues"
-          >
-            {contentIssues.length ? (
-              <ul style={styles.issueList}>
-                {contentIssues.map((issue) => (
-                  <li key={issue} style={{listStyle: 'none'}}>
-                    <Text size={1}>{issue}</Text>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <Text muted size={1}>
-                No current content or photography need is recorded.
-              </Text>
-            )}
-          </SummaryCard>
-          <SummaryCard
-            status={photographyNeeds.length ? 'needsAttention' : 'complete'}
-            statusLabel={photographyNeeds.length ? 'Photography needed' : 'Photography ready'}
-            title="Photography needs"
-          >
-            {photographyNeeds.length ? (
-              <ul style={styles.issueList}>
-                {photographyNeeds.map((need) => (
-                  <li key={need} style={{listStyle: 'none'}}>
-                    <Text size={1}>{need}</Text>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <Text muted size={1}>
-                No current photography need is recorded.
-              </Text>
-            )}
-          </SummaryCard>
-          <SummaryCard
-            status={optionalImprovements.length ? 'unknown' : 'complete'}
-            statusLabel={optionalImprovements.length ? 'Optional improvement' : 'Complete'}
-            title="Optional improvements"
-          >
-            {optionalImprovements.length ? (
-              <ul style={styles.issueList}>
-                {optionalImprovements.map((improvement) => (
-                  <li key={improvement} style={{listStyle: 'none'}}>
-                    <Text size={1}>{improvement}</Text>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <Text muted size={1}>
-                No optional improvement is currently reported.
-              </Text>
-            )}
-          </SummaryCard>
-        </div>
+      <DashboardSection title="Launch Control" description="Current state. No controls here.">
+        <CompactStatusGrid items={compactLaunchItems} />
       </DashboardSection>
 
       <DashboardSection
@@ -1130,13 +1247,12 @@ function OwnerDashboardContent({
         </div>
       </DashboardSection>
 
-      <DashboardSection
-        title="Analytics"
-        description="Production analytics status and the underlying privacy-conscious service."
-      >
+      <DashboardSection title="Analytics" description="Production analytics status.">
         <div style={styles.sectionGrid}>
           <SummaryCard
-            status={liveStatus?.analyticsEnabled ? 'complete' : 'needsAttention'}
+            colour={liveStatus?.analyticsEnabled ? 'ready' : 'disabled'}
+            status={liveStatus?.analyticsEnabled ? 'complete' : 'unknown'}
+            statusLabel={liveStatus?.analyticsEnabled ? 'Ready' : 'Disabled by owner'}
             title="Plausible Analytics"
           >
             <Value label="Analytics" value={enabledLabel(liveStatus?.analyticsEnabled)} />
@@ -1155,13 +1271,12 @@ function OwnerDashboardContent({
         </div>
       </DashboardSection>
 
-      <DashboardSection
-        title="Monitoring"
-        description="Error monitoring and hosting remain in their specialist services, reachable from here."
-      >
+      <DashboardSection title="Monitoring" description="Production monitoring status.">
         <div style={styles.sectionGrid}>
           <SummaryCard
-            status={liveStatus?.sentryEnabled ? 'complete' : 'needsAttention'}
+            colour={liveStatus?.sentryEnabled ? 'ready' : 'disabled'}
+            status={liveStatus?.sentryEnabled ? 'complete' : 'unknown'}
+            statusLabel={liveStatus?.sentryEnabled ? 'Ready' : 'Disabled by owner'}
             title="Production monitoring"
           >
             <Value label="Sentry" value={enabledLabel(liveStatus?.sentryEnabled)} />
@@ -1287,11 +1402,18 @@ function OwnerDashboardContent({
       >
         <div style={styles.sectionGrid}>
           <SummaryCard
+            colour={
+              availabilityWarnings.length
+                ? 'attention'
+                : availabilityState === 'Available'
+                  ? 'ready'
+                  : 'information'
+            }
             status={
-              availabilityState === 'Available'
-                ? 'complete'
-                : availabilityState === 'Unavailable'
-                  ? 'needsAttention'
+              availabilityWarnings.length
+                ? 'needsAttention'
+                : availabilityState === 'Available'
+                  ? 'complete'
                   : 'unknown'
             }
             statusLabel={availabilityState}
@@ -1490,9 +1612,11 @@ function OwnerDashboardContent({
         </div>
       </DashboardSection>
 
-      <DashboardSection
+      <CollapsibleDashboardSection
         title="Premium Guide"
-        description="Edition 1 production status without duplicating manuscript content or claiming CMS authority."
+        description={`${premiumGuide.chapters.complete}/${premiumGuide.chapters.total} chapters · ${premiumGuide.photography}`}
+        status={premiumGuide.overallStatus}
+        statusLabel={statusLabels[premiumGuide.overallStatus]}
       >
         <div style={styles.sectionGrid}>
           <SummaryCard status={premiumGuide.overallStatus} title={premiumGuide.title}>
@@ -1528,7 +1652,7 @@ function OwnerDashboardContent({
             ) : null}
           </SummaryCard>
         </div>
-      </DashboardSection>
+      </CollapsibleDashboardSection>
 
       <DashboardSection
         title="Content Center"
@@ -1633,9 +1757,11 @@ function OwnerDashboardContent({
           </div>
         </DashboardSubsection>
 
-        <DashboardSubsection
+        <CollapsibleDashboardSection
           title="Photography"
-          description="Required visual roles are assessed by content type. Optional editorial photo stories do not reduce readiness."
+          description={`${photographyNeededLabels.length} pages need photography`}
+          status={photographyNeededLabels.length ? 'needsAttention' : 'complete'}
+          statusLabel={photographyNeededLabels.length ? 'Needs owner attention' : 'Ready'}
         >
           <div style={styles.sectionGrid}>
             {[
@@ -1690,11 +1816,15 @@ function OwnerDashboardContent({
               </Text>
             </SummaryCard>
           </div>
-        </DashboardSubsection>
+        </CollapsibleDashboardSection>
 
-        <DashboardSubsection
+        <CollapsibleDashboardSection
           title="Maps"
-          description="Only the presence of approved public map data is shown. Coordinates themselves remain hidden here."
+          description={
+            mapIssueCount ? `${mapIssueCount} items need review` : 'All map checks ready'
+          }
+          status={mapIssueCount ? 'needsAttention' : 'complete'}
+          statusLabel={mapIssueCount ? 'Needs owner attention' : 'Ready'}
         >
           <div style={styles.sectionGrid}>
             <SummaryCard
@@ -1753,11 +1883,15 @@ function OwnerDashboardContent({
               </Text>
             </SummaryCard>
           </div>
-        </DashboardSubsection>
+        </CollapsibleDashboardSection>
 
-        <DashboardSubsection
+        <CollapsibleDashboardSection
           title="SEO"
-          description="Effective metadata follows the same page, content and Site Settings fallbacks used by the website."
+          description={
+            seoIssueCount ? `${seoIssueCount} items need review` : 'All SEO checks ready'
+          }
+          status={seoIssueCount ? 'needsAttention' : 'complete'}
+          statusLabel={seoIssueCount ? 'Needs owner attention' : 'Ready'}
         >
           <div style={styles.sectionGrid}>
             <SummaryCard
@@ -1842,7 +1976,7 @@ function OwnerDashboardContent({
               <IssueList documents={unexpectedNoIndexDocuments} />
             </SummaryCard>
           </div>
-        </DashboardSubsection>
+        </CollapsibleDashboardSection>
       </DashboardSection>
 
       <DashboardSection
@@ -1851,6 +1985,15 @@ function OwnerDashboardContent({
       >
         <div style={styles.sectionGrid}>
           <SummaryCard
+            colour={
+              emailOperationalState === 'systemReady'
+                ? 'ready'
+                : emailOperationalState === 'disabledByOwner'
+                  ? 'disabled'
+                  : emailOperationalState === 'deliveryError'
+                    ? 'problem'
+                    : 'information'
+            }
             status={emailStatus}
             statusLabel={emailStatusLabel}
             title="Enquiry email delivery"
@@ -1888,7 +2031,7 @@ function OwnerDashboardContent({
               value={liveStatus?.lastSuccessfulOwnerEnquiryTest?.referenceNumber ?? 'Unavailable'}
             />
             {emailOperationalState === 'disabledByOwner' ? (
-              <Card padding={3} radius={2} tone="caution">
+              <Card padding={2} radius={2} tone="default">
                 <Text size={1}>
                   Delivery is disabled by the owner
                   {liveStatus?.comingSoon ? ' while Coming Soon is active' : ''}. The system is not
@@ -1982,7 +2125,7 @@ function OwnerDashboardContent({
               }
             />
             {liveStatus?.subscriptionMode === 'disabled' ? (
-              <Card padding={3} radius={2} tone="caution">
+              <Card padding={2} radius={2} tone="default">
                 <Text size={1}>
                   Public subscription delivery is disabled. Manage preparation in Resend without
                   sending from Studio.

@@ -9,6 +9,11 @@ export type OwnerEnquiryOperationsSummary = {
     completedAt: string
     referenceNumber: string
   } | null
+  newEnquiryCount: number
+  nextArrival: {
+    arrival: string
+    referenceNumber: string
+  } | null
 }
 
 const operationsApiVersion = '2026-08-20'
@@ -43,6 +48,8 @@ export async function getOwnerEnquiryOperationsSummary(): Promise<OwnerEnquiryOp
   })
 
   try {
+    const today = new Intl.DateTimeFormat('en-CA', {timeZone: 'Asia/Manila'}).format(new Date())
+
     return await client.fetch<OwnerEnquiryOperationsSummary>(
       /* groq */ `{
         "lastDeliveryStatus": *[
@@ -55,9 +62,18 @@ export async function getOwnerEnquiryOperationsSummary(): Promise<OwnerEnquiryOp
         ] | order(emailDelivery.lastAttemptAt desc)[0] {
           "completedAt": emailDelivery.lastAttemptAt,
           referenceNumber
+        },
+        "newEnquiryCount": count(*[_type == "stayEnquiry" && status == "new"]),
+        "nextArrival": *[
+          _type == "wholeHouseStay" &&
+          status == "confirmed" &&
+          dates.arrival >= $today
+        ] | order(dates.arrival asc)[0] {
+          "arrival": dates.arrival,
+          referenceNumber
         }
       }`,
-      {testMailboxes},
+      {testMailboxes, today},
     )
   } catch {
     return null
