@@ -115,10 +115,10 @@ const resendManagementLinks = {
 const operationsStudioUrl = 'https://joshuas-point-operations.sanity.studio/owner-operations'
 
 const statusLabels: Record<DashboardStatus, string> = {
-  blocked: 'Blocked',
+  blocked: 'Unavailable',
   complete: 'Complete',
   needsAttention: 'Needs attention',
-  unknown: 'Unknown',
+  unknown: 'Unavailable',
 }
 
 const statusTones = {
@@ -133,7 +133,7 @@ type LaunchControlStatus = Extract<DashboardStatus, 'complete' | 'needsAttention
 const launchControlLabels: Record<LaunchControlStatus, string> = {
   complete: 'Ready',
   needsAttention: 'Needs attention',
-  unknown: 'Unknown',
+  unknown: 'Unavailable',
 }
 
 const availabilityStatusLabels: Record<
@@ -170,6 +170,17 @@ function formatDashboardDateTime(value: string | null | undefined) {
     minute: '2-digit',
     month: 'short',
     year: 'numeric',
+  })
+}
+
+function formatPropertyTime(value: string | null | undefined) {
+  if (!value) return 'Unavailable'
+  const parsed = new Date(value)
+  if (Number.isNaN(parsed.getTime())) return 'Unavailable'
+  return parsed.toLocaleTimeString(undefined, {
+    hour: 'numeric',
+    minute: '2-digit',
+    timeZone: 'Asia/Manila',
   })
 }
 
@@ -453,6 +464,7 @@ function isDashboardLiveStatus(value: unknown): value is DashboardLiveStatus {
   const booleanFields = [
     'analyticsEnabled',
     'comingSoon',
+    'enquiryRecipientConfigured',
     'resendConfigured',
     'senderConfigured',
     'enquiryReplyToConfigured',
@@ -471,9 +483,27 @@ function isDashboardLiveStatus(value: unknown): value is DashboardLiveStatus {
     (status.productionDomain === null || typeof status.productionDomain === 'string') &&
     typeof status.checkedAt === 'string' &&
     !Number.isNaN(Date.parse(status.checkedAt)) &&
+    ['deliveryError', 'disabledByOwner', 'systemReady', 'unavailable'].includes(
+      String(status.enquiryDeliveryState),
+    ) &&
     ['disabled', 'live', 'test'].includes(String(status.enquiryMode)) &&
     ['disabled', 'live'].includes(String(status.subscriptionMode)) &&
-    ['needsAttention', 'ready'].includes(String(status.newsletterReadiness))
+    ['needsAttention', 'ready'].includes(String(status.newsletterReadiness)) &&
+    (status.lastSuccessfulOwnerEnquiryTest === null ||
+      (typeof status.lastSuccessfulOwnerEnquiryTest === 'object' &&
+        typeof (status.lastSuccessfulOwnerEnquiryTest as Record<string, unknown>).completedAt ===
+          'string' &&
+        typeof (status.lastSuccessfulOwnerEnquiryTest as Record<string, unknown>)
+          .referenceNumber === 'string')) &&
+    (status.weather === null ||
+      (typeof status.weather === 'object' &&
+        typeof (status.weather as Record<string, unknown>).condition === 'string' &&
+        typeof (status.weather as Record<string, unknown>).fetchedAt === 'string' &&
+        typeof (status.weather as Record<string, unknown>).rainProbabilityPercent === 'number' &&
+        typeof (status.weather as Record<string, unknown>).sunrise === 'string' &&
+        typeof (status.weather as Record<string, unknown>).sunset === 'string' &&
+        typeof (status.weather as Record<string, unknown>).temperatureCelsius === 'number' &&
+        typeof (status.weather as Record<string, unknown>).windKilometresPerHour === 'number'))
   )
 }
 
@@ -639,12 +669,19 @@ function OwnerDashboardContent({
     document.slug?.includes('mountain-lake'),
   )
 
-  const emailReady = Boolean(
-    liveStatus?.resendConfigured &&
-    liveStatus.sendingDomainConfigured &&
-    liveStatus.senderConfigured &&
-    liveStatus.enquiryMode !== 'disabled',
-  )
+  const emailOperationalState = liveStatus?.enquiryDeliveryState ?? 'unavailable'
+  const emailStatus: DashboardStatus =
+    emailOperationalState === 'systemReady'
+      ? 'complete'
+      : emailOperationalState === 'deliveryError'
+        ? 'needsAttention'
+        : 'unknown'
+  const emailStatusLabel = {
+    deliveryError: 'Delivery error',
+    disabledByOwner: 'Disabled by owner',
+    systemReady: 'System ready',
+    unavailable: 'Unavailable',
+  }[emailOperationalState]
   const mapProviderConfigured = studioEnvironment.SANITY_STUDIO_MAP_PROVIDER_CONFIGURED === 'true'
 
   const premiumGuide = resolvePremiumGuideStatus(data)
@@ -706,9 +743,11 @@ function OwnerDashboardContent({
       : 'needsAttention'
   const emailLaunchStatus: LaunchControlStatus = !liveStatus
     ? 'unknown'
-    : emailReady
+    : emailOperationalState === 'systemReady'
       ? 'complete'
-      : 'needsAttention'
+      : emailOperationalState === 'deliveryError'
+        ? 'needsAttention'
+        : 'unknown'
   const newsletterLaunchStatus: LaunchControlStatus = !liveStatus
     ? 'unknown'
     : liveStatus.newsletterReadiness === 'ready' && liveStatus.subscriptionMode === 'live'
@@ -735,6 +774,7 @@ function OwnerDashboardContent({
     detail: string
     label: string
     status: LaunchControlStatus
+    statusLabel?: string
   }> = [
     {
       detail:
@@ -749,14 +789,20 @@ function OwnerDashboardContent({
     },
     {
       detail:
-        emailLaunchStatus === 'complete'
-          ? 'Transactional delivery configuration and enquiry sending mode are ready.'
-          : emailLaunchStatus === 'unknown'
-            ? 'Live transactional email status could not be verified.'
-            : 'Transactional email delivery is incomplete or remains disabled.',
-      category: 'Technical readiness',
+        emailOperationalState === 'systemReady'
+          ? 'The enquiry system is configured and delivery is enabled.'
+          : emailOperationalState === 'disabledByOwner'
+            ? liveStatus?.comingSoon
+              ? 'Delivery is intentionally disabled by the owner while Coming Soon remains active. Coming Soon itself does not create a delivery error.'
+              : 'Delivery is intentionally disabled by the owner.'
+            : emailOperationalState === 'deliveryError'
+              ? 'The most recent recorded delivery attempt failed or was only partially sent.'
+              : 'The current delivery configuration or live status could not be verified.',
+      category:
+        emailOperationalState === 'disabledByOwner' ? 'Owner decision' : 'Technical readiness',
       label: 'Email readiness',
       status: emailLaunchStatus,
+      statusLabel: emailStatusLabel,
     },
     {
       detail:
@@ -818,9 +864,11 @@ function OwnerDashboardContent({
     ...(liveStatus && !liveStatus.comingSoon
       ? ['Coming Soon protection is disabled. Restore it before continuing private review.']
       : []),
-    ...(emailLaunchStatus === 'needsAttention'
-      ? ['Transactional enquiry email is not launch-ready.']
-      : []),
+    ...(emailOperationalState === 'deliveryError'
+      ? ['The most recent transactional enquiry delivery recorded an error.']
+      : emailOperationalState === 'unavailable' && liveStatus
+        ? ['Transactional enquiry email configuration could not be verified.']
+        : []),
     ...(newsletterLaunchStatus === 'needsAttention'
       ? ['Newsletter signup is not launch-ready.']
       : []),
@@ -872,6 +920,41 @@ function OwnerDashboardContent({
       </DashboardSection>
 
       <DashboardSection
+        title="Today at Joshua's Point"
+        description="A current property weather snapshot for the owner's morning overview. Recent data is reused for fifteen minutes and refreshed automatically."
+      >
+        <div style={styles.sectionGrid}>
+          <SummaryCard
+            status={liveStatus?.weather ? 'complete' : 'unknown'}
+            statusLabel={liveStatus?.weather ? 'Current' : 'Unavailable'}
+            title="Weather"
+          >
+            {liveStatus?.weather ? (
+              <>
+                <Value label="Conditions" value={liveStatus.weather.condition} />
+                <Value label="Temperature" value={`${liveStatus.weather.temperatureCelsius} °C`} />
+                <Value
+                  label="Rain probability"
+                  value={`${liveStatus.weather.rainProbabilityPercent}%`}
+                />
+                <Value label="Wind" value={`${liveStatus.weather.windKilometresPerHour} km/h`} />
+                <Value label="Sunrise" value={formatPropertyTime(liveStatus.weather.sunrise)} />
+                <Value label="Sunset" value={formatPropertyTime(liveStatus.weather.sunset)} />
+                <Text muted size={1}>
+                  Updated {formatDashboardDateTime(liveStatus.weather.fetchedAt)} · Open-Meteo
+                  forecast for the approved Site Settings location.
+                </Text>
+              </>
+            ) : (
+              <Text muted size={1}>
+                Weather is temporarily unavailable. Other dashboard checks remain available.
+              </Text>
+            )}
+          </SummaryCard>
+        </div>
+      </DashboardSection>
+
+      <DashboardSection
         title="Launch Control"
         description="One truthful overview of what is ready for launch and what still needs attention. No services can be enabled from this dashboard."
       >
@@ -880,7 +963,7 @@ function OwnerDashboardContent({
             <SummaryCard
               key={item.label}
               status={item.status}
-              statusLabel={launchControlLabels[item.status]}
+              statusLabel={item.statusLabel ?? launchControlLabels[item.status]}
               title={item.label}
             >
               <Value label="Type" value={item.category} />
@@ -1767,7 +1850,11 @@ function OwnerDashboardContent({
         description="Review the real email presentation and see delivery readiness without sending from Studio."
       >
         <div style={styles.sectionGrid}>
-          <SummaryCard status={emailReady ? 'complete' : 'blocked'} title="Enquiry email delivery">
+          <SummaryCard
+            status={emailStatus}
+            statusLabel={emailStatusLabel}
+            title="Enquiry email delivery"
+          >
             <Value
               label="Resend configured"
               value={liveStatus ? (liveStatus.resendConfigured ? 'Yes' : 'No') : 'Unavailable'}
@@ -1777,20 +1864,44 @@ function OwnerDashboardContent({
               value={configuredLabel(liveStatus?.sendingDomainConfigured)}
             />
             <Value label="Public sender" value={configuredLabel(liveStatus?.senderConfigured)} />
+            <Value
+              label="Owner recipient"
+              value={configuredLabel(liveStatus?.enquiryRecipientConfigured)}
+            />
             <Value label="Enquiry mode" value={liveStatus?.enquiryMode ?? 'Unavailable'} />
             <Value label="Reply-To" value={configuredLabel(liveStatus?.enquiryReplyToConfigured)} />
             <Value
               label="Subscription mode"
               value={liveStatus?.subscriptionMode ?? 'Unavailable'}
             />
-            <Value label="Test-email readiness" value={emailReady ? 'Ready' : 'Not ready'} />
+            <Value label="Operational state" value={emailStatusLabel} />
             <Value
               label="Last successful test"
-              value="Not recorded by the current delivery service"
+              value={
+                liveStatus?.lastSuccessfulOwnerEnquiryTest
+                  ? formatDashboardDateTime(liveStatus.lastSuccessfulOwnerEnquiryTest.completedAt)
+                  : 'No successful owner test recorded'
+              }
             />
-            {liveStatus?.enquiryMode === 'disabled' ? (
+            <Value
+              label="Test reference"
+              value={liveStatus?.lastSuccessfulOwnerEnquiryTest?.referenceNumber ?? 'Unavailable'}
+            />
+            {emailOperationalState === 'disabledByOwner' ? (
               <Card padding={3} radius={2} tone="caution">
-                <Text size={1}>Enquiry delivery is disabled. Studio cannot send email.</Text>
+                <Text size={1}>
+                  Delivery is disabled by the owner
+                  {liveStatus?.comingSoon ? ' while Coming Soon is active' : ''}. The system is not
+                  reporting a delivery error.
+                </Text>
+              </Card>
+            ) : null}
+            {emailOperationalState === 'deliveryError' ? (
+              <Card padding={3} radius={2} tone="critical">
+                <Text size={1}>
+                  The most recent recorded delivery attempt needs attention. Review provider
+                  activity without changing delivery settings here.
+                </Text>
               </Card>
             ) : null}
             {liveStatusError ? (
@@ -1807,7 +1918,7 @@ function OwnerDashboardContent({
               text="Edit Email Content"
             />
           </SummaryCard>
-          <SummaryCard status={emailPreviewUrl ? 'complete' : 'blocked'} title="Email previews">
+          <SummaryCard status={emailPreviewUrl ? 'complete' : 'unknown'} title="Email previews">
             <Text muted size={1}>
               Preview the real branded HTML shell with safe sample information. Opening a preview
               never sends an email.
@@ -1908,65 +2019,73 @@ export function OwnerDashboard() {
   const [liveStatusError, setLiveStatusError] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
 
-  const load = useCallback(async () => {
-    setLoading(true)
-    setError(null)
-    setLiveStatusError(null)
-    try {
-      const result = await client
-        .withConfig({useCdn: false})
-        .fetch<OwnerDashboardData>(ownerDashboardQuery, {}, {perspective: 'raw'})
-      setData(result)
-
-      const token = client.config().token
-      if (!token) {
-        setLiveStatus(null)
-        setLiveStatusError(
-          'Live deployment status is unavailable because Studio authentication could not be verified.',
-        )
-        return
-      }
-
-      const statusUrl = resolveOwnerStatusUrl()
-      if (!statusUrl) {
-        setLiveStatus(null)
-        setLiveStatusError(
-          'Live deployment status is unavailable because its endpoint is not approved.',
-        )
-        return
-      }
-
+  const load = useCallback(
+    async (showLoading = true) => {
+      if (showLoading) setLoading(true)
+      setError(null)
+      setLiveStatusError(null)
       try {
-        statusUrl.searchParams.set('_checkedAt', Date.now().toString())
-        const statusResponse = await fetch(statusUrl, {
-          cache: 'no-store',
-          headers: {Authorization: `Bearer ${token}`},
-        })
-        const payload = (await statusResponse.json()) as {
-          ok?: boolean
-          status?: DashboardLiveStatus
+        const result = await client
+          .withConfig({useCdn: false})
+          .fetch<OwnerDashboardData>(ownerDashboardQuery, {}, {perspective: 'raw'})
+        setData(result)
+
+        const token = client.config().token
+        if (!token) {
+          setLiveStatus(null)
+          setLiveStatusError(
+            'Live deployment status is unavailable because Studio authentication could not be verified.',
+          )
+          return
         }
 
-        if (!statusResponse.ok || !payload.ok || !isDashboardLiveStatus(payload.status)) {
-          throw new Error('The live status service rejected the request.')
+        const statusUrl = resolveOwnerStatusUrl()
+        if (!statusUrl) {
+          setLiveStatus(null)
+          setLiveStatusError(
+            'Live deployment status is unavailable because its endpoint is not approved.',
+          )
+          return
         }
 
-        setLiveStatus(payload.status)
-      } catch {
-        setLiveStatus(null)
-        setLiveStatusError(
-          'Live deployment status could not be verified. No services are assumed ready.',
-        )
+        try {
+          statusUrl.searchParams.set('_checkedAt', Date.now().toString())
+          const statusResponse = await fetch(statusUrl, {
+            cache: 'no-store',
+            headers: {Authorization: `Bearer ${token}`},
+          })
+          const payload = (await statusResponse.json()) as {
+            ok?: boolean
+            status?: DashboardLiveStatus
+          }
+
+          if (!statusResponse.ok || !payload.ok || !isDashboardLiveStatus(payload.status)) {
+            throw new Error('The live status service rejected the request.')
+          }
+
+          setLiveStatus(payload.status)
+        } catch {
+          setLiveStatus(null)
+          setLiveStatusError(
+            'Live deployment status could not be verified. No services are assumed ready.',
+          )
+        }
+      } catch (caught) {
+        setError(caught instanceof Error ? caught.message : 'The dashboard could not be loaded.')
+      } finally {
+        if (showLoading) setLoading(false)
       }
-    } catch (caught) {
-      setError(caught instanceof Error ? caught.message : 'The dashboard could not be loaded.')
-    } finally {
-      setLoading(false)
-    }
-  }, [client])
+    },
+    [client],
+  )
 
   useEffect(() => {
     void load()
+  }, [load])
+
+  useEffect(() => {
+    const refreshInterval = window.setInterval(() => void load(false), 15 * 60 * 1000)
+    return () => window.clearInterval(refreshInterval)
   }, [load])
 
   const content = useMemo(() => {

@@ -1,14 +1,28 @@
+import type {SanityClient} from '@sanity/client'
+
 import {isComingSoonModeEnabled} from '@/lib/coming-soon'
 import {getDeploymentEnvironment, isSearchIndexingAllowed} from '@/lib/deployment'
 import {getEnquiryEmailMode} from '@/lib/email/email-service'
+import {
+  resolveEnquiryDeliveryState,
+  type EnquiryDeliveryState,
+} from '@/lib/owner-dashboard/email-status'
+import {getOwnerEnquiryOperationsSummary} from '@/lib/owner-dashboard/operations-status'
+import {getOwnerDashboardWeather, type OwnerDashboardWeather} from '@/lib/owner-dashboard/weather'
 import {getSubscriptionMode} from '@/lib/subscriptions/config'
 
 export type OwnerDashboardLiveStatus = {
   analyticsEnabled: boolean
   checkedAt: string
   comingSoon: boolean
+  enquiryDeliveryState: EnquiryDeliveryState
+  enquiryRecipientConfigured: boolean
   enquiryReplyToConfigured: boolean
   enquiryMode: 'disabled' | 'live' | 'test'
+  lastSuccessfulOwnerEnquiryTest: {
+    completedAt: string
+    referenceNumber: string
+  } | null
   newsletterReadiness: 'needsAttention' | 'ready'
   productionDomain: string | null
   resendConfigured: boolean
@@ -22,6 +36,7 @@ export type OwnerDashboardLiveStatus = {
   subscriptionReplyToConfigured: boolean
   subscriptionMode: 'disabled' | 'live'
   topicConfigured: boolean
+  weather: OwnerDashboardWeather | null
 }
 
 const emailAddressPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -86,15 +101,44 @@ function hasConfiguredSiteDomain() {
   }
 }
 
-export function getOwnerDashboardLiveStatus(): OwnerDashboardLiveStatus {
+type PropertyCoordinates = {lat?: number | null; lng?: number | null} | null
+
+async function getPublishedPropertyCoordinates(client: SanityClient) {
+  try {
+    const coordinates = await client.fetch<PropertyCoordinates>(
+      '*[_type == "siteSettings" && _id == "siteSettings"][0].propertyLocation.coordinates',
+    )
+    if (
+      !coordinates ||
+      typeof coordinates.lat !== 'number' ||
+      typeof coordinates.lng !== 'number'
+    ) {
+      return null
+    }
+    return coordinates as {lat: number; lng: number}
+  } catch {
+    return null
+  }
+}
+
+export async function getOwnerDashboardLiveStatus(
+  studioClient: SanityClient,
+): Promise<OwnerDashboardLiveStatus> {
   const enquirySender = senderAddress('ENQUIRY_FROM_EMAIL')
+  const enquiryRecipient = senderAddress('ENQUIRY_TO_EMAIL')
+  const enquiryReplyTo = senderAddress('ENQUIRY_REPLY_TO_EMAIL')
   const subscriptionSender = senderAddress('SUBSCRIPTION_FROM_EMAIL')
   const enquirySendingDomain = enquirySender?.split('@')[1]
   const productionDomain = process.env.NEXT_PUBLIC_SITE_URL?.trim() || null
+  const enquiryMode = getEnquiryEmailMode()
 
   const resendConfigured =
     process.env.ENQUIRY_EMAIL_PROVIDER?.trim().toLowerCase() === 'resend' &&
     configured('RESEND_API_KEY')
+
+  const enquirySystemConfigured = Boolean(
+    resendConfigured && enquirySender && enquiryRecipient && enquiryReplyTo,
+  )
 
   const newsletterConfigured =
     resendConfigured &&
@@ -105,12 +149,28 @@ export function getOwnerDashboardLiveStatus(): OwnerDashboardLiveStatus {
     configured('RESEND_UPDATES_SEGMENT_ID') &&
     configured('RESEND_UPDATES_TOPIC_ID')
 
+  const [operationsSummary, propertyCoordinates] = await Promise.all([
+    getOwnerEnquiryOperationsSummary(),
+    getPublishedPropertyCoordinates(studioClient),
+  ])
+  const weather = propertyCoordinates
+    ? await getOwnerDashboardWeather(propertyCoordinates.lat, propertyCoordinates.lng)
+    : null
+  const enquiryDeliveryState = resolveEnquiryDeliveryState({
+    configured: enquirySystemConfigured,
+    lastDeliveryStatus: operationsSummary?.lastDeliveryStatus,
+    mode: enquiryMode,
+  })
+
   return {
     analyticsEnabled: analyticsEnabled(),
     checkedAt: new Date().toISOString(),
     comingSoon: isComingSoonModeEnabled(),
-    enquiryReplyToConfigured: Boolean(senderAddress('ENQUIRY_REPLY_TO_EMAIL')),
-    enquiryMode: getEnquiryEmailMode(),
+    enquiryDeliveryState,
+    enquiryRecipientConfigured: Boolean(enquiryRecipient),
+    enquiryReplyToConfigured: Boolean(enquiryReplyTo),
+    enquiryMode,
+    lastSuccessfulOwnerEnquiryTest: operationsSummary?.lastSuccessfulOwnerTest ?? null,
     newsletterReadiness: newsletterConfigured ? 'ready' : 'needsAttention',
     productionDomain,
     resendConfigured,
@@ -124,5 +184,6 @@ export function getOwnerDashboardLiveStatus(): OwnerDashboardLiveStatus {
     subscriptionReplyToConfigured: Boolean(senderAddress('SUBSCRIPTION_REPLY_TO_EMAIL')),
     subscriptionMode: getSubscriptionMode(),
     topicConfigured: configured('RESEND_UPDATES_TOPIC_ID'),
+    weather,
   }
 }

@@ -4,8 +4,14 @@ export type DashboardLiveStatus = {
   analyticsEnabled: boolean
   checkedAt: string
   comingSoon: boolean
+  enquiryDeliveryState: 'deliveryError' | 'disabledByOwner' | 'systemReady' | 'unavailable'
+  enquiryRecipientConfigured: boolean
   enquiryReplyToConfigured: boolean
   enquiryMode: 'disabled' | 'live' | 'test'
+  lastSuccessfulOwnerEnquiryTest: {
+    completedAt: string
+    referenceNumber: string
+  } | null
   newsletterReadiness: 'needsAttention' | 'ready'
   productionDomain: string | null
   resendConfigured: boolean
@@ -19,6 +25,15 @@ export type DashboardLiveStatus = {
   subscriptionReplyToConfigured: boolean
   subscriptionMode: 'disabled' | 'live'
   topicConfigured: boolean
+  weather: {
+    condition: string
+    fetchedAt: string
+    rainProbabilityPercent: number
+    sunrise: string
+    sunset: string
+    temperatureCelsius: number
+    windKilometresPerHour: number
+  } | null
 }
 
 export type DashboardImage = {

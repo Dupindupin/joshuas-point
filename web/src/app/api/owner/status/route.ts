@@ -54,7 +54,7 @@ function bearerToken(request: Request) {
   return token && !/[\r\n]/.test(token) ? token : null
 }
 
-async function isAuthenticatedStudioUser(token: string) {
+async function authenticatedStudioClient(token: string) {
   try {
     const client = createClient({
       ...sanityConfig,
@@ -62,9 +62,9 @@ async function isAuthenticatedStudioUser(token: string) {
       useCdn: false,
     })
     const user = await client.users.getById('me')
-    return Boolean(user.id && user.role)
+    return user.id && user.role ? client : null
   } catch {
-    return false
+    return null
   }
 }
 
@@ -90,9 +90,12 @@ export async function GET(request: Request) {
   if (!isAllowedOrigin(origin)) return response(null, {ok: false}, 403)
 
   const token = bearerToken(request)
-  if (!token || !(await isAuthenticatedStudioUser(token))) {
+  if (!token) {
     return response(origin, {ok: false}, 401)
   }
 
-  return response(origin, {ok: true, status: getOwnerDashboardLiveStatus()}, 200)
+  const studioClient = await authenticatedStudioClient(token)
+  if (!studioClient) return response(origin, {ok: false}, 401)
+
+  return response(origin, {ok: true, status: await getOwnerDashboardLiveStatus(studioClient)}, 200)
 }
