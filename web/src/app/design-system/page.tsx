@@ -161,7 +161,7 @@ export default function DesignSystemPage() {
         </DesignSystemSection>
 
         <DesignSystemSection
-          description="Colors are drawn from linen, timber, stone, forest, ocean, and evening light. Nature should always remain more colorful than the interface."
+          description="Colors are drawn from linen, warm sand, stone, forest, deep ocean, and charcoal. Nature should always remain more colorful than the interface."
           id="colors"
           index="02 / Foundations"
           title="Color palette"
@@ -169,20 +169,20 @@ export default function DesignSystemPage() {
           <ul className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
             <ColorSwatch
               className="bg-[var(--jp-color-linen)]"
-              hex="#F6F2EB"
-              name="Warm Linen"
+              hex="#F3EDE6"
+              name="Linen"
               usage="Primary canvas and reading surfaces."
             />
             <ColorSwatch
               className="bg-[var(--jp-color-charcoal)]"
-              hex="#242424"
-              name="Deep Charcoal"
+              hex="#282828"
+              name="Charcoal"
               usage="Primary text and architectural contrast."
             />
             <ColorSwatch
               className="bg-timber"
-              hex="#A56F3A"
-              name="Warm Timber"
+              hex="#C8A26A"
+              name="Warm Sand"
               usage="Brand accent; never normal-size text on Linen."
             />
             <ColorSwatch
@@ -193,20 +193,20 @@ export default function DesignSystemPage() {
             />
             <ColorSwatch
               className="bg-[var(--jp-color-forest)]"
-              hex="#405548"
+              hex="#496B5B"
               name="Forest"
               usage="Accessible natural accent used sparingly."
             />
             <ColorSwatch
               className="bg-ocean"
-              hex="#6A8EA1"
-              name="Ocean"
-              usage="Atmospheric accent; not normal-size text on Linen."
+              hex="#1F3D3A"
+              name="Deep Ocean"
+              usage="Architectural contrast and primary action colour."
             />
           </ul>
           <p className="mt-7 max-w-3xl text-sm leading-7 text-ink-muted">
-            Accessibility note: Warm Timber, Ocean, and Stone do not meet AA contrast for
-            normal-size text on Warm Linen. Their use is limited to accents and non-text detail.
+            Accessibility note: Warm Sand and Stone are reserved for accents and non-text detail.
+            Deep Ocean and Forest support accessible text and action contrast on Linen.
           </p>
           <dl className="mt-10 grid gap-x-8 gap-y-6 border-t border-border pt-8 sm:grid-cols-2 lg:grid-cols-4">
             {[

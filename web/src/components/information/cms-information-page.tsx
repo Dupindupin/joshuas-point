@@ -46,6 +46,7 @@ export async function CmsInformationPage({
         <EditorialPageHero
           eyebrow={page.eyebrow?.trim() || page.title}
           introduction={page.introduction}
+          scale="utility"
           title={page.title}
         />
 

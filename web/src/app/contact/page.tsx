@@ -91,6 +91,7 @@ export default async function ContactPage({searchParams}: ContactPageProps) {
         <EditorialPageHero
           eyebrow="Contact"
           introduction="Ask about a stay, your arrival, or the places you hope to explore from Joshua’s Point."
+          scale="utility"
           size="compact"
           title="Let’s talk about your stay."
         />

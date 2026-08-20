@@ -62,7 +62,7 @@ export function SocialProfileLinks({
 
   return (
     <nav aria-label={ariaLabel} className={className}>
-      <ul className="flex flex-wrap gap-3">
+      <ul className="flex flex-wrap gap-x-4 gap-y-3">
         {visibleProfiles.map((profile) => {
           const Icon = profileIcons[profile.platform]
 

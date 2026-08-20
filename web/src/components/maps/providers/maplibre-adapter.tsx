@@ -159,8 +159,8 @@ function routeWidth(selectedItemId: string | undefined) {
 }
 
 function routeColor(selectedItemId: string | undefined, theme: ResolvedTheme) {
-  const selectedColor = theme === 'dark' ? '#e0b982' : '#a56f3a'
-  const routeColorValue = theme === 'dark' ? '#d0a16b' : '#405548'
+  const selectedColor = theme === 'dark' ? '#e0b982' : '#c8a26a'
+  const routeColorValue = theme === 'dark' ? '#d0a16b' : '#496b5b'
   return [
     'case',
     ['==', ['get', 'id'], selectedItemId ?? ''],

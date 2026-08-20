@@ -112,11 +112,10 @@ test('email palette meets WCAG AA contrast thresholds', () => {
     ['#1f3d3a', '#faf7f2'],
     ['#496b5b', '#faf7f2'],
     ['#f3ede6', '#1f3d3a'],
-    ['#d8cec0', '#14211f'],
-    ['#f3ede6', '#14211f'],
-    ['#f3ede6', '#202420'],
-    ['#e7c78f', '#202420'],
-    ['#d8b77e', '#202420'],
+    ['#d8cec0', '#282828'],
+    ['#f3ede6', '#282828'],
+    ['#e7c78f', '#282828'],
+    ['#d8b77e', '#282828'],
   ] as const
 
   for (const [foreground, background] of normalTextPairs) {
@@ -138,6 +137,6 @@ test('the shared shell keeps email-client accessibility fallbacks', () => {
     assert.match(html, /<img[^>]+alt="Joshua&#039;s Point"/)
   }
 
-  assert.match(subscriptionConfirmation.html ?? '', /mso-padding-alt:12px 22px/)
-  assert.match(welcome.html ?? '', /mso-padding-alt:12px 22px/)
+  assert.match(subscriptionConfirmation.html ?? '', /mso-padding-alt:14px 24px/)
+  assert.match(welcome.html ?? '', /mso-padding-alt:14px 24px/)
 })

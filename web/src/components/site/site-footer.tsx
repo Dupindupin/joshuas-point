@@ -178,7 +178,7 @@ function FooterContact({
             <p className="font-body text-[0.6875rem] tracking-[0.12em] text-inverse/60 uppercase">
               Social
             </p>
-            <SocialProfileLinks profiles={socialLinks} tone="inverse" />
+            <SocialProfileLinks className="mt-5" profiles={socialLinks} tone="inverse" />
           </div>
         ) : null}
       </address>

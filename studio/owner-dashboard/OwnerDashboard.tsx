@@ -121,9 +121,11 @@ const styles = {
   },
   quickAction: {
     alignItems: 'center',
+    borderRadius: '999px',
     display: 'flex',
     justifyContent: 'center',
-    minHeight: '3.25rem',
+    minHeight: '3rem',
+    padding: '0.75rem 1.5rem',
     textAlign: 'center' as const,
   },
   row: {

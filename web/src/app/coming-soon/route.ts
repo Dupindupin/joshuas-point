@@ -48,9 +48,11 @@ function documentShell(content: string, title: string, analyticsMarkup = '') {
       :root {
         color-scheme: light dark;
         --canvas: #f3ede6;
+        --surface: #faf7f2;
         --ink: #282828;
         --muted: rgb(40 40 40 / 68%);
         --ocean: #1f3d3a;
+        --forest: #496b5b;
         --sand: #c8a26a;
         --line: rgb(31 61 58 / 22%);
       }
@@ -60,8 +62,8 @@ function documentShell(content: string, title: string, analyticsMarkup = '') {
         min-height: 100vh;
         margin: 0;
         background:
-          radial-gradient(circle at 18% 14%, rgb(200 162 106 / 15%), transparent 36rem),
-          linear-gradient(145deg, var(--canvas), #f8f4ed 58%, #e9e2d8);
+          linear-gradient(90deg, transparent 0 72%, rgb(200 162 106 / 9%) 72% 100%),
+          var(--canvas);
         color: var(--ink);
         font-family: Arial, Helvetica, sans-serif;
       }
@@ -69,47 +71,65 @@ function documentShell(content: string, title: string, analyticsMarkup = '') {
         display: grid;
         min-height: 100vh;
         place-items: center;
-        padding: clamp(2rem, 7vw, 6rem) 1.5rem;
+        padding: clamp(1.5rem, 4vw, 3.5rem);
       }
       .frame {
-        width: min(100%, 58rem);
-        border-block: 1px solid var(--line);
-        padding: clamp(3rem, 9vw, 7rem) 0;
-        text-align: center;
+        width: min(100%, 74rem);
+        border: 1px solid var(--line);
+        background: color-mix(in srgb, var(--surface) 88%, transparent);
+        padding: clamp(2rem, 5vw, 4.75rem);
+        box-shadow: 0 2rem 6rem rgb(31 61 58 / 7%);
       }
       picture, img { display: block; }
       .logo {
-        width: min(86vw, 31rem);
+        width: min(68vw, 25rem);
         height: auto;
-        margin: 0 auto clamp(2rem, 6vw, 4rem);
+        margin: 0;
+      }
+      .brand-line {
+        margin: 1.1rem 0 0;
+        color: var(--muted);
+        font-size: 0.72rem;
+        letter-spacing: 0.12em;
+        line-height: 1.6;
+        text-transform: uppercase;
+      }
+      .opening {
+        display: grid;
+        gap: clamp(2.5rem, 7vw, 6.5rem);
+        margin-top: clamp(3.5rem, 9vw, 7.5rem);
+      }
+      .opening-copy {
+        align-self: end;
       }
       .eyebrow {
         margin: 0 0 1.25rem;
-        color: var(--sand);
+        color: var(--forest);
         font-size: 0.72rem;
         font-weight: 700;
         letter-spacing: 0.24em;
         text-transform: uppercase;
       }
       h1 {
-        max-width: 18ch;
-        margin: 0 auto;
+        max-width: 12ch;
+        margin: 0;
+        color: var(--ocean);
         font-family: Georgia, 'Times New Roman', serif;
-        font-size: clamp(2.4rem, 7vw, 5.4rem);
+        font-size: clamp(2.8rem, 6.5vw, 5.65rem);
         font-weight: 400;
         letter-spacing: -0.025em;
         line-height: 0.98;
       }
       .introduction {
-        max-width: 34rem;
-        margin: 2rem auto 0;
+        max-width: 30rem;
+        margin: 0;
         color: var(--muted);
         font-size: clamp(1rem, 2vw, 1.18rem);
         line-height: 1.75;
       }
       .contact {
         display: inline-block;
-        margin-top: 2rem;
+        margin-top: 1.75rem;
         border-bottom: 1px solid var(--sand);
         color: var(--ocean);
         font-size: 0.83rem;
@@ -129,21 +149,30 @@ function documentShell(content: string, title: string, analyticsMarkup = '') {
         display: grid;
         max-width: 25rem;
         gap: 1rem;
-        margin: 2.5rem auto 0;
+        margin: 2.5rem 0 0;
         text-align: left;
       }
       .subscription {
-        max-width: 34rem;
-        margin: 3.5rem auto 0;
+        display: grid;
+        gap: 2rem;
+        margin: clamp(3.5rem, 8vw, 6.5rem) 0 0;
         border-top: 1px solid var(--line);
-        padding-top: 3.5rem;
+        padding-top: clamp(2.5rem, 5vw, 4rem);
       }
-      .subscription-title { font-family: Arial, Helvetica, sans-serif; }
+      .subscription-heading { max-width: 28rem; }
+      .subscription-title {
+        margin: 0;
+        color: var(--ocean);
+        font-family: Georgia, 'Times New Roman', serif;
+        font-size: clamp(1.8rem, 4vw, 2.7rem);
+        font-weight: 400;
+        line-height: 1.08;
+      }
       .subscription form { margin-top: 1rem; }
-      .subscription-note { max-width: 31rem; margin: 0 auto; color: var(--muted); font-size: 0.88rem; line-height: 1.6; }
-      .subscription-consent { max-width: 29rem; margin: 1rem auto 0; color: var(--muted); font-size: 0.76rem; line-height: 1.6; text-align: center; }
+      .subscription-note { max-width: 28rem; margin: 1rem 0 0; color: var(--muted); font-size: 0.9rem; line-height: 1.7; }
+      .subscription-consent { max-width: 25rem; margin: 1rem 0 0; color: var(--muted); font-size: 0.76rem; line-height: 1.6; }
       .subscription-consent a, .subscription-recovery { color: var(--ocean); text-underline-offset: 0.18em; }
-      .subscription-status { max-width: 31rem; margin: 1.25rem auto 0; color: var(--ocean); font-size: 0.95rem; line-height: 1.6; }
+      .subscription-status { max-width: 25rem; margin: 1.25rem 0 0; color: var(--ocean); font-size: 0.95rem; line-height: 1.6; }
       .honeypot { position: absolute; left: -10000px; width: 1px; height: 1px; overflow: hidden; }
       label { font-size: 0.85rem; font-weight: 700; letter-spacing: 0.03em; }
       input {
@@ -165,25 +194,40 @@ function documentShell(content: string, title: string, analyticsMarkup = '') {
         font-size: 0.8rem;
         font-weight: 700;
         letter-spacing: 0.08em;
-        padding: 0.9rem 1.25rem;
+        min-height: 3rem;
+        padding: 0.75rem 1.5rem;
         text-transform: uppercase;
+        transition: background-color 180ms ease, border-color 180ms ease, color 180ms ease;
       }
+      button:hover { border-color: var(--sand); background: var(--sand); color: #282828; }
       .error { margin: 0; color: #8a4a32; font-size: 0.9rem; line-height: 1.5; }
+      .review-frame { max-width: 50rem; text-align: center; }
+      .review-frame .logo { margin-inline: auto; }
+      .review-frame h1, .review-frame .introduction { margin-inline: auto; }
+      .review-frame .eyebrow { margin-top: 3.5rem; }
+      .review-frame form { margin-inline: auto; }
+      @media (min-width: 48rem) {
+        .opening { grid-template-columns: minmax(0, 1.45fr) minmax(18rem, 0.55fr); }
+        .subscription { grid-template-columns: minmax(0, 1fr) minmax(19rem, 0.72fr); }
+        .subscription form { margin-top: 0; }
+      }
       @media (prefers-color-scheme: dark) {
         :root {
-          --canvas: #191c1a;
-          --ink: #f1ede6;
-          --muted: rgb(241 237 230 / 72%);
-          --ocean: #d0a16b;
-          --line: rgb(241 237 230 / 20%);
+          --canvas: #20201f;
+          --surface: #282828;
+          --ink: #f3ede6;
+          --muted: rgb(243 237 230 / 72%);
+          --ocean: #f3ede6;
+          --forest: #d8b77e;
+          --line: rgb(243 237 230 / 18%);
         }
         body {
           background:
-            radial-gradient(circle at 18% 14%, rgb(73 107 91 / 24%), transparent 36rem),
-            linear-gradient(145deg, #191c1a, #202420 58%, #14211f);
+            radial-gradient(circle at 82% 14%, rgb(31 61 58 / 45%), transparent 32rem),
+            var(--canvas);
         }
         input { background: rgb(255 255 255 / 6%); }
-        button { color: #191c1a; }
+        button { color: #282828; }
       }
       @media (prefers-reduced-motion: no-preference) {
         .frame { animation: reveal 700ms cubic-bezier(0.22, 1, 0.36, 1) both; }
@@ -192,8 +236,7 @@ function documentShell(content: string, title: string, analyticsMarkup = '') {
       @media (max-width: 30rem) and (max-height: 56.25rem) {
         main { padding-block: 1.5rem; }
         .frame { padding-block: 2rem; }
-        .logo { margin-bottom: 1.5rem; }
-        .introduction { margin-top: 1.5rem; }
+        .opening { margin-top: 2.75rem; }
         .contact { margin-top: 1.5rem; }
         .subscription { margin-top: 2.25rem; padding-top: 2.25rem; }
       }
@@ -247,21 +290,31 @@ function comingSoonDocument(
   const message = subscriptionMessage(subscriptionStatus)
   const subscriptionsEnabled = getSubscriptionMode() === 'live'
   return documentShell(
-    `<section class="frame" aria-labelledby="coming-soon-title">
+    `<article class="frame" aria-labelledby="coming-soon-title">
       <picture>
         <source media="(prefers-color-scheme: dark)" srcset="/brand/logo-light.png" />
         <img class="logo" src="/brand/logo-horizontal.png" alt="Joshua's Point" width="1200" height="360" />
       </picture>
-      <p class="eyebrow">A place between sea and mountain</p>
-      <h1 id="coming-soon-title">We are preparing our new website.</h1>
-      <p class="introduction">Joshua's Point will be back soon. For enquiries, you can still reach us directly.</p>
-      <a class="contact" href="mailto:mail@joshuaspoint.com">mail@joshuaspoint.com</a>
+      <p class="brand-line">A private whole-house stay in Southern Negros</p>
+      <div class="opening">
+        <div>
+          <p class="eyebrow">Between sea and mountain</p>
+          <h1 id="coming-soon-title">A quieter beginning is taking shape.</h1>
+        </div>
+        <div class="opening-copy">
+          <p class="introduction">Joshua’s Point is a private whole-house stay in Zamboanguita. While we prepare the full website, enquiries remain warmly welcome.</p>
+          <a class="contact" href="mailto:mail@joshuaspoint.com">mail@joshuaspoint.com</a>
+        </div>
+      </div>
       ${
         subscriptionsEnabled
           ? `<section class="subscription" aria-labelledby="subscription-title">
-        <h2 class="eyebrow subscription-title" id="subscription-title">News from Joshua's Point</h2>
-        <p class="subscription-note">Leave your email if you would like a quiet note when the new website is ready. We’ll send one email to confirm your address.</p>
-        <form action="/api/subscriptions/request" method="post">
+        <div class="subscription-heading">
+          <p class="eyebrow">Stay in touch</p>
+          <h2 class="subscription-title" id="subscription-title">Occasional notes from Joshua’s Point.</h2>
+          <p class="subscription-note">Leave your email for a quiet note when the new website is ready. We’ll send one email first to confirm your address.</p>
+        </div>
+        <div><form action="/api/subscriptions/request" method="post">
           <label for="subscription-email">Email address</label>
           <input id="subscription-email" name="email" type="email" required autocomplete="email" maxlength="254" />
           <div class="honeypot" aria-hidden="true"><label for="subscription-website">Website</label><input id="subscription-website" name="website" type="text" tabindex="-1" autocomplete="off" /></div>
@@ -270,10 +323,11 @@ function comingSoonDocument(
         <p class="subscription-consent">By subscribing, you agree to receive occasional Joshua’s Point updates. You can unsubscribe at any time. Read our <a href="/privacy">Privacy information</a>.</p>
         ${message ? `<p class="subscription-status" role="status">${escapeHtml(message)}</p>` : ''}
         ${subscriptionStatus === 'invalid-link' ? '<p class="subscription-consent"><a class="subscription-recovery" href="/coming-soon#subscription-title">Return to the signup form and request a new confirmation email.</a></p>' : ''}
+        </div>
       </section>`
           : ''
       }
-    </section>`,
+    </article>`,
     "Joshua's Point — Coming Soon",
     plausibleMarkup(analytics, nonce, subscriptionStatus),
   )
@@ -281,7 +335,7 @@ function comingSoonDocument(
 
 function accessDocument(error?: string) {
   return documentShell(
-    `<section class="frame" aria-labelledby="access-title">
+    `<section class="frame review-frame" aria-labelledby="access-title">
       <picture>
         <source media="(prefers-color-scheme: dark)" srcset="/brand/logo-light.png" />
         <img class="logo" src="/brand/logo-horizontal.png" alt="Joshua's Point" width="1200" height="360" />

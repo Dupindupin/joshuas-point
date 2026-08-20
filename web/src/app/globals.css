@@ -2,32 +2,32 @@
 
 :root {
   /* Joshua's Point — foundational brand tokens */
-  --jp-color-linen: #f6f2eb;
-  --jp-color-charcoal: #242424;
-  --jp-color-timber: #a56f3a;
+  --jp-color-linen: #f3ede6;
+  --jp-color-charcoal: #282828;
+  --jp-color-timber: #c8a26a;
   --jp-color-stone: #b7b0a6;
-  --jp-color-forest: #405548;
-  --jp-color-ocean: #6a8ea1;
-  --jp-color-evening: #121212;
-  --jp-color-evening-surface: #1b1b1b;
-  --jp-color-evening-text: #f2efea;
-  --jp-color-evening-accent: #c89a64;
+  --jp-color-forest: #496b5b;
+  --jp-color-ocean: #1f3d3a;
+  --jp-color-evening: #282828;
+  --jp-color-evening-surface: #1f3d3a;
+  --jp-color-evening-text: #f3ede6;
+  --jp-color-evening-accent: #c8a26a;
 
   /* Semantic color roles — components should prefer these over raw palette names. */
   --jp-color-canvas: var(--jp-color-linen);
-  --jp-color-surface: #fbf8f2;
-  --jp-color-surface-soft: #eee8df;
-  --jp-color-surface-deep: #e4ddd2;
+  --jp-color-surface: #faf7f2;
+  --jp-color-surface-soft: #ece4da;
+  --jp-color-surface-deep: #ded5c9;
   --jp-color-ink: var(--jp-color-charcoal);
-  --jp-color-ink-muted: rgb(36 36 36 / 72%);
-  --jp-color-ink-subtle: rgb(36 36 36 / 64%);
+  --jp-color-ink-muted: rgb(40 40 40 / 72%);
+  --jp-color-ink-subtle: rgb(40 40 40 / 64%);
   --jp-color-border: rgb(183 176 166 / 62%);
   --jp-color-accent: var(--jp-color-forest);
   --jp-color-focus: var(--jp-color-forest);
-  --jp-color-inverse-surface: #242925;
+  --jp-color-inverse-surface: var(--jp-color-ocean);
   --jp-color-inverse: var(--jp-color-evening-text);
   --jp-color-footer: var(--jp-color-evening);
-  --jp-color-map-surface: #252a27;
+  --jp-color-map-surface: var(--jp-color-ocean);
   --jp-color-warning: #8a4a32;
 
   --background: var(--jp-color-canvas);
@@ -64,20 +64,20 @@
 
 [data-theme='dark'] {
   color-scheme: dark;
-  --jp-color-canvas: #191c1a;
-  --jp-color-surface: #202420;
-  --jp-color-surface-soft: #252a26;
-  --jp-color-surface-deep: #2b312c;
-  --jp-color-ink: #f1ede6;
-  --jp-color-ink-muted: rgb(241 237 230 / 76%);
-  --jp-color-ink-subtle: rgb(241 237 230 / 58%);
+  --jp-color-canvas: #20201f;
+  --jp-color-surface: #282828;
+  --jp-color-surface-soft: #30302e;
+  --jp-color-surface-deep: #383734;
+  --jp-color-ink: #f3ede6;
+  --jp-color-ink-muted: rgb(243 237 230 / 76%);
+  --jp-color-ink-subtle: rgb(243 237 230 / 60%);
   --jp-color-border: rgb(183 176 166 / 30%);
   --jp-color-accent: #d0a16b;
   --jp-color-focus: #e0b982;
-  --jp-color-inverse-surface: #101512;
-  --jp-color-inverse: #f3efe8;
-  --jp-color-footer: #0e120f;
-  --jp-color-map-surface: #152126;
+  --jp-color-inverse-surface: #1f3d3a;
+  --jp-color-inverse: #f3ede6;
+  --jp-color-footer: #1b1b1b;
+  --jp-color-map-surface: #1f3d3a;
   --jp-color-warning: #e7ad8d;
 }
 

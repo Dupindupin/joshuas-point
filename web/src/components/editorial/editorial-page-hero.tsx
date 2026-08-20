@@ -2,6 +2,7 @@ type EditorialPageHeroProps = {
   eyebrow: string
   introduction?: string
   motion?: boolean
+  scale?: 'editorial' | 'utility'
   size?: 'compact' | 'focused' | 'standard'
   title: string
 }
@@ -10,6 +11,7 @@ export function EditorialPageHero({
   eyebrow,
   introduction,
   motion = false,
+  scale = 'editorial',
   size = 'standard',
   title,
 }: EditorialPageHeroProps) {
@@ -20,9 +22,13 @@ export function EditorialPageHero({
         ? 'px-6 pt-40 pb-16 sm:px-8 sm:pt-44 sm:pb-20 md:px-10 lg:pt-48 lg:pb-24'
         : 'px-6 pt-48 pb-24 sm:px-8 sm:pt-52 sm:pb-32 md:px-10 lg:pt-60 lg:pb-36'
   const titleClasses =
-    size === 'compact' || size === 'focused'
-      ? 'text-[clamp(3rem,14vw,4.25rem)] sm:text-[5rem] lg:text-[6.5rem] xl:text-[7.5rem]'
-      : 'text-[clamp(3rem,15vw,4.25rem)] sm:text-[5.5rem] lg:text-[7.75rem] xl:text-[9rem]'
+    scale === 'utility'
+      ? size === 'compact' || size === 'focused'
+        ? 'text-[clamp(2.75rem,12vw,3.75rem)] sm:text-[4.375rem] lg:text-[5.625rem] xl:text-[6.5rem]'
+        : 'text-[clamp(2.75rem,13vw,3.75rem)] sm:text-[4.75rem] lg:text-[6.75rem] xl:text-[7.75rem]'
+      : size === 'compact' || size === 'focused'
+        ? 'text-[clamp(3rem,14vw,4.25rem)] sm:text-[5rem] lg:text-[6.5rem] xl:text-[7.5rem]'
+        : 'text-[clamp(3rem,15vw,4.25rem)] sm:text-[5.5rem] lg:text-[7.75rem] xl:text-[9rem]'
   const introductionClasses =
     size === 'focused' ? 'mt-8 lg:mt-10' : size === 'compact' ? 'mt-10 lg:mt-14' : 'mt-14 lg:mt-20'
 

@@ -165,6 +165,7 @@ export default async function PlanYourStayPage() {
               ? cmsPage!.introduction
               : 'The practical details to know before deciding whether Joshua’s Point feels right for your stay.'
           }
+          scale="utility"
           size="focused"
           title={hasApprovedCmsContent ? cmsPage!.title : 'Planning your stay.'}
         />
