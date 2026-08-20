@@ -726,7 +726,7 @@ function OwnerDashboardContent({
     : 'complete'
 
   const launchControlItems: Array<{
-    category: 'Content / photography needed' | 'Optional improvement' | 'Technical issue'
+    category: string
     detail: string
     label: string
     status: LaunchControlStatus
@@ -738,7 +738,7 @@ function OwnerDashboardContent({
           : websiteLaunchStatus === 'unknown'
             ? 'Live domain and Coming Soon status could not be verified.'
             : 'Review the domain, SSL, required Site Settings or Coming Soon protection below.',
-      category: 'Technical issue',
+      category: 'Technical readiness',
       label: 'Website status',
       status: websiteLaunchStatus,
     },
@@ -749,7 +749,7 @@ function OwnerDashboardContent({
           : emailLaunchStatus === 'unknown'
             ? 'Live transactional email status could not be verified.'
             : 'Transactional email delivery is incomplete or remains disabled.',
-      category: 'Technical issue',
+      category: 'Technical readiness',
       label: 'Email readiness',
       status: emailLaunchStatus,
     },
@@ -760,7 +760,7 @@ function OwnerDashboardContent({
           : newsletterLaunchStatus === 'unknown'
             ? 'Live newsletter configuration could not be verified.'
             : 'Subscriber configuration needs attention or subscription delivery remains disabled.',
-      category: 'Technical issue',
+      category: 'Technical readiness',
       label: 'Newsletter readiness',
       status: newsletterLaunchStatus,
     },
@@ -782,12 +782,12 @@ function OwnerDashboardContent({
           : contentLaunchStatus === 'unknown'
             ? 'There is not enough current content information to assess launch readiness.'
             : 'One or more launch content groups has a genuine publication, review or SEO issue.',
-      category: 'Content / photography needed',
+      category: contentLaunchStatus === 'complete' ? 'Content readiness' : 'Content incomplete',
       label: 'Content readiness',
       status: contentLaunchStatus,
     },
     {
-      category: 'Content / photography needed',
+      category: photographyNeededLabels.length ? 'Photography needed' : 'Photography readiness',
       detail: photographyNeededLabels.length
         ? `${photographyNeededLabels.length} text-led pages still need owner-approved, place-specific photography. Their content is not treated as broken.`
         : 'No current production photography requirement is recorded.',
