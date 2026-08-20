@@ -19,9 +19,11 @@ import {approvedAmenityKeys, selectApprovedAmenities} from '@/lib/amenities'
 import {analyticsEvents} from '@/lib/analytics/event-names'
 import {createPageMetadata} from '@/lib/seo/metadata'
 import {stayPolicy} from '@/lib/stay/policy'
+import {interpretGuestWeather} from '@/lib/owner-dashboard/weather-data'
 import {getPublicAmenities} from '@/sanity/queries/amenities'
 import {getPublicHouseAvailability} from '@/sanity/queries/house-availability'
 import {getInformationPage} from '@/sanity/queries/information-pages'
+import {getGuestWeather} from '@/sanity/queries/weather'
 
 export async function generateMetadata(): Promise<Metadata> {
   const cmsPage = await getInformationPage('planningYourStay')
@@ -123,10 +125,11 @@ const enquirySteps = [
 ] as const
 
 export default async function PlanYourStayPage() {
-  const [cmsPage, publicAmenities, houseAvailability] = await Promise.all([
+  const [cmsPage, publicAmenities, houseAvailability, guestWeather] = await Promise.all([
     getInformationPage('planningYourStay'),
     getPublicAmenities(),
     getPublicHouseAvailability(),
+    getGuestWeather(),
   ])
   const hasApprovedCmsContent = Boolean(
     cmsPage?.title?.trim() && cmsPage.introduction?.trim() && cmsPage.body?.length,
@@ -170,6 +173,53 @@ export default async function PlanYourStayPage() {
           <SectionSpacing axis="bottom" id="availability" size="compact">
             <EditorialContainer>
               <HouseAvailabilityCalendar availability={houseAvailability} />
+              {guestWeather ? (
+                <aside
+                  aria-labelledby="guest-weather-title"
+                  className="mt-10 border-y border-ink/15 py-7 sm:mt-12 sm:py-8"
+                >
+                  <div className="grid gap-8 lg:grid-cols-12 lg:items-end">
+                    <div className="lg:col-span-4">
+                      <p className="font-body text-xs font-semibold tracking-[0.2em] text-ink-subtle uppercase">
+                        Today at Joshua&apos;s Point
+                      </p>
+                      <h2
+                        className="mt-3 max-w-md font-display text-2xl leading-tight font-medium tracking-[-0.02em] text-ink sm:text-3xl"
+                        id="guest-weather-title"
+                      >
+                        {interpretGuestWeather(guestWeather)}
+                      </h2>
+                    </div>
+                    <dl className="grid grid-cols-2 gap-x-6 gap-y-6 sm:grid-cols-4 lg:col-span-7 lg:col-start-6">
+                      {[
+                        ['Current conditions', guestWeather.condition],
+                        ['Temperature', `${guestWeather.temperatureCelsius} °C`],
+                        ['Rain probability', `${guestWeather.rainProbabilityPercent}%`],
+                        ['Wind', `${guestWeather.windKilometresPerHour} km/h`],
+                      ].map(([label, value]) => (
+                        <div className="border-t border-ink/15 pt-4" key={label}>
+                          <dt className="font-body text-xs leading-5 text-ink-subtle">{label}</dt>
+                          <dd className="mt-2 font-body text-sm font-semibold text-ink sm:text-base">
+                            {value}
+                          </dd>
+                        </div>
+                      ))}
+                    </dl>
+                    <p className="font-body text-xs leading-5 text-ink-subtle lg:col-span-7 lg:col-start-6">
+                      Weather data by{' '}
+                      <a
+                        className="border-b border-ink/30 hover:border-ink focus-visible:rounded-sm focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-focus"
+                        href="https://open-meteo.com/"
+                        rel="noreferrer"
+                        target="_blank"
+                      >
+                        Open-Meteo
+                      </a>
+                      , refreshed every 15 minutes.
+                    </p>
+                  </div>
+                </aside>
+              ) : null}
             </EditorialContainer>
           </SectionSpacing>
         ) : null}

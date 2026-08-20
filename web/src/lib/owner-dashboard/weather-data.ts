@@ -8,6 +8,37 @@ export type OwnerDashboardWeather = {
   windKilometresPerHour: number
 }
 
+export function interpretGuestWeather(weather: OwnerDashboardWeather) {
+  const condition = weather.condition.toLowerCase()
+
+  if (
+    condition.includes('thunder') ||
+    condition.includes('rain') ||
+    condition.includes('drizzle') ||
+    weather.rainProbabilityPercent >= 60
+  ) {
+    return 'Rain is likely today, so plans can stay easy and flexible.'
+  }
+
+  if (weather.rainProbabilityPercent >= 35) {
+    return 'A passing shower is possible, with plenty of time to enjoy the house.'
+  }
+
+  if (weather.windKilometresPerHour >= 25) {
+    return 'A breezy day for enjoying the changing light across the ridge.'
+  }
+
+  if (weather.temperatureCelsius >= 30) {
+    return 'A warm day for slowing down by the pool.'
+  }
+
+  if (['clear sky', 'mainly clear', 'partly cloudy'].includes(condition)) {
+    return 'Lovely weather for relaxing by the pool.'
+  }
+
+  return 'A gentle day to enjoy the house and let plans unfold naturally.'
+}
+
 export type OpenMeteoPayload = {
   current?: {
     precipitation_probability?: number
