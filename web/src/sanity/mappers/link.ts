@@ -8,6 +8,7 @@ export type ResolvedSanityLink = {
 
 const publicRoutes = new Set([
   '/',
+  '/cancellation-policy',
   '/contact',
   '/destinations',
   '/dive-sites',
@@ -15,6 +16,7 @@ const publicRoutes = new Set([
   '/faq',
   '/getting-here',
   '/guide',
+  '/house-guide',
   '/plan-your-stay',
   '/privacy',
   '/rooms',
