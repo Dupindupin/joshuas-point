@@ -121,30 +121,20 @@ export function publishedDocumentIds(documents: DashboardDocument[]) {
 }
 
 function photographyReadiness(document: DashboardDocument) {
-  const issues: string[] = []
-
-  if (['destination', 'diveSite', 'scenicRoute'].includes(document._type)) {
-    if (ownerPhotographyNeedFor(document)) {
-      issues.push('Owner-approved place-specific photography')
+  if (ownerPhotographyNeedFor(document)) {
+    return {
+      issues: ['Owner-approved place-specific photography'],
+      status: 'needsAttention' as const,
     }
-  } else if (document._type === 'room') {
-    if (!hasImage(document.heroImage)) issues.push('Verified room preview image')
-  } else if (document._type === 'housePage') {
-    if (!hasImage(document.heroImage)) issues.push('Hero image')
-    if (!hasImage(document.viewImage)) issues.push('View image')
-    if ((document.sharedHeartImageCount ?? 0) < 1) issues.push('Shared Heart image')
-    if ((document.indoorOutdoorImageCount ?? 0) < 1) issues.push('Indoor / Outdoor image')
-    if (document.morningPresent && !hasImage(document.morningImage)) issues.push('Morning image')
-    if (document.rainPresent && !hasImage(document.rainImage)) issues.push('Rain image')
-    if (document.eveningPresent && !hasImage(document.eveningImage)) issues.push('Evening image')
-    if ((document.materialCount ?? 0) > (document.materialImageCount ?? 0)) {
-      issues.push('Materials images')
-    }
-  } else {
-    return {issues, status: 'unknown' as const}
   }
 
-  return {issues, status: issues.length ? ('needsAttention' as const) : ('complete' as const)}
+  return photographyContentType(document._type)
+    ? {issues: [], status: 'complete' as const}
+    : {issues: [], status: 'unknown' as const}
+}
+
+function photographyContentType(documentType: string) {
+  return ['destination', 'diveSite', 'housePage', 'room', 'scenicRoute'].includes(documentType)
 }
 
 function reviewReadiness(document: DashboardDocument): ContentReadiness['reviewStatus'] {

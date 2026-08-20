@@ -1120,11 +1120,13 @@ function OwnerDashboardContent({
                 <Value
                   label="Publication"
                   value={
-                    page.published
-                      ? 'Published'
-                      : page.draft
-                        ? 'Draft / unpublished'
-                        : 'Draft not created'
+                    page.published && page.draft
+                      ? 'Published with draft changes'
+                      : page.published
+                        ? 'Published'
+                        : page.draft
+                          ? 'Draft / unpublished'
+                          : 'Draft not created'
                   }
                 />
                 <Value label="Workflow" value={page.current?.workflowStatus ?? 'Owner decision'} />
@@ -1170,11 +1172,13 @@ function OwnerDashboardContent({
                 <Value
                   label="Publication"
                   value={
-                    page.published
-                      ? 'Published'
-                      : page.draft
-                        ? 'Draft / unpublished'
-                        : 'Draft not created'
+                    page.published && page.draft
+                      ? 'Published with draft changes'
+                      : page.published
+                        ? 'Published'
+                        : page.draft
+                          ? 'Draft / unpublished'
+                          : 'Draft not created'
                   }
                 />
                 <Value label="Workflow" value={page.current?.workflowStatus ?? 'Owner decision'} />
