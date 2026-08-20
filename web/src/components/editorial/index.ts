@@ -16,6 +16,7 @@ export type {EditorialImage, EditorialMediaRatio, EditorialMediaTone} from './ed
 export {MasonryGallery} from './masonry-gallery'
 export type {MasonryGalleryData, MasonryGalleryImage} from './masonry-gallery'
 export {EditorialPageHero} from './editorial-page-hero'
+export {EditorialPhotographyPlaceholder} from './editorial-photography-placeholder'
 export {EditorialMediaStory} from './editorial-media-story'
 export type {EditorialMediaStoryPosition} from './editorial-media-story'
 export {EditorialPhotoEssay} from './editorial-photo-essay'

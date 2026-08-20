@@ -191,9 +191,7 @@ export default async function DiveSitePage({params}: DiveSitePageProps) {
 
         <EditorialPhotoStories stories={photoStories} />
 
-        {gallery ? (
-          <MasonryGallery {...gallery} heading="More from the underwater world" />
-        ) : null}
+        {gallery ? <MasonryGallery {...gallery} heading="More from the underwater world" /> : null}
 
         {practicalItems.length > 0 || diveSite.safetyNotes ? (
           <SectionSpacing aria-labelledby="dive-practical-title" size="generous">
@@ -241,23 +239,6 @@ export default async function DiveSitePage({params}: DiveSitePageProps) {
           diveSiteName={diveSite.name}
           locationLabel={diveSite.mapLocation?.label ?? undefined}
         />
-
-        {diveSite.photographyNotes.length > 0 ? (
-          <SectionSpacing aria-labelledby="dive-photography-title" size="generous">
-            <EditorialContainer size="reading">
-              <EditorialText
-                as="h2"
-                className="mb-10"
-                headingSize="small"
-                id="dive-photography-title"
-                variant="heading"
-              >
-                Photography below the surface.
-              </EditorialText>
-              <EditorialPortableText value={diveSite.photographyNotes} />
-            </EditorialContainer>
-          </SectionSpacing>
-        ) : null}
 
         <EditorialShare
           pathname={`/dive-sites/${encodeURIComponent(diveSite.slug)}`}

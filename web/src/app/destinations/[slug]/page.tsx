@@ -10,6 +10,7 @@ import {
   EditorialContainer,
   EditorialGrid,
   EditorialPageHero,
+  EditorialPhotographyPlaceholder,
   EditorialPhotoStories,
   EditorialPortableText,
   EditorialText,
@@ -26,6 +27,8 @@ import {EditorialShare} from '@/components/share'
 import {SiteHeader} from '@/components/site/site-header'
 import {EditorialInstagramSection} from '@/components/social'
 import {createPageMetadata} from '@/lib/seo/metadata'
+import {requiresTextLedDestination} from '@/lib/editorial/photography-readiness'
+import {getPublicEditorialCopy, isInternalEditorialCopy} from '@/lib/editorial/public-copy'
 import {normalizeSocialProfiles} from '@/lib/social-profiles'
 import {getEditorialImage} from '@/sanity/image'
 import {mapEditorialPhotoStories} from '@/sanity/photography'
@@ -57,12 +60,13 @@ function getDestinationPhotograph(
   id: string,
   dimensions: {height: number; width: number},
 ): DestinationPhotograph | undefined {
+  if (isInternalEditorialCopy(image?.credit)) return undefined
   const editorialImage = getEditorialImage(image, dimensions)
   if (!editorialImage) return undefined
 
   return {
-    caption: image?.caption?.trim() || undefined,
-    credit: image?.credit?.trim() || undefined,
+    caption: getPublicEditorialCopy(image?.caption),
+    credit: getPublicEditorialCopy(image?.credit),
     creditUrl: image?.creditUrl ?? undefined,
     id,
     image: editorialImage,
@@ -95,8 +99,10 @@ export async function generateMetadata({params}: DestinationPageProps): Promise<
   return createPageMetadata({
     description,
     pathname: `/destinations/${encodeURIComponent(destination.slug)}`,
-    seo: destination.seo,
-    socialImage: destination.heroImage,
+    seo: requiresTextLedDestination(destination.slug)
+      ? {...destination.seo, socialImage: null}
+      : destination.seo,
+    socialImage: requiresTextLedDestination(destination.slug) ? undefined : destination.heroImage,
     title,
     type: 'article',
   })
@@ -112,11 +118,14 @@ export default async function DestinationPage({params}: DestinationPageProps) {
   if (!destination) notFound()
 
   const relationships = await getDestinationRelationships(destination._id)
-  const heroPhotograph = getDestinationPhotograph(destination.heroImage, 'hero', {
-    height: 1440,
-    width: 2560,
-  })
-  const photoStories = mapEditorialPhotoStories(destination.editorialPhotography)
+  const isTextLed = requiresTextLedDestination(destination.slug)
+  const heroPhotograph = isTextLed
+    ? undefined
+    : getDestinationPhotograph(destination.heroImage, 'hero', {
+        height: 1440,
+        width: 2560,
+      })
+  const photoStories = isTextLed ? [] : mapEditorialPhotoStories(destination.editorialPhotography)
   const galleryPhotographs = (photoStories.length > 0 ? [] : (destination.gallery?.images ?? []))
     .map((image, index) =>
       getDestinationPhotograph(image, `gallery-${index}`, {
@@ -125,6 +134,7 @@ export default async function DestinationPage({params}: DestinationPageProps) {
       }),
     )
     .filter((image): image is DestinationPhotograph => Boolean(image))
+  const publicGalleryPhotographs = isTextLed ? [] : galleryPhotographs
   const instagramProfile = normalizeSocialProfiles(siteSettings?.socialProfiles).find(
     (profile) => profile.platform === 'instagram',
   )
@@ -143,6 +153,8 @@ export default async function DestinationPage({params}: DestinationPageProps) {
           title={destination.title}
         />
 
+        {!heroPhotograph ? <EditorialPhotographyPlaceholder subject={destination.title} /> : null}
+
         {destination.editorialIntroduction ? (
           <SectionSpacing aria-labelledby="destination-introduction-title" size="generous">
             <EditorialContainer size="reading">
@@ -158,7 +170,7 @@ export default async function DestinationPage({params}: DestinationPageProps) {
           galleryCaption={destination.gallery?.caption}
           galleryLabel={destination.gallery?.accessibleLabel}
           hero={heroPhotograph}
-          images={galleryPhotographs}
+          images={publicGalleryPhotographs}
         />
 
         {destination.story.length > 0 ? (
@@ -209,30 +221,6 @@ export default async function DestinationPage({params}: DestinationPageProps) {
           locationLabel={destination.mapLocation?.label}
         />
 
-        {destination.photographyNotes.length > 0 ? (
-          <SectionSpacing aria-labelledby="photography-notes-title" size="generous">
-            <EditorialContainer>
-              <EditorialGrid gap="generous">
-                <EditorialText className="lg:col-span-2" variant="eyebrow">
-                  Photography notes
-                </EditorialText>
-                <div className="lg:col-span-6 lg:col-start-5">
-                  <EditorialText
-                    as="h2"
-                    className="mb-12"
-                    headingSize="small"
-                    id="photography-notes-title"
-                    variant="heading"
-                  >
-                    Looking with care.
-                  </EditorialText>
-                  <EditorialPortableText value={destination.photographyNotes} />
-                </div>
-              </EditorialGrid>
-            </EditorialContainer>
-          </SectionSpacing>
-        ) : null}
-
         {destination.whyVisit ? (
           <SectionSpacing
             aria-labelledby="joshua-point-recommendation-title"
@@ -263,7 +251,7 @@ export default async function DestinationPage({params}: DestinationPageProps) {
           </SectionSpacing>
         ) : null}
 
-        {instagramProfile && instagramPosts.length > 0 ? (
+        {!isTextLed && instagramProfile && instagramPosts.length > 0 ? (
           <EditorialInstagramSection
             heading={`From ${destination.title}`}
             introduction="Selected photographs connected to this place."
@@ -277,10 +265,14 @@ export default async function DestinationPage({params}: DestinationPageProps) {
           title={destination.title}
         />
 
-        <RelatedPlaces items={relationships.all} limit={3} />
-        <NearbyDiveSites items={relationships.all} limit={3} />
-        <RelatedScenicRoutes items={relationships.all} limit={3} />
-        <RelatedJournalArticles items={relationships.all} limit={3} />
+        {!isTextLed ? (
+          <>
+            <RelatedPlaces items={relationships.all} limit={3} />
+            <NearbyDiveSites items={relationships.all} limit={3} />
+            <RelatedScenicRoutes items={relationships.all} limit={3} />
+            <RelatedJournalArticles items={relationships.all} limit={3} />
+          </>
+        ) : null}
       </main>
     </>
   )

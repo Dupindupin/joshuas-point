@@ -63,7 +63,7 @@ export default async function RoomsPage() {
       <main className="bg-canvas">
         <EditorialPageHero
           eyebrow={hero.eyebrow}
-          introduction={hero.introduction}
+          introduction="Joshua’s Point is always offered as one private whole-house stay. The Ocean Suite and Garden Suite are yours together."
           title={hero.title}
         />
 

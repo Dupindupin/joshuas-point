@@ -34,6 +34,9 @@ export function getSanityRevalidationTags(payload: SanityRevalidationPayload) {
     case 'houseAvailability':
       tags.add('sanity:house-availability')
       break
+    case 'informationPage':
+      if (documentId) tags.add(`sanity:informationPage:${documentId}`)
+      break
     case 'roomsPage':
     case 'room':
       tags.add('sanity:rooms-page')

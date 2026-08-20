@@ -1,4 +1,5 @@
 import type {EditorialPhotoStoryData, EditorialPhotoStoryPhase} from '@/components/editorial'
+import {getPublicEditorialCopy, isInternalEditorialCopy} from '@/lib/editorial/public-copy'
 
 import {getEditorialImage} from './image'
 import type {SanityEditorialPhotography, SanityImage} from './types'
@@ -10,13 +11,14 @@ function mapImages(
 ) {
   return (images ?? []).flatMap((source, index) => {
     if (!source?.asset?._ref) return []
+    if (isInternalEditorialCopy(source.credit)) return []
     const image = getEditorialImage(source, {height: 1600, width: 2400})
     if (!image) return []
 
     return [
       {
-        caption: source.caption?.trim() || undefined,
-        credit: source.credit?.trim() || undefined,
+        caption: getPublicEditorialCopy(source.caption),
+        credit: getPublicEditorialCopy(source.credit),
         creditUrl: source.creditUrl?.trim() || undefined,
         id: `${idPrefix}-${index}`,
         image,
@@ -51,7 +53,7 @@ export function mapEditorialPhotoStories(
         accessibleLabel: story.accessibleLabel,
         frames,
         id: story._key || `photo-story-${storyIndex}`,
-        introduction: story.introduction?.trim() || undefined,
+        introduction: getPublicEditorialCopy(story.introduction),
         title: story.title,
       },
     ]

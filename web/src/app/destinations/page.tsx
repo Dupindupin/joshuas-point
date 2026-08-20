@@ -15,6 +15,7 @@ import {
 } from '@/components/editorial'
 import {SiteHeader} from '@/components/site/site-header'
 import {createPageMetadata} from '@/lib/seo/metadata'
+import {requiresTextLedDestination} from '@/lib/editorial/photography-readiness'
 import {getEditorialImage} from '@/sanity/image'
 import {getDestinationsPage, getPublishedDestinations} from '@/sanity/queries/destinations'
 
@@ -52,6 +53,23 @@ export default async function DestinationsPage() {
     getPublishedDestinations(),
   ])
   if (!page || publishedDestinations.length === 0) notFound()
+  const preferredDestinationSlugs = ['casaroro-falls', 'apo-island', 'dumaguete'] as const
+  const curatedDestinations = [
+    ...page.featuredDestinations,
+    ...preferredDestinationSlugs.flatMap((slug) =>
+      publishedDestinations.filter((destination) => destination.slug === slug),
+    ),
+  ]
+    .filter(
+      (destination, index, destinations) =>
+        !requiresTextLedDestination(destination.slug) &&
+        destinations.findIndex((item) => item._id === destination._id) === index,
+    )
+    .flatMap((destination) => {
+      const image = getEditorialImage(destination.heroImage, {height: 1000, width: 1500})
+      return image ? [{destination, image}] : []
+    })
+    .slice(0, 3)
 
   return (
     <>
@@ -86,7 +104,7 @@ export default async function DestinationsPage() {
           </EditorialContainer>
         </SectionSpacing>
 
-        {page.featuredDestinations.length > 0 ? (
+        {curatedDestinations.length > 0 ? (
           <SectionSpacing aria-labelledby="featured-destinations-title" size="generous">
             <EditorialContainer>
               <EditorialText
@@ -98,16 +116,13 @@ export default async function DestinationsPage() {
                 Featured destinations
               </EditorialText>
               <div className="mt-16 sm:mt-20">
-                {page.featuredDestinations.map((destination) => (
+                {curatedDestinations.map(({destination, image}) => (
                   <SectionSpacing as="div" key={destination._id} size="compact">
                     <FeaturedDestination
                       destination={{
                         href: `/destinations/${encodeURIComponent(destination.slug)}`,
                         id: destination._id,
-                        image: getEditorialImage(destination.heroImage, {
-                          height: 1000,
-                          width: 1500,
-                        }),
+                        image,
                         introduction: destination.editorialIntroduction,
                         title: destination.title,
                       }}

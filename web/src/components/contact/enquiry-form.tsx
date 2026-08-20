@@ -11,7 +11,6 @@ import {
 } from '@/lib/enquiry/types'
 import {getAvailabilityGuidance} from '@/lib/availability/guidance'
 import type {PublicHouseAvailability} from '@/lib/availability/types'
-import {stayPolicyLines} from '@/lib/stay/policy'
 
 type EnquiryFormProps = {
   action: EnquiryFormAction
@@ -57,7 +56,6 @@ export function EnquiryForm({
   const [arrivalDate, setArrivalDate] = useState(initialArrivalDate)
   const [departureDate, setDepartureDate] = useState(initialDepartureDate)
   const formRef = useRef<HTMLFormElement>(null)
-
   useEffect(() => {
     if (state.status === 'success') formRef.current?.reset()
   }, [state.status])
@@ -106,16 +104,17 @@ export function EnquiryForm({
         Your details are used only to understand and respond to this enquiry.
       </div>
 
-      <div className="mt-8 border-l border-ink/25 pl-5 sm:pl-6">
-        <p className="font-body text-xs font-semibold tracking-[0.16em] text-ink/62 uppercase">
-          Current stay information
-        </p>
-        <ul className="mt-4 space-y-1 font-body text-sm leading-7 text-ink/65">
-          {stayPolicyLines().map((line) => (
-            <li key={line}>{line}</li>
-          ))}
-        </ul>
-      </div>
+      <p className="mt-7 max-w-xl font-body text-sm leading-7 text-ink-muted">
+        Stay-specific payment and cancellation terms will be set out in your personal written
+        confirmation. Read the{' '}
+        <Link
+          className="rounded-sm border-b border-ink/35 pb-0.5 font-semibold text-ink hover:border-accent hover:text-accent focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-focus"
+          href="/cancellation-policy"
+        >
+          Cancellation &amp; Rebooking Policy
+        </Link>
+        .
+      </p>
 
       <div aria-hidden="true" className="absolute -left-[10000px] h-px w-px overflow-hidden">
         <label htmlFor="enquiry-website">Website</label>

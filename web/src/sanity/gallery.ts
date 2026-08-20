@@ -1,4 +1,5 @@
 import type {MasonryGalleryData, MasonryGalleryImage} from '@/components/editorial'
+import {getPublicEditorialCopy, isInternalEditorialCopy} from '@/lib/editorial/public-copy'
 
 import {getEditorialImage} from './image'
 import type {SanityGallery} from './types'
@@ -14,6 +15,7 @@ export function mapSanityGallery(
   const images = (gallery.images ?? [])
     .map((source, index): MasonryGalleryImage | null => {
       if (!source?.asset?._ref) return null
+      if (isInternalEditorialCopy(source.credit)) return null
 
       const orientation =
         typeof source.dimensions?.aspectRatio === 'number' && source.dimensions.aspectRatio < 0.9
@@ -26,8 +28,8 @@ export function mapSanityGallery(
       if (!image) return null
 
       return {
-        caption: source.caption?.trim() || undefined,
-        credit: source.credit?.trim() || undefined,
+        caption: getPublicEditorialCopy(source.caption),
+        credit: getPublicEditorialCopy(source.credit),
         creditUrl: source.creditUrl?.trim() || undefined,
         id: `${source.asset._ref}-${index}`,
         image,

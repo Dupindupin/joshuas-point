@@ -1,10 +1,9 @@
 import type {EnquirySubmission} from '@/lib/enquiry/types'
-import {stayPolicyLines} from '@/lib/stay/policy'
 
 import type {EmailMessage} from './types'
 import {
+  defaultEmailBrand,
   emailHeading,
-  emailInformationBlock,
   emailKicker,
   emailMessageBlock,
   emailParagraph,
@@ -54,7 +53,9 @@ export function createEnquiryEmails({
   brand,
 }: EnquiryEmailPairOptions): readonly EmailMessage[] {
   const summary = enquirySummary(enquiry)
-  const policySummary = ['Current stay information:', ...stayPolicyLines()].join('\n')
+  const resolvedBrand = brand ?? defaultEmailBrand
+  const cancellationPolicyUrl = new URL('/cancellation-policy', resolvedBrand.siteUrl).toString()
+  const policyLink = `<a class="email-link" href="${escapeEmailHtml(cancellationPolicyUrl)}" style="color:#1f3d3a;text-decoration:underline;text-decoration-color:#c8a26a;overflow-wrap:anywhere;word-break:break-word">Cancellation &amp; Rebooking Policy</a>`
   const arrivalDate = formatEmailDate(enquiry.arrivalDate)
   const departureDate = formatEmailDate(enquiry.departureDate)
   const guestEmailLink = `<a class="email-link" href="mailto:${escapeEmailHtml(enquiry.email)}" style="color:#1f3d3a;text-decoration:underline;text-decoration-color:#c8a26a;overflow-wrap:anywhere;word-break:break-word">${escapeEmailHtml(enquiry.email)}</a>`
@@ -115,9 +116,11 @@ export function createEnquiryEmails({
             ['Guests', String(enquiry.guests)],
           ]),
           emailMessageBlock('Your message', enquiry.message),
-          emailInformationBlock('Current stay information', stayPolicyLines()),
           emailParagraph(
-            'This message confirms receipt of your enquiry only. It does not confirm availability or a booking.',
+            `For general guidance, read the ${policyLink}. The stay-specific payment and cancellation terms in your personal written confirmation will be authoritative.`,
+          ),
+          emailParagraph(
+            'This message confirms receipt of your enquiry only. A stay is confirmed only when Joshua’s Point sends your personal written confirmation.',
           ),
           emailParagraph('Warmly,<br>Joshua’s Point'),
         ].join(''),
@@ -132,9 +135,10 @@ export function createEnquiryEmails({
         '',
         summary,
         '',
-        policySummary,
+        `Cancellation & Rebooking Policy: ${cancellationPolicyUrl}`,
+        'The stay-specific payment and cancellation terms in your personal written confirmation will be authoritative.',
         '',
-        'This message confirms receipt of your enquiry only. It does not confirm availability or a booking.',
+        'This message confirms receipt of your enquiry only. A stay is confirmed only when Joshua’s Point sends your personal written confirmation.',
         '',
         'Warmly,',
         'Joshua’s Point',

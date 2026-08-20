@@ -14,6 +14,8 @@ import {
 } from '@/components/editorial'
 import {SiteHeader} from '@/components/site/site-header'
 import {createPageMetadata} from '@/lib/seo/metadata'
+import {requiresTextLedScenicRoute} from '@/lib/editorial/photography-readiness'
+import {isInternalEditorialCopy} from '@/lib/editorial/public-copy'
 import {getEditorialImage} from '@/sanity/image'
 import {getPublishedScenicRoutes, getScenicRoutesPage} from '@/sanity/queries/scenic-routes'
 
@@ -76,7 +78,11 @@ export default async function ScenicRoutesPage() {
             </EditorialContainer>
           </SectionSpacing>
 
-          {page.featuredRoutes.length > 0 ? (
+          {page.featuredRoutes.some(
+            (route) =>
+              !requiresTextLedScenicRoute(route.slug) &&
+              !isInternalEditorialCopy(route.heroImage?.credit),
+          ) ? (
             <SectionSpacing aria-labelledby="featured-routes-title" size="generous">
               <EditorialContainer>
                 <EditorialText
@@ -88,22 +94,28 @@ export default async function ScenicRoutesPage() {
                   Featured routes
                 </EditorialText>
                 <div className="mt-16 sm:mt-20">
-                  {page.featuredRoutes.map((route) => (
-                    <SectionSpacing as="div" key={route._id} size="compact">
-                      <FeaturedDestination
-                        destination={{
-                          href: `/scenic-routes/${encodeURIComponent(route.slug)}`,
-                          id: route._id,
-                          image: getEditorialImage(route.heroImage, {
-                            height: 1000,
-                            width: 1500,
-                          }),
-                          introduction: route.editorialIntroduction,
-                          title: route.title,
-                        }}
-                      />
-                    </SectionSpacing>
-                  ))}
+                  {page.featuredRoutes
+                    .filter(
+                      (route) =>
+                        !requiresTextLedScenicRoute(route.slug) &&
+                        !isInternalEditorialCopy(route.heroImage?.credit),
+                    )
+                    .map((route) => (
+                      <SectionSpacing as="div" key={route._id} size="compact">
+                        <FeaturedDestination
+                          destination={{
+                            href: `/scenic-routes/${encodeURIComponent(route.slug)}`,
+                            id: route._id,
+                            image: getEditorialImage(route.heroImage, {
+                              height: 1000,
+                              width: 1500,
+                            }),
+                            introduction: route.editorialIntroduction,
+                            title: route.title,
+                          }}
+                        />
+                      </SectionSpacing>
+                    ))}
                 </div>
               </EditorialContainer>
             </SectionSpacing>

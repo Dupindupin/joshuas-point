@@ -35,7 +35,8 @@ const coreFaqItems = [
   {
     id: 'cancellation',
     question: 'What is the cancellation policy?',
-    answer: stayPolicy.cancellation,
+    answer:
+      'Please read the Cancellation & Rebooking Policy. Your personal written confirmation will set out the terms that apply to your stay.',
   },
 ] satisfies readonly FaqItem[]
 

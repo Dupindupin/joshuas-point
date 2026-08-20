@@ -5,6 +5,7 @@ import {HouseAvailabilitySummary} from '@/components/availability'
 import {
   EditorialContainer,
   EditorialGrid,
+  EditorialLink,
   EditorialPageHero,
   EditorialText,
   SectionSpacing,
@@ -27,14 +28,6 @@ export function generateMetadata(): Promise<Metadata> {
     title: "Contact | Joshua's Point",
   })
 }
-
-const enquiryReasons = [
-  'Stay enquiries',
-  'Availability questions',
-  'Arrival planning',
-  'Diving and local exploration questions',
-  'Special requests',
-] as const
 
 type ContactPageProps = {
   searchParams: Promise<{arrival?: string | string[]; departure?: string | string[]}>
@@ -89,6 +82,7 @@ export default async function ContactPage({searchParams}: ContactPageProps) {
         ]
       : []),
   ]
+  const secondaryContactMethods = contactMethods.filter((method) => method.id !== 'email')
 
   return (
     <>
@@ -97,103 +91,33 @@ export default async function ContactPage({searchParams}: ContactPageProps) {
         <EditorialPageHero
           eyebrow="Contact"
           introduction="Ask about a stay, your arrival, or the places you hope to explore from Joshua’s Point."
+          size="compact"
           title="Let’s talk about your stay."
         />
 
-        <SectionSpacing aria-labelledby="contact-introduction-title" size="generous">
-          <EditorialContainer>
-            <EditorialGrid gap="generous">
-              <EditorialText className="lg:col-span-2" variant="eyebrow">
-                Begin here
-              </EditorialText>
-              <div className="lg:col-span-8 lg:col-start-3">
-                <EditorialText
-                  as="h2"
-                  className="max-w-3xl"
-                  headingSize="small"
-                  id="contact-introduction-title"
-                  variant="heading"
-                >
-                  A conversation before the journey.
-                </EditorialText>
-                <EditorialText className="mt-10 max-w-2xl" variant="body">
-                  Write with as much or as little detail as you have. A date and a simple question
-                  are enough to begin. You can also ask about practical arrangements such as
-                  transfers, scooters, parking, or laundry.
-                </EditorialText>
-              </div>
-            </EditorialGrid>
-
-            <ol className="mt-20 border-t border-ink/18 sm:mt-28 lg:ml-[25%]">
-              {enquiryReasons.map((reason, index) => (
-                <li
-                  className="grid grid-cols-[3rem_1fr] items-baseline gap-5 border-b border-ink/18 py-7 sm:gap-8 sm:py-9"
-                  key={reason}
-                >
-                  <span
-                    aria-hidden="true"
-                    className="font-body text-xs font-semibold tracking-[0.16em] text-ink-subtle"
-                  >
-                    {String(index + 1).padStart(2, '0')}
-                  </span>
-                  <EditorialText as="span" headingSize="small" variant="heading">
-                    {reason}
-                  </EditorialText>
-                </li>
-              ))}
-            </ol>
-          </EditorialContainer>
-        </SectionSpacing>
-
-        <SectionSpacing
-          aria-labelledby="contact-methods-title"
-          className="bg-surface-soft"
-          size="generous"
-        >
-          <EditorialContainer>
-            <EditorialGrid gap="generous">
-              <EditorialText className="lg:col-span-2" variant="eyebrow">
-                Contact
-              </EditorialText>
-              <EditorialText
-                className="max-w-3xl lg:col-span-8 lg:col-start-3"
-                headingSize="medium"
-                id="contact-methods-title"
-                variant="heading"
-              >
-                Begin in writing.
-              </EditorialText>
-            </EditorialGrid>
-            <div className="mt-20 sm:mt-28 lg:ml-[16.666667%]">
-              <ContactMethods methods={contactMethods} />
-              {socialProfiles.length > 0 ? (
-                <div className="mt-12">
-                  <EditorialText variant="eyebrow">Follow Joshua&apos;s Point</EditorialText>
-                  <SocialProfileLinks className="mt-5" profiles={socialProfiles} />
-                </div>
-              ) : null}
-            </div>
-          </EditorialContainer>
-        </SectionSpacing>
-
-        <SectionSpacing aria-labelledby="enquiry-form-title" size="immersive">
+        <SectionSpacing aria-labelledby="enquiry-form-title" size="standard">
           <EditorialContainer>
             <EditorialGrid gap="generous">
               <div className="lg:col-span-4">
-                <EditorialText variant="eyebrow">Your enquiry</EditorialText>
+                <EditorialText variant="eyebrow">Stay enquiry</EditorialText>
                 <EditorialText
                   className="mt-7 max-w-md"
                   headingSize="small"
                   id="enquiry-form-title"
                   variant="heading"
                 >
-                  Tell us what you would like to know.
+                  Enquire about a stay with dates.
                 </EditorialText>
                 <EditorialText className="mt-9 max-w-md" variant="body">
-                  Dates and guest numbers are a useful beginning. Use the message for anything else
-                  you would like to ask about the house, the journey, or your time in Southern
-                  Negros.
+                  Use this form when you have possible arrival and departure dates. We will review
+                  your dates and message personally before any stay is confirmed.
                 </EditorialText>
+                <EditorialText className="mt-6 max-w-md" variant="body">
+                  For a general question without dates, email us directly:
+                </EditorialText>
+                <div className="mt-8">
+                  <EditorialLink href={`mailto:${email}`} label={email} />
+                </div>
               </div>
 
               <div className="lg:col-span-7 lg:col-start-6">
@@ -211,7 +135,39 @@ export default async function ContactPage({searchParams}: ContactPageProps) {
           </EditorialContainer>
         </SectionSpacing>
 
-        <SectionSpacing aria-label="Closing reflection" size="immersive">
+        {secondaryContactMethods.length > 0 || socialProfiles.length > 0 ? (
+          <SectionSpacing
+            aria-labelledby="contact-methods-title"
+            className="bg-surface-soft"
+            size="compact"
+          >
+            <EditorialContainer>
+              <EditorialGrid gap="generous">
+                <EditorialText className="lg:col-span-2" variant="eyebrow">
+                  Stay in touch
+                </EditorialText>
+                <div className="lg:col-span-7 lg:col-start-4">
+                  <EditorialText headingSize="small" id="contact-methods-title" variant="heading">
+                    Other ways to begin.
+                  </EditorialText>
+                  {secondaryContactMethods.length > 0 ? (
+                    <div className="mt-10">
+                      <ContactMethods methods={secondaryContactMethods} />
+                    </div>
+                  ) : null}
+                  {socialProfiles.length > 0 ? (
+                    <div className="mt-10">
+                      <EditorialText variant="eyebrow">Follow Joshua&apos;s Point</EditorialText>
+                      <SocialProfileLinks className="mt-5" profiles={socialProfiles} />
+                    </div>
+                  ) : null}
+                </div>
+              </EditorialGrid>
+            </EditorialContainer>
+          </SectionSpacing>
+        ) : null}
+
+        <SectionSpacing aria-label="Closing reflection" size="generous">
           <EditorialContainer size="reading">
             <EditorialText variant="lead">
               A stay can begin quietly—with a date, a question, and a little room for the rest to

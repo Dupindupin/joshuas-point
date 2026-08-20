@@ -7,6 +7,7 @@ import {
   EditorialGrid,
   EditorialMedia,
   EditorialPageHero,
+  EditorialPhotographyPlaceholder,
   EditorialPhotoStories,
   EditorialPortableText,
   EditorialText,
@@ -18,6 +19,8 @@ import {ScenicRoutePractical} from '@/components/scenic-routes/scenic-route-prac
 import {EditorialShare} from '@/components/share'
 import {SiteHeader} from '@/components/site/site-header'
 import {createPageMetadata} from '@/lib/seo/metadata'
+import {requiresTextLedScenicRoute} from '@/lib/editorial/photography-readiness'
+import {isInternalEditorialCopy} from '@/lib/editorial/public-copy'
 import {getEditorialImage} from '@/sanity/image'
 import {mapEditorialPhotoStories} from '@/sanity/photography'
 import {getScenicRouteBySlug, getScenicRouteSlugs} from '@/sanity/queries/scenic-routes'
@@ -45,12 +48,14 @@ export async function generateMetadata({params}: ScenicRoutePageProps): Promise<
 
   const title = route.seo?.metaTitle || `${route.title} | Joshua's Point`
   const description = route.seo?.metaDescription || route.excerpt
+  const hideRoutePhotography =
+    requiresTextLedScenicRoute(route.slug) || isInternalEditorialCopy(route.heroImage?.credit)
 
   return createPageMetadata({
     description,
     pathname: `/scenic-routes/${encodeURIComponent(route.slug)}`,
-    seo: route.seo,
-    socialImage: route.heroImage,
+    seo: hideRoutePhotography ? {...route.seo, socialImage: null} : route.seo,
+    socialImage: hideRoutePhotography ? undefined : route.heroImage,
     title,
     type: 'article',
   })
@@ -61,8 +66,9 @@ export default async function ScenicRoutePage({params}: ScenicRoutePageProps) {
   const route = await getScenicRouteBySlug(slug)
   if (!route) notFound()
 
+  const isTextLed = requiresTextLedScenicRoute(route.slug)
   const relationships = await getScenicRouteRelationships(route._id)
-  const photoStories = mapEditorialPhotoStories(route.editorialPhotography)
+  const photoStories = isTextLed ? [] : mapEditorialPhotoStories(route.editorialPhotography)
   const mappedStops = route.routeStops.flatMap((stop) => {
     const location = stop.location?.coordinates
       ? stop.location
@@ -109,7 +115,7 @@ export default async function ScenicRoutePage({params}: ScenicRoutePageProps) {
           title={route.title}
         />
 
-        {route.heroImage ? (
+        {!isTextLed && route.heroImage && !isInternalEditorialCopy(route.heroImage.credit) ? (
           <figure>
             <EditorialMedia
               image={getEditorialImage(route.heroImage, {height: 1440, width: 2560})}
@@ -118,7 +124,9 @@ export default async function ScenicRoutePage({params}: ScenicRoutePageProps) {
               sizes="100vw"
             />
           </figure>
-        ) : null}
+        ) : (
+          <EditorialPhotographyPlaceholder subject={route.title} />
+        )}
 
         {route.editorialIntroduction ? (
           <SectionSpacing aria-labelledby="route-introduction-title" size="generous">
@@ -223,29 +231,12 @@ export default async function ScenicRoutePage({params}: ScenicRoutePageProps) {
           routes={mapRoutes}
         />
 
-        {route.photographyNotes.length > 0 ? (
-          <SectionSpacing aria-labelledby="route-photography-title" size="generous">
-            <EditorialContainer size="reading">
-              <EditorialText
-                as="h2"
-                className="mb-10"
-                headingSize="small"
-                id="route-photography-title"
-                variant="heading"
-              >
-                Photography along the road.
-              </EditorialText>
-              <EditorialPortableText value={route.photographyNotes} />
-            </EditorialContainer>
-          </SectionSpacing>
-        ) : null}
-
         <EditorialShare
           pathname={`/scenic-routes/${encodeURIComponent(route.slug)}`}
           title={route.title}
         />
 
-        <RelatedPlaces items={relationships.all} limit={4} />
+        {!isTextLed ? <RelatedPlaces items={relationships.all} limit={4} /> : null}
       </main>
     </>
   )
