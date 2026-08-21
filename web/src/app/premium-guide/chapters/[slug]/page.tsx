@@ -156,6 +156,17 @@ export default async function PremiumGuideChapterPage({params}: PremiumGuideChap
                 routes={journey.mapRoutes}
                 viewport={journey.mapViewport}
               />
+              <div className="jp-reader-map-summary sr-only">
+                <p>Places and routes shown for this journey:</p>
+                <ul>
+                  {journey.mapMarkers?.map((marker) => (
+                    <li key={marker.id}>{marker.label}</li>
+                  ))}
+                  {journey.mapRoutes?.map((route) => (
+                    <li key={route.id}>{route.label ?? 'Journey route'}</li>
+                  ))}
+                </ul>
+              </div>
             </EditorialContainer>
           </section>
         ) : null}
