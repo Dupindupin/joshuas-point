@@ -491,6 +491,55 @@ body {
   color: var(--jp-color-ink);
 }
 
+/* Private Edition 1 reader */
+.jp-reader {
+  scroll-padding-top: 5.5rem;
+}
+
+body:has(.jp-edition-reader) > footer,
+body:has(.jp-reader) > footer {
+  display: none;
+}
+
+.jp-reader-section + .jp-reader-section {
+  margin-top: clamp(4.5rem, 9vw, 8rem);
+}
+
+.jp-reader-copy {
+  font-family: var(--font-body), sans-serif;
+  font-size: clamp(1.0625rem, 1.1vw, 1.1875rem);
+  line-height: 1.82;
+}
+
+.jp-reader [data-map-motion='route'],
+.jp-reader [data-map-motion='marker'] {
+  animation: none;
+}
+
+.jp-reader[data-reading-mode='on'] .jp-reader-media,
+.jp-reader[data-reading-mode='on'] .jp-reader-map {
+  display: none;
+}
+
+.jp-reader[data-reading-mode='on'] .jp-reader-article {
+  background: var(--jp-color-surface);
+}
+
+.jp-reader[data-reading-mode='on'] .jp-reader-prose {
+  max-width: 46rem;
+}
+
+.jp-reader[data-reading-mode='on'] .jp-reader-copy {
+  font-size: clamp(1.125rem, 1.25vw, 1.25rem);
+  line-height: 1.9;
+}
+
+@media (max-width: 39.999rem) {
+  .jp-reader-copy {
+    line-height: 1.76;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   body {
     transition: none;

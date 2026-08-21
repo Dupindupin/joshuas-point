@@ -10,20 +10,39 @@ import {
 } from '@/lib/coming-soon'
 
 export async function proxy(request: NextRequest) {
-  if (!isComingSoonModeEnabled()) return NextResponse.next()
-
+  const comingSoonEnabled = isComingSoonModeEnabled()
+  const isPrivateReadingRoute =
+    request.nextUrl.pathname === '/premium-guide' ||
+    request.nextUrl.pathname.startsWith('/premium-guide/') ||
+    request.nextUrl.pathname === '/premium-guide-preview' ||
+    request.nextUrl.pathname.startsWith('/premium-guide-preview/')
   const bypassSecret = getComingSoonBypassSecret()
   const accessCookie = request.cookies.get(comingSoonAccessCookie)?.value
+  let hasReviewAccess = false
 
   if (bypassSecret && accessCookie) {
     const expectedAccessValue = await createComingSoonAccessValue(bypassSecret)
-
-    if (securelyMatches(accessCookie, expectedAccessValue)) {
-      return NextResponse.next()
-    }
+    hasReviewAccess = securelyMatches(accessCookie, expectedAccessValue)
   }
 
-  return NextResponse.rewrite(new URL('/coming-soon', request.url))
+  if (hasReviewAccess) return NextResponse.next()
+
+  if (isPrivateReadingRoute && !comingSoonEnabled) {
+    return new NextResponse('Not Found', {
+      headers: {
+        'Cache-Control': 'private, no-store',
+        'X-Robots-Tag': 'noindex, nofollow, noarchive',
+      },
+      status: 404,
+    })
+  }
+
+  if (!comingSoonEnabled) return NextResponse.next()
+
+  const response = NextResponse.rewrite(new URL('/coming-soon', request.url))
+  response.headers.set('Cache-Control', 'private, no-store')
+  response.headers.set('X-Robots-Tag', 'noindex, nofollow, noarchive')
+  return response
 }
 
 export const config = {

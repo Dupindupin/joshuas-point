@@ -7,173 +7,122 @@ import {
   SectionSpacing,
 } from '@/components/editorial'
 import {PremiumGuideCover} from '@/components/premium-guide/premium-guide-cover'
-import {PremiumJourneyCard} from '@/components/premium-guide/premium-journey-card'
-import {SiteHeader} from '@/components/site/site-header'
+import {readerChapters} from '@/lib/premium-guide/reader-manuscript'
 import {createPageMetadata} from '@/lib/seo/metadata'
-import {
-  getPremiumGuideEditionOneJourneys,
-  premiumGuideChapters,
-} from '@/lib/premium-guide/edition-one'
 
 export function generateMetadata() {
   return createPageMetadata({
     description:
-      'Edition 1 of the Southern Negros guide from Joshua’s Point: five considered journeys, owner perspective, maps and field notes.',
+      'Southern Negros Explorer, Edition 1: a personal field companion written by Tobias Steger from Joshua’s Point.',
     noIndex: true,
     pathname: '/premium-guide',
-    title: "Southern Negros from Joshua's Point | Edition 1",
+    title: 'Southern Negros Explorer | Edition 1',
   })
 }
 
-export default async function PremiumGuidePage() {
-  const journeys = await getPremiumGuideEditionOneJourneys()
+export default function PremiumGuidePage() {
+  const firstChapter = readerChapters[0]
 
   return (
-    <>
-      <SiteHeader appearance="transparent" />
-      <main className="bg-canvas">
-        <PremiumGuideCover
-          edition="Southern Negros Oriental · Edition 01"
-          introduction="Five journeys from Joshua’s Point, shaped by Tobias’s experience, verified place knowledge and enough practical guidance to carry the day offline."
-          statusLabel="First production edition · private review"
-          title="Southern Negros, one journey at a time."
-        />
+    <main className="jp-edition-reader bg-canvas">
+      <PremiumGuideCover
+        author="Tobias Steger"
+        edition="Edition 1"
+        introduction="A personal field companion for leaving Joshua’s Point well, noticing more and returning without rushing."
+        title="The journeys around home."
+      />
 
-        <SectionSpacing aria-labelledby="premium-guide-note-title" size="generous">
-          <EditorialContainer>
-            <EditorialGrid gap="generous">
-              <EditorialText className="lg:col-span-2" variant="eyebrow">
-                A note from Joshua’s Point
+      <SectionSpacing aria-labelledby="premium-guide-opening-title" size="generous">
+        <EditorialContainer>
+          <EditorialGrid gap="generous">
+            <EditorialText className="lg:col-span-2" variant="eyebrow">
+              Opening note
+            </EditorialText>
+            <div className="lg:col-span-8 lg:col-start-4">
+              <EditorialText
+                as="h2"
+                headingSize="medium"
+                id="premium-guide-opening-title"
+                variant="heading"
+              >
+                Joshua’s Point is the beginning and the end of every journey.
               </EditorialText>
-              <div className="lg:col-span-8 lg:col-start-4">
-                <EditorialText
-                  as="h2"
-                  headingSize="medium"
-                  id="premium-guide-note-title"
-                  variant="heading"
-                >
-                  This guide begins at the house, but it is really about what lies around it.
+              <div className="mt-10 grid gap-8 sm:grid-cols-2 sm:gap-12">
+                <EditorialText variant="body">
+                  This is not intended to be the most complete guide to Southern Negros. It is
+                  intended to be the most personal: a companion shaped by lived experience, careful
+                  observation and information worth carrying into the day.
                 </EditorialText>
-                <div className="mt-10 grid gap-8 sm:grid-cols-2 sm:gap-12">
-                  <EditorialText variant="body">
-                    Tobias has shaped each journey from places and roads he knows. The guide keeps
-                    his observations separate from general place knowledge, then brings both
-                    together in a day that can be followed without overfilling it.
-                  </EditorialText>
-                  <EditorialText variant="body">
-                    Conditions and services change. Use the maps for orientation, carry the useful
-                    notes offline and confirm anything time-sensitive before leaving.
-                  </EditorialText>
-                </div>
+                <EditorialText variant="body">
+                  It exists to help you leave well, notice more and return without rushing. Trust
+                  matters more than completeness, and one thoughtfully chosen journey is enough.
+                </EditorialText>
               </div>
-            </EditorialGrid>
-          </EditorialContainer>
-        </SectionSpacing>
+            </div>
+          </EditorialGrid>
+        </EditorialContainer>
+      </SectionSpacing>
 
-        <SectionSpacing
-          aria-labelledby="premium-guide-contents-title"
-          className="bg-surface-soft"
-          size="generous"
-        >
-          <EditorialContainer>
-            <EditorialGrid gap="generous">
-              <div className="lg:col-span-3">
-                <EditorialText variant="eyebrow">The book</EditorialText>
-                <EditorialText
-                  as="h2"
-                  className="mt-7"
-                  headingSize="small"
-                  id="premium-guide-contents-title"
-                  variant="heading"
-                >
-                  Nine chapters, five journeys.
-                </EditorialText>
-                <div className="mt-10 flex flex-wrap gap-5">
-                  <a
-                    className="rounded-sm border-b border-ink/35 pb-1 font-body text-sm font-semibold text-ink hover:border-accent hover:text-accent focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-focus"
-                    href="/downloads/southern-negros-from-joshuas-point-edition-1.pdf"
-                  >
-                    Print edition · PDF
-                  </a>
-                  <a
-                    className="rounded-sm border-b border-ink/35 pb-1 font-body text-sm font-semibold text-ink hover:border-accent hover:text-accent focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-focus"
-                    href="/downloads/southern-negros-from-joshuas-point-edition-1.epub"
-                  >
-                    Reader edition · EPUB
-                  </a>
-                </div>
-              </div>
-              <ol className="border-t border-border lg:col-span-8 lg:col-start-5">
-                {premiumGuideChapters.map((chapter) => (
-                  <li className="border-b border-border" key={chapter.slug}>
-                    <Link
-                      className="group grid rounded-sm py-7 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-focus sm:grid-cols-[3rem_minmax(0,1fr)_auto] sm:items-baseline sm:gap-8"
-                      href={`/premium-guide/chapters/${chapter.slug}`}
-                    >
-                      <span className="font-body text-xs tracking-[0.12em] text-ink-subtle">
-                        {chapter.number}
-                      </span>
-                      <span className="mt-2 font-display text-2xl text-ink sm:mt-0 sm:text-3xl">
-                        {chapter.title}
-                      </span>
-                      <span aria-hidden="true" className="mt-3 text-ink-subtle group-hover:text-ink sm:mt-0">
-                        →
-                      </span>
-                    </Link>
-                  </li>
-                ))}
-              </ol>
-            </EditorialGrid>
-          </EditorialContainer>
-        </SectionSpacing>
-
-        <SectionSpacing aria-labelledby="premium-guide-journeys-title" size="generous">
-          <EditorialContainer>
-            <div className="flex flex-wrap items-end justify-between gap-8">
-              <div>
-                <EditorialText variant="eyebrow">Edition 01 · Journey collection</EditorialText>
-                <EditorialText
-                  as="h2"
-                  className="mt-7"
-                  headingSize="medium"
-                  id="premium-guide-journeys-title"
-                  variant="heading"
-                >
-                  Choose the character of the day.
-                </EditorialText>
-              </div>
-              <p className="max-w-xs font-body text-xs leading-6 text-ink-subtle">
-                Each journey begins and ends at Joshua’s Point. Missing imagery is reserved
-                honestly; no other place is used to stand in for it.
+      <SectionSpacing aria-labelledby="contents" className="bg-surface-soft" size="generous">
+        <EditorialContainer>
+          <EditorialGrid gap="generous">
+            <div className="lg:col-span-3">
+              <EditorialText variant="eyebrow">Edition 1</EditorialText>
+              <EditorialText
+                as="h2"
+                className="mt-7"
+                headingSize="small"
+                id="contents"
+                variant="heading"
+              >
+                Contents
+              </EditorialText>
+              <p className="mt-8 max-w-xs font-body text-sm leading-7 text-ink-muted">
+                Nine chapters moving outward from Joshua’s Point and returning home.
               </p>
             </div>
 
-            <div className="mt-14 grid gap-x-12 gap-y-20 lg:grid-cols-2 xl:gap-x-20">
-              {journeys.map((journey) => (
-                <PremiumJourneyCard
-                  href={`/premium-guide/journeys/${journey.slug}`}
-                  image={journey.image}
-                  imagePosition={journey.imagePosition}
-                  key={journey.slug}
-                  number={journey.number}
-                  route={journey.route}
-                  summary={journey.summary}
-                  title={journey.title}
-                />
+            <ol className="border-t border-border lg:col-span-8 lg:col-start-5">
+              {readerChapters.map((chapter) => (
+                <li className="border-b border-border" key={chapter.slug}>
+                  <Link
+                    className="group grid rounded-sm py-6 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-focus sm:grid-cols-[3rem_minmax(0,1fr)_auto] sm:items-baseline sm:gap-8 sm:py-7"
+                    href={`/premium-guide/chapters/${chapter.slug}`}
+                  >
+                    <span className="font-body text-xs tracking-[0.12em] text-ink-subtle">
+                      {chapter.number}
+                    </span>
+                    <span className="mt-2 font-display text-2xl text-ink transition-colors group-hover:text-accent sm:mt-0 sm:text-3xl">
+                      {chapter.title}
+                    </span>
+                    <span
+                      aria-hidden="true"
+                      className="mt-3 text-ink-subtle transition-transform group-hover:translate-x-1 group-hover:text-ink sm:mt-0"
+                    >
+                      →
+                    </span>
+                  </Link>
+                </li>
               ))}
-            </div>
-          </EditorialContainer>
-        </SectionSpacing>
+            </ol>
+          </EditorialGrid>
+        </EditorialContainer>
+      </SectionSpacing>
 
-        <SectionSpacing aria-label="Guide closing reflection" className="bg-inverse-surface" size="immersive">
-          <EditorialContainer size="reading">
-            <EditorialText className="text-inverse" tone="inverse" variant="lead">
-              A useful guide does not make the day louder. It gives you enough context to leave
-              well, pay attention and find your way home.
-            </EditorialText>
-          </EditorialContainer>
-        </SectionSpacing>
-      </main>
-    </>
+      <SectionSpacing aria-label="Begin reading" className="bg-inverse-surface" size="immersive">
+        <EditorialContainer size="reading">
+          <EditorialText className="text-inverse" tone="inverse" variant="lead">
+            The aim is not to fit the greatest number of places into a stay. It is to choose a
+            journey that matches the day and leave enough room to notice it.
+          </EditorialText>
+          <Link
+            className="mt-12 inline-flex rounded-full border border-inverse/35 px-6 py-3 font-body text-xs font-semibold tracking-[0.12em] text-inverse uppercase transition-colors hover:border-inverse hover:bg-inverse hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-inverse"
+            href={`/premium-guide/chapters/${firstChapter.slug}`}
+          >
+            Begin with chapter one
+          </Link>
+        </EditorialContainer>
+      </SectionSpacing>
+    </main>
   )
 }
